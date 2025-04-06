@@ -12,46 +12,37 @@ BASE_RESOURCE_SCHEMA = {
     "properties": {
         "id": {
             "type": "string",
-            "description": "The unique identifier for the resource"
+            "description": "The unique identifier for the resource",
         },
-        "name": {
-            "type": "string",
-            "description": "The name of the resource"
-        },
-        "type": {
-            "type": "string",
-            "description": "The GCP resource type"
-        },
-        "project": {
-            "type": "string",
-            "description": "The GCP project ID"
-        },
+        "name": {"type": "string", "description": "The name of the resource"},
+        "type": {"type": "string", "description": "The GCP resource type"},
+        "project": {"type": "string", "description": "The GCP project ID"},
         "labels": {
             "type": "object",
             "description": "The labels associated with the resource",
-            "additionalProperties": {"type": "string"}
+            "additionalProperties": {"type": "string"},
         },
         "created": {
             "type": "string",
             "format": "date-time",
-            "description": "When the resource was created"
+            "description": "When the resource was created",
         },
         "updated": {
             "type": "string",
             "format": "date-time",
-            "description": "When the resource was last updated"
-        }
+            "description": "When the resource was last updated",
+        },
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
 def get_schema(resource_type: str) -> Dict[str, Any]:
     """Get the JSON schema for a specific resource type.
-    
+
     Args:
         resource_type: The GCP resource type
-        
+
     Returns:
         The JSON schema for the resource type
     """

@@ -3,6 +3,7 @@
 import os
 import json
 import click
+from datetime import datetime
 from typing import Optional, List
 
 from gcpoto import __version__
@@ -25,7 +26,12 @@ from gcpoto.models.base import GCPResource
 )
 @click.option("--region", help="GCP region to use for regional resources.")
 @click.option("--zone", help="GCP zone to use for zonal resources.")
-@click.option("--output", type=click.Choice(["json", "text", "table"]), default="json", help="Output format")
+@click.option(
+    "--output",
+    type=click.Choice(["json", "text", "table"]),
+    default="json",
+    help="Output format",
+)
 @click.pass_context
 def cli(ctx, project, credentials, region, zone, output):
     """GCPoto: A boto-like CLI for Google Cloud Platform."""
@@ -36,10 +42,10 @@ def cli(ctx, project, credentials, region, zone, output):
     ctx.obj["zone"] = zone
     ctx.obj["output"] = output
 
- 
+
 @cli.group()
 @click.pass_context
-def storage(ctx): 
+def storage(ctx):
     """Commands for interacting with Google Cloud Storage."""
     pass
 
@@ -49,16 +55,15 @@ def storage(ctx):
 def list_buckets(ctx):
     """List storage buckets in the project."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     buckets = service.list_resources()
     _output_result(buckets, ctx.obj.get("output", "json"))
 
@@ -70,16 +75,15 @@ def list_buckets(ctx):
 def list_objects(ctx, bucket, prefix):
     """List objects in a bucket."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     objects = service.list_objects(bucket, prefix)
     _output_result(objects, ctx.obj.get("output", "json"))
 
@@ -91,16 +95,15 @@ def list_objects(ctx, bucket, prefix):
 def get_object(ctx, bucket, object_name):
     """Get object metadata from a bucket."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     obj = service.get_object(bucket, object_name)
     _output_result(obj, ctx.obj.get("output", "json"))
 
@@ -113,20 +116,19 @@ def get_object(ctx, bucket, object_name):
 def download_object(ctx, bucket, object_name, destination):
     """Download an object from a bucket."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     # If no destination is provided, use the object name in the current directory
     if not destination:
         destination = os.path.basename(object_name)
-        
+
     result = service.download_object(bucket, object_name, destination)
     click.echo(f"Downloaded {object_name} to {destination}")
 
@@ -134,26 +136,28 @@ def download_object(ctx, bucket, object_name, destination):
 @storage.command("upload")
 @click.argument("bucket")
 @click.argument("source")
-@click.option("--object-name", help="Name to give the object in the bucket (defaults to source filename)")
+@click.option(
+    "--object-name",
+    help="Name to give the object in the bucket (defaults to source filename)",
+)
 @click.option("--content-type", help="Content type of the object")
 @click.pass_context
 def upload_object(ctx, bucket, source, object_name, content_type):
     """Upload a file to a bucket."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     # If no object name is provided, use the source filename
     if not object_name:
         object_name = os.path.basename(source)
-        
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     obj = service.upload_object(bucket, object_name, source, content_type)
     click.echo(f"Uploaded {source} to {bucket}/{object_name}")
     _output_result(obj, ctx.obj.get("output", "json"))
@@ -167,16 +171,15 @@ def upload_object(ctx, bucket, source, object_name, content_type):
 def delete_object(ctx, bucket, object_name):
     """Delete an object from a bucket."""
     from gcpoto.services.storage import StorageService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = StorageService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     service.delete_object(bucket, object_name)
     click.echo(f"Deleted {bucket}/{object_name}")
 
@@ -193,16 +196,15 @@ def pubsub(ctx):
 def list_topics(ctx):
     """List Pub/Sub topics in the project."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     topics = service.list_resources()
     _output_result(topics, ctx.obj.get("output", "json"))
 
@@ -213,64 +215,69 @@ def list_topics(ctx):
 def get_topic(ctx, topic):
     """Get a specific Pub/Sub topic."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     topic_obj = service.get_topic(topic)
     _output_result(topic_obj, ctx.obj.get("output", "json"))
 
 
 @pubsub.command("create-topic")
 @click.argument("topic")
-@click.option("--label", multiple=True, help="Labels to apply to the topic in the format key=value")
+@click.option(
+    "--label",
+    multiple=True,
+    help="Labels to apply to the topic in the format key=value",
+)
 @click.option("--kms-key", help="KMS key to use for message protection")
-@click.option("--message-retention", help="Duration for which messages are retained (e.g., 'P1D' for 1 day)")
+@click.option(
+    "--message-retention",
+    help="Duration for which messages are retained (e.g., 'P1D' for 1 day)",
+)
 @click.option("--region", multiple=True, help="Regions where messages can be stored")
 @click.pass_context
 def create_topic(ctx, topic, label, kms_key, message_retention, region):
     """Create a new Pub/Sub topic."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     # Process labels into a dictionary
     labels = {}
     for lbl in label:
-        if '=' in lbl:
-            key, value = lbl.split('=', 1)
+        if "=" in lbl:
+            key, value = lbl.split("=", 1)
             labels[key] = value
         else:
-            click.echo(f"Warning: Ignoring malformed label '{lbl}'. Use format key=value")
-    
+            click.echo(
+                f"Warning: Ignoring malformed label '{lbl}'. Use format key=value"
+            )
+
     # Process regions into a message storage policy if specified
     message_storage_policy = None
     if region:
-        message_storage_policy = {
-            "allowedPersistenceRegions": list(region)
-        }
-    
+        message_storage_policy = {"allowedPersistenceRegions": list(region)}
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     topic_obj = service.create_topic(
         topic_name=topic,
         labels=labels if labels else None,
         kms_key_name=kms_key,
         message_retention_duration=message_retention,
-        message_storage_policy=message_storage_policy
+        message_storage_policy=message_storage_policy,
     )
-    
+
     click.echo(f"Created topic: {topic_obj.name}")
     _output_result(topic_obj, ctx.obj.get("output", "json"))
 
@@ -282,16 +289,15 @@ def create_topic(ctx, topic, label, kms_key, message_retention, region):
 def delete_topic(ctx, topic):
     """Delete a Pub/Sub topic."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     service.delete_topic(topic)
     click.echo(f"Deleted topic: {topic}")
 
@@ -299,36 +305,37 @@ def delete_topic(ctx, topic):
 @pubsub.command("publish")
 @click.argument("topic")
 @click.argument("message")
-@click.option("--attribute", multiple=True, help="Message attributes in the format key=value")
+@click.option(
+    "--attribute", multiple=True, help="Message attributes in the format key=value"
+)
 @click.pass_context
 def publish_message(ctx, topic, message, attribute):
     """Publish a message to a Pub/Sub topic."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     # Process attributes into a dictionary
     attributes = {}
     for attr in attribute:
-        if '=' in attr:
-            key, value = attr.split('=', 1)
+        if "=" in attr:
+            key, value = attr.split("=", 1)
             attributes[key] = value
         else:
-            click.echo(f"Warning: Ignoring malformed attribute '{attr}'. Use format key=value")
-    
+            click.echo(
+                f"Warning: Ignoring malformed attribute '{attr}'. Use format key=value"
+            )
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     message_id = service.publish_message(
-        topic_name=topic,
-        data=message,
-        attributes=attributes if attributes else None
+        topic_name=topic, data=message, attributes=attributes if attributes else None
     )
-    
+
     click.echo(f"Published message with ID: {message_id}")
 
 
@@ -338,16 +345,15 @@ def publish_message(ctx, topic, message, attribute):
 def list_subscriptions(ctx, topic):
     """List Pub/Sub subscriptions in the project."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     subscriptions = service.list_subscriptions(topic)
     _output_result(subscriptions, ctx.obj.get("output", "json"))
 
@@ -358,16 +364,15 @@ def list_subscriptions(ctx, topic):
 def get_subscription(ctx, subscription):
     """Get a specific Pub/Sub subscription."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     subscription_obj = service.get_subscription(subscription)
     _output_result(subscription_obj, ctx.obj.get("output", "json"))
 
@@ -378,41 +383,57 @@ def get_subscription(ctx, subscription):
 @click.option("--ack-deadline", type=int, help="Acknowledgement deadline in seconds")
 @click.option("--push-endpoint", help="URL to push messages to")
 @click.option("--retain-acked", is_flag=True, help="Retain acknowledged messages")
-@click.option("--message-retention", help="Duration to retain unacknowledged messages (e.g., 'P1D' for 1 day)")
-@click.option("--label", multiple=True, help="Labels to apply to the subscription in the format key=value")
+@click.option(
+    "--message-retention",
+    help="Duration to retain unacknowledged messages (e.g., 'P1D' for 1 day)",
+)
+@click.option(
+    "--label",
+    multiple=True,
+    help="Labels to apply to the subscription in the format key=value",
+)
 @click.option("--filter", help="Filter expression for the subscription")
 @click.option("--enable-ordering", is_flag=True, help="Enable message ordering")
 @click.pass_context
-def create_subscription(ctx, subscription, topic, ack_deadline, push_endpoint, retain_acked,
-                       message_retention, label, filter, enable_ordering):
+def create_subscription(
+    ctx,
+    subscription,
+    topic,
+    ack_deadline,
+    push_endpoint,
+    retain_acked,
+    message_retention,
+    label,
+    filter,
+    enable_ordering,
+):
     """Create a new Pub/Sub subscription."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     # Process labels into a dictionary
     labels = {}
     for lbl in label:
-        if '=' in lbl:
-            key, value = lbl.split('=', 1)
+        if "=" in lbl:
+            key, value = lbl.split("=", 1)
             labels[key] = value
         else:
-            click.echo(f"Warning: Ignoring malformed label '{lbl}'. Use format key=value")
-    
+            click.echo(
+                f"Warning: Ignoring malformed label '{lbl}'. Use format key=value"
+            )
+
     # Create push config if push endpoint is specified
     push_config = None
     if push_endpoint:
-        push_config = {
-            "pushEndpoint": push_endpoint
-        }
-    
+        push_config = {"pushEndpoint": push_endpoint}
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     subscription_obj = service.create_subscription(
         subscription_name=subscription,
         topic_name=topic,
@@ -422,9 +443,9 @@ def create_subscription(ctx, subscription, topic, ack_deadline, push_endpoint, r
         message_retention_duration=message_retention,
         labels=labels if labels else None,
         filter_expr=filter,
-        enable_message_ordering=enable_ordering
+        enable_message_ordering=enable_ordering,
     )
-    
+
     click.echo(f"Created subscription: {subscription_obj.name}")
     _output_result(subscription_obj, ctx.obj.get("output", "json"))
 
@@ -436,61 +457,64 @@ def create_subscription(ctx, subscription, topic, ack_deadline, push_endpoint, r
 def delete_subscription(ctx, subscription):
     """Delete a Pub/Sub subscription."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     service.delete_subscription(subscription)
     click.echo(f"Deleted subscription: {subscription}")
 
 
 @pubsub.command("pull")
 @click.argument("subscription")
-@click.option("--max-messages", type=int, default=10, help="Maximum number of messages to pull")
-@click.option("--auto-ack", is_flag=True, help="Automatically acknowledge messages after pulling")
+@click.option(
+    "--max-messages", type=int, default=10, help="Maximum number of messages to pull"
+)
+@click.option(
+    "--auto-ack", is_flag=True, help="Automatically acknowledge messages after pulling"
+)
 @click.pass_context
 def pull_messages(ctx, subscription, max_messages, auto_ack):
     """Pull messages from a Pub/Sub subscription."""
     from gcpoto.services.pubsub import PubSubService
-    
+
     project_id = ctx.obj.get("project")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     service = PubSubService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials")
     )
-    
+
     messages = service.pull_messages(subscription, max_messages)
-    
+
     if not messages:
         click.echo("No messages available.")
         return
-    
+
     # Format and display the messages
     click.echo(f"Pulled {len(messages)} messages:")
-    
+
     ack_ids = []
     for msg in messages:
-        ack_ids.append(msg.get('ackId'))
-        message_data = msg.get('message', {})
-        data = message_data.get('data', '')
-        attributes = message_data.get('attributes', {})
-        
+        ack_ids.append(msg.get("ackId"))
+        message_data = msg.get("message", {})
+        data = message_data.get("data", "")
+        attributes = message_data.get("attributes", {})
+
         # Try to decode the message data if it's base64 encoded
         try:
             import base64
-            decoded_data = base64.b64decode(data).decode('utf-8')
+
+            decoded_data = base64.b64decode(data).decode("utf-8")
         except Exception:
             decoded_data = data
-        
+
         click.echo(f"Message ID: {message_data.get('messageId', 'unknown')}")
         click.echo(f"Data: {decoded_data}")
         if attributes:
@@ -498,7 +522,7 @@ def pull_messages(ctx, subscription, max_messages, auto_ack):
             for key, value in attributes.items():
                 click.echo(f"  {key}: {value}")
         click.echo("---")
-    
+
     # Auto-acknowledge messages if requested
     if auto_ack and ack_ids:
         service.acknowledge_messages(subscription, ack_ids)
@@ -518,37 +542,43 @@ def compute(ctx):
 def list_instances(ctx, zone):
     """List compute instances in the project."""
     from gcpoto.services.compute import ComputeService
-    
+
     project_id = ctx.obj.get("project_id")
     if not project_id:
         raise click.UsageError("Project ID must be specified")
-    
+
     zone = zone or ctx.obj.get("zone")
     if not zone:
         raise click.UsageError("Zone must be specified")
-    
+
     service = ComputeService(
-        project_id=project_id,
-        credentials_file=ctx.obj.get("credentials_file")
+        project_id=project_id, credentials_file=ctx.obj.get("credentials_file")
     )
-    
+
     instances = service.list_resources(zone=zone)
     _output_result(instances, ctx.obj.get("output", "json"))
 
 
 def _output_result(resources, output_format="json"):
     """Output the result in the specified format.
-    
+
     Args:
         resources: List of GCPResource objects or a single GCPResource
         output_format: Format to output (json, text, or table)
     """
     if not isinstance(resources, list):
         resources = [resources]
-    
+
     if output_format == "json":
+        # Create a custom JSON encoder to handle datetime objects
+        class DateTimeEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, datetime):
+                    return obj.isoformat()
+                return super().default(obj)
+
         result = [r.to_dict() for r in resources]
-        click.echo(json.dumps(result, indent=2))
+        click.echo(json.dumps(result, indent=2, cls=DateTimeEncoder))
     elif output_format == "text":
         for resource in resources:
             click.echo(f"ID: {resource.id}")

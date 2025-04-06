@@ -19,9 +19,9 @@ def test_billing_account_model():
         display_name="Test Billing Account",
         open=True,
         labels={"env": "test"},
-        tags={"purpose": "testing"}
+        tags={"purpose": "testing"},
     )
-    
+
     # Verify attributes
     assert account.id == "billingAccounts/ABCDEF-123456-789012"
     assert account.billing_account_id == "ABCDEF-123456-789012"
@@ -39,16 +39,16 @@ def test_billing_account_validators():
         name="ABCDEF-123456-789012",  # Missing prefix
         display_name="Test Account",
         type="billing.account",
-        project="test-project"
+        project="test-project",
     )
     assert account.name == "billingAccounts/ABCDEF-123456-789012"
-    
+
     # Test id validator
     account = BillingAccount(
         billing_account_id="ABCDEF-123456-789012",
         display_name="Test Account",
         type="billing.account",
-        project="test-project"
+        project="test-project",
     )
     assert account.id == "billingAccounts/ABCDEF-123456-789012"
 
@@ -61,24 +61,24 @@ def test_billing_account_from_api_response():
         "displayName": "Test Billing Account",
         "open": True,
         "masterBillingAccount": "billingAccounts/PARENT-123456-789012",
-        "labels": {"department": "engineering"}
+        "labels": {"department": "engineering"},
     }
-    
+
     account = BillingAccount.from_api_response(response)
-    
+
     assert account.billing_account_id == "ABCDEF-123456-789012"
     assert account.display_name == "Test Billing Account"
     assert account.open is True
     assert account.master_billing_account == "billingAccounts/PARENT-123456-789012"
     assert account.labels == {"department": "engineering"}
     assert account.tags == {"department": "engineering"}
-    
+
     # Test with minimal response
     minimal_response = {
         "name": "billingAccounts/MINIMAL-123456",
-        "displayName": "Minimal Account"
+        "displayName": "Minimal Account",
     }
-    
+
     minimal_account = BillingAccount.from_api_response(minimal_response)
     assert minimal_account.billing_account_id == "MINIMAL-123456"
     assert minimal_account.display_name == "Minimal Account"
@@ -96,9 +96,9 @@ def test_project_billing_info_model():
         project="test-project",
         project_id="test-project",
         billing_account_name="billingAccounts/ABCDEF-123456-789012",
-        billing_enabled=True
+        billing_enabled=True,
     )
-    
+
     # Verify attributes
     assert billing_info.id == "projects/test-project/billingInfo"
     assert billing_info.project_id == "test-project"
@@ -113,20 +113,20 @@ def test_project_billing_info_validators():
         project_id="test-project",
         type="billing.projectBillingInfo",
         project="test-project",
-        billing_enabled=True
+        billing_enabled=True,
     )
-    
+
     assert billing_info.name == "projects/test-project/billingInfo"
     assert billing_info.id == "projects/test-project/billingInfo"
-    
+
     # Test with projects/ prefix
     billing_info = ProjectBillingInfo(
         project_id="projects/another-project",
         type="billing.projectBillingInfo",
         project="another-project",
-        billing_enabled=False
+        billing_enabled=False,
     )
-    
+
     assert billing_info.name == "projects/another-project/billingInfo"
     assert billing_info.id == "projects/another-project/billingInfo"
 
@@ -137,20 +137,18 @@ def test_project_billing_info_from_api_response():
     response = {
         "name": "projects/test-project/billingInfo",
         "billingAccountName": "billingAccounts/ABCDEF-123456-789012",
-        "billingEnabled": True
+        "billingEnabled": True,
     }
-    
+
     billing_info = ProjectBillingInfo.from_api_response(response)
-    
+
     assert billing_info.project_id == "test-project"
     assert billing_info.billing_account_name == "billingAccounts/ABCDEF-123456-789012"
     assert billing_info.billing_enabled is True
-    
+
     # Test with minimal response
-    minimal_response = {
-        "name": "projects/minimal-project/billingInfo"
-    }
-    
+    minimal_response = {"name": "projects/minimal-project/billingInfo"}
+
     minimal_info = ProjectBillingInfo.from_api_response(minimal_response)
     assert minimal_info.project_id == "minimal-project"
     assert minimal_info.billing_account_name is None
@@ -170,15 +168,17 @@ def test_billing_budget_model():
         budget_filter={"projects": ["projects/test-project"]},
         amount={"specified_amount": {"units": "1000", "currency_code": "USD"}},
         threshold_rules=[{"threshold_percent": 0.8, "spend_basis": "CURRENT_SPEND"}],
-        notify_emails=["alert@example.com"]
+        notify_emails=["alert@example.com"],
     )
-    
+
     # Verify attributes
     assert budget.id == "billingAccounts/ABCDEF-123456-789012/budgets/budget-123"
     assert budget.budget_id == "budget-123"
     assert budget.display_name == "Test Budget"
     assert budget.budget_filter == {"projects": ["projects/test-project"]}
-    assert budget.amount == {"specified_amount": {"units": "1000", "currency_code": "USD"}}
+    assert budget.amount == {
+        "specified_amount": {"units": "1000", "currency_code": "USD"}
+    }
     assert len(budget.threshold_rules) == 1
     assert budget.threshold_rules[0]["threshold_percent"] == 0.8
     assert budget.notify_emails == ["alert@example.com"]
@@ -192,9 +192,9 @@ def test_billing_budget_validators():
         type="billing.budget",
         project="test-project",
         display_name="Minimal Budget",
-        amount={"specified_amount": {"units": "500", "currency_code": "USD"}}
+        amount={"specified_amount": {"units": "500", "currency_code": "USD"}},
     )
-    
+
     # Default values are applied
     assert budget.budget_filter == {}
     assert budget.threshold_rules == []
@@ -209,29 +209,24 @@ def test_billing_budget_from_api_response():
         "displayName": "API Test Budget",
         "budgetFilter": {
             "projects": ["projects/test-project"],
-            "services": ["services/compute.googleapis.com"]
+            "services": ["services/compute.googleapis.com"],
         },
-        "amount": {
-            "specified_amount": {
-                "currency_code": "USD",
-                "units": "2000"
-            }
-        },
+        "amount": {"specified_amount": {"currency_code": "USD", "units": "2000"}},
         "thresholdRules": [
             {"threshold_percent": 0.5, "spend_basis": "CURRENT_SPEND"},
-            {"threshold_percent": 0.9, "spend_basis": "CURRENT_SPEND"}
+            {"threshold_percent": 0.9, "spend_basis": "CURRENT_SPEND"},
         ],
         "notificationsRule": {
             "monitoringNotificationChannels": [
                 "projects/test-project/notificationChannels/email-alert1",
-                "projects/test-project/notificationChannels/email-alert2"
+                "projects/test-project/notificationChannels/email-alert2",
             ]
         },
-        "labels": {"purpose": "testing"}
+        "labels": {"purpose": "testing"},
     }
-    
+
     budget = BillingBudget.from_api_response(response, "ABCDEF-123456-789012")
-    
+
     assert budget.budget_id == "budget-123"
     assert budget.display_name == "API Test Budget"
     assert "projects" in budget.budget_filter

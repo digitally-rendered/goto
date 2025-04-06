@@ -16,11 +16,11 @@ from gcpoto.models.resource_manager import Project, Folder
 @pytest.fixture
 def mock_projects_client():
     """Create a mock ProjectsClient."""
-    with patch('google.cloud.resourcemanager_v3.ProjectsClient') as mock_client:
+    with patch("google.cloud.resourcemanager_v3.ProjectsClient") as mock_client:
         # Setup mock operations client
         operations_client = MagicMock()
         mock_client.return_value.transport.operations_client = operations_client
-        
+
         # Setup other return values
         mock_client.return_value.list_projects.return_value = []
         mock_client.return_value.get_project.return_value = None
@@ -29,18 +29,18 @@ def mock_projects_client():
         mock_client.return_value.delete_project.return_value = None
         mock_client.return_value.undelete_project.return_value = None
         mock_client.return_value.move_project.return_value = None
-        
+
         yield mock_client.return_value
 
 
 @pytest.fixture
 def mock_folders_client():
     """Create a mock FoldersClient."""
-    with patch('google.cloud.resourcemanager_v3.FoldersClient') as mock_client:
+    with patch("google.cloud.resourcemanager_v3.FoldersClient") as mock_client:
         # Setup mock operations client
         operations_client = MagicMock()
         mock_client.return_value.transport.operations_client = operations_client
-        
+
         # Setup other return values
         mock_client.return_value.list_folders.return_value = []
         mock_client.return_value.get_folder.return_value = None
@@ -50,22 +50,24 @@ def mock_folders_client():
         mock_client.return_value.undelete_folder.return_value = None
         mock_client.return_value.move_folder.return_value = None
         mock_client.return_value.get_iam_policy.return_value = None
-        
+
         yield mock_client.return_value
 
 
 @pytest.fixture
 def mock_resource_manager_service(mock_projects_client, mock_folders_client):
     """Create a ResourceManagerService with mocked clients."""
-    with patch('gcpoto.services.resource_manager.ResourceManagerService._wait_for_operation') as mock_wait:
+    with patch(
+        "gcpoto.services.resource_manager.ResourceManagerService._wait_for_operation"
+    ) as mock_wait:
         # Configure the mock wait_for_operation to return immediately
         mock_wait.return_value = None
-        
+
         # Create the service
         service = ResourceManagerService(project_id="test-project")
         service.projects_client = mock_projects_client
         service.folders_client = mock_folders_client
-        
+
         yield service
 
 
@@ -80,20 +82,20 @@ def sample_project_proto():
     project.display_name = "Test Project"
     project.parent = "folders/98765"
     project.state = resourcemanager_v3.Project.State.ACTIVE
-    
+
     # Set timestamps
     create_time = timestamp_pb2.Timestamp()
     create_time.FromDatetime(datetime.now())
     project.create_time = create_time
-    
+
     update_time = timestamp_pb2.Timestamp()
     update_time.FromDatetime(datetime.now())
     project.update_time = update_time
-    
+
     project.etag = "abc123"
     project.labels["env"] = "test"
     project.labels["team"] = "engineering"
-    
+
     return project
 
 
@@ -105,18 +107,18 @@ def sample_folder_proto():
     folder.display_name = "Test Folder"
     folder.parent = "organizations/12345"
     folder.state = resourcemanager_v3.Folder.State.ACTIVE
-    
+
     # Set timestamps
     create_time = timestamp_pb2.Timestamp()
     create_time.FromDatetime(datetime.now())
     folder.create_time = create_time
-    
+
     update_time = timestamp_pb2.Timestamp()
     update_time.FromDatetime(datetime.now())
     folder.update_time = update_time
-    
+
     folder.etag = "def456"
-    
+
     return folder
 
 
@@ -126,429 +128,459 @@ def mock_operation():
     operation = operations_pb2.Operation()
     operation.name = "operations/test-operation"
     operation.done = True
-    
+
     # Create a response Any proto
     response = any_pb2.Any()
     operation.response.CopyFrom(response)
-    
+
     return operation
 
 
 class TestResourceManagerService:
     """Tests for the ResourceManagerService class."""
-    
+
     def test_list_projects(self, mock_resource_manager_service, sample_project_proto):
         """Test listing projects."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.list_projects.return_value = [sample_project_proto]
-        
+
         # Execute
         projects = mock_resource_manager_service.list_projects()
-        
+
         # Verify
         assert len(projects) == 1
         assert projects[0].id == "projects/test-project"
         assert projects[0].project_id == "test-project"
         assert projects[0].display_name == "Test Project"
-        
+
         # Verify client was called correctly
         projects_client.list_projects.assert_called_once()
-        
+
         # Test with parent
         mock_resource_manager_service.list_projects(parent="organizations/12345")
         # 2nd call should include parent
         assert projects_client.list_projects.call_count == 2
-    
+
     def test_get_project(self, mock_resource_manager_service, sample_project_proto):
         """Test getting a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Execute
         project = mock_resource_manager_service.get_project("test-project")
-        
+
         # Verify
         assert project.id == "projects/test-project"
         assert project.project_id == "test-project"
         assert project.display_name == "Test Project"
-        
+
         # Verify client was called correctly
-        projects_client.get_project.assert_called_once_with(name="projects/test-project")
-        
+        projects_client.get_project.assert_called_once_with(
+            name="projects/test-project"
+        )
+
         # Test with already formatted name
         mock_resource_manager_service.get_project("projects/test-project-2")
         projects_client.get_project.assert_called_with(name="projects/test-project-2")
-        
+
         # Test error handling
         projects_client.get_project.side_effect = Exception("Not found")
         with pytest.raises(Exception, match="Failed to get project"):
             mock_resource_manager_service.get_project("non-existent")
-    
+
     def test_create_project(self, mock_resource_manager_service, sample_project_proto):
         """Test creating a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         projects_client.create_project.return_value = operation
-        
+
         # Execute
         project = mock_resource_manager_service.create_project(
             project_id="test-project",
             display_name="Test Project",
             parent="folders/98765",
             labels={"env": "test"},
-            tags={"team": "engineering"}
+            tags={"team": "engineering"},
         )
-        
+
         # Verify
-        assert project.id == "projects/test-project"  # The result comes from get_project
+        assert (
+            project.id == "projects/test-project"
+        )  # The result comes from get_project
         projects_client.create_project.assert_called_once()
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         projects_client.create_project.side_effect = Exception("Creation failed")
         with pytest.raises(Exception, match="Failed to create project"):
             mock_resource_manager_service.create_project(
-                project_id="error-project",
-                display_name="Error Project"
+                project_id="error-project", display_name="Error Project"
             )
-    
+
     def test_update_project(self, mock_resource_manager_service, sample_project_proto):
         """Test updating a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         projects_client.update_project.return_value = operation
-        
+
         # Execute - test updating display name only
         project = mock_resource_manager_service.update_project(
-            project_id="test-project",
-            display_name="Updated Project"
+            project_id="test-project", display_name="Updated Project"
         )
-        
+
         # Verify
-        assert project.id == "projects/test-project"  # The result comes from get_project
+        assert (
+            project.id == "projects/test-project"
+        )  # The result comes from get_project
         projects_client.update_project.assert_called_once()
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test updating labels
         mock_resource_manager_service._wait_for_operation.reset_mock()
         projects_client.update_project.reset_mock()
-        
+
         project = mock_resource_manager_service.update_project(
             project_id="test-project",
             labels={"env": "prod"},
-            tags={"cost-center": "12345"}
+            tags={"cost-center": "12345"},
         )
-        
+
         # Verify
         projects_client.update_project.assert_called_once()
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         projects_client.update_project.side_effect = Exception("Update failed")
         with pytest.raises(Exception, match="Failed to update project"):
             mock_resource_manager_service.update_project(
-                project_id="test-project",
-                display_name="Error Update"
+                project_id="test-project", display_name="Error Update"
             )
-    
+
     def test_delete_project(self, mock_resource_manager_service):
         """Test deleting a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         projects_client.delete_project.return_value = operation
-        
+
         # Execute
         result = mock_resource_manager_service.delete_project("test-project")
-        
+
         # Verify
         assert result is True
-        projects_client.delete_project.assert_called_once_with(name="projects/test-project")
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        projects_client.delete_project.assert_called_once_with(
+            name="projects/test-project"
+        )
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         projects_client.delete_project.side_effect = Exception("Deletion failed")
         with pytest.raises(Exception, match="Failed to delete project"):
             mock_resource_manager_service.delete_project("test-project")
-    
-    def test_undelete_project(self, mock_resource_manager_service, sample_project_proto):
+
+    def test_undelete_project(
+        self, mock_resource_manager_service, sample_project_proto
+    ):
         """Test undeleting a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         projects_client.undelete_project.return_value = operation
-        
+
         # Execute
         project = mock_resource_manager_service.undelete_project("test-project")
-        
+
         # Verify
-        assert project.id == "projects/test-project"  # The result comes from get_project
-        projects_client.undelete_project.assert_called_once_with(name="projects/test-project")
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        assert (
+            project.id == "projects/test-project"
+        )  # The result comes from get_project
+        projects_client.undelete_project.assert_called_once_with(
+            name="projects/test-project"
+        )
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         projects_client.undelete_project.side_effect = Exception("Undeletion failed")
         with pytest.raises(Exception, match="Failed to undelete project"):
             mock_resource_manager_service.undelete_project("test-project")
-    
+
     def test_list_folders(self, mock_resource_manager_service, sample_folder_proto):
         """Test listing folders."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.list_folders.return_value = [sample_folder_proto]
-        
+
         # Execute
         folders = mock_resource_manager_service.list_folders()
-        
+
         # Verify
         assert len(folders) == 1
         assert folders[0].id == "folders/test-folder"
         assert folders[0].display_name == "Test Folder"
-        
+
         # Verify client was called correctly
         folders_client.list_folders.assert_called_once()
-        
+
         # Test with parent
         mock_resource_manager_service.list_folders(parent="organizations/12345")
         # 2nd call should include parent
         assert folders_client.list_folders.call_count == 2
-    
+
     def test_get_folder(self, mock_resource_manager_service, sample_folder_proto):
         """Test getting a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.get_folder.return_value = sample_folder_proto
-        
+
         # Execute
         folder = mock_resource_manager_service.get_folder("test-folder")
-        
+
         # Verify
         assert folder.id == "folders/test-folder"
         assert folder.display_name == "Test Folder"
-        
+
         # Verify client was called correctly
         folders_client.get_folder.assert_called_once_with(name="folders/test-folder")
-        
+
         # Test with already formatted name
         mock_resource_manager_service.get_folder("folders/test-folder-2")
         folders_client.get_folder.assert_called_with(name="folders/test-folder-2")
-        
+
         # Test error handling
         folders_client.get_folder.side_effect = Exception("Not found")
         with pytest.raises(Exception, match="Failed to get folder"):
             mock_resource_manager_service.get_folder("non-existent")
-    
+
     def test_create_folder(self, mock_resource_manager_service, sample_folder_proto):
         """Test creating a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.get_folder.return_value = sample_folder_proto
-        
+
         # Mock the long-running operation and result
         operation = MagicMock()
         result_folder = MagicMock()
         result_folder.name = "folders/test-folder"
         mock_resource_manager_service._wait_for_operation.return_value = result_folder
-        
+
         folders_client.create_folder.return_value = operation
-        
+
         # Execute
         folder = mock_resource_manager_service.create_folder(
             display_name="Test Folder",
             parent="organizations/12345",
-            tags={"team": "engineering"}
+            tags={"team": "engineering"},
         )
-        
+
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
         folders_client.create_folder.assert_called_once()
-        
+
         # Verify the actual request structure
-        request = folders_client.create_folder.call_args[1]['request']
+        request = folders_client.create_folder.call_args[1]["request"]
         assert request.folder.display_name == "Test Folder"
         assert request.folder.parent == "organizations/12345"
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         folders_client.create_folder.side_effect = Exception("Creation failed")
         with pytest.raises(Exception, match="Failed to create folder"):
             mock_resource_manager_service.create_folder(
-                display_name="Error Folder",
-                parent="organizations/12345"
+                display_name="Error Folder", parent="organizations/12345"
             )
-    
+
     def test_update_folder(self, mock_resource_manager_service, sample_folder_proto):
         """Test updating a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.get_folder.return_value = sample_folder_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         folders_client.update_folder.return_value = operation
-        
+
         # Execute
         folder = mock_resource_manager_service.update_folder(
-            folder_id="test-folder",
-            display_name="Updated Folder"
+            folder_id="test-folder", display_name="Updated Folder"
         )
-        
+
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
         folders_client.update_folder.assert_called_once()
-        
+
         # Verify the update request structure
-        request = folders_client.update_folder.call_args[1]['request']
+        request = folders_client.update_folder.call_args[1]["request"]
         assert request.folder.display_name == "Updated Folder"
         # Field mask is a FieldMask object with a paths attribute that contains the field names
-        assert 'display_name' in request.update_mask.paths
-        
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        assert "display_name" in request.update_mask.paths
+
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         folders_client.update_folder.side_effect = Exception("Update failed")
         with pytest.raises(Exception, match="Failed to update folder"):
             mock_resource_manager_service.update_folder(
-                folder_id="test-folder",
-                display_name="Error Update"
+                folder_id="test-folder", display_name="Error Update"
             )
-    
+
     def test_delete_folder(self, mock_resource_manager_service):
         """Test deleting a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         folders_client.delete_folder.return_value = operation
-        
+
         # Execute
         result = mock_resource_manager_service.delete_folder("test-folder")
-        
+
         # Verify
         assert result is True
         folders_client.delete_folder.assert_called_once_with(name="folders/test-folder")
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         folders_client.delete_folder.side_effect = Exception("Deletion failed")
         with pytest.raises(Exception, match="Failed to delete folder"):
             mock_resource_manager_service.delete_folder("test-folder")
-    
+
     def test_undelete_folder(self, mock_resource_manager_service, sample_folder_proto):
         """Test undeleting a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.get_folder.return_value = sample_folder_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         folders_client.undelete_folder.return_value = operation
-        
+
         # Execute
         folder = mock_resource_manager_service.undelete_folder("test-folder")
-        
+
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
-        folders_client.undelete_folder.assert_called_once_with(name="folders/test-folder")
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        folders_client.undelete_folder.assert_called_once_with(
+            name="folders/test-folder"
+        )
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         folders_client.undelete_folder.side_effect = Exception("Undeletion failed")
         with pytest.raises(Exception, match="Failed to undelete folder"):
             mock_resource_manager_service.undelete_folder("test-folder")
-    
+
     def test_move_folder(self, mock_resource_manager_service, sample_folder_proto):
         """Test moving a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.get_folder.return_value = sample_folder_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         folders_client.move_folder.return_value = operation
-        
+
         # Execute
         folder = mock_resource_manager_service.move_folder(
-            folder_id="test-folder",
-            new_parent="organizations/67890"
+            folder_id="test-folder", new_parent="organizations/67890"
         )
-        
+
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
         folders_client.move_folder.assert_called_once()
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         folders_client.move_folder.side_effect = Exception("Move failed")
         with pytest.raises(Exception, match="Failed to move folder"):
             mock_resource_manager_service.move_folder(
-                folder_id="test-folder",
-                new_parent="organizations/67890"
+                folder_id="test-folder", new_parent="organizations/67890"
             )
-    
+
     def test_move_project(self, mock_resource_manager_service, sample_project_proto):
         """Test moving a project."""
         # Setup
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Mock the long-running operation
         operation = MagicMock()
         projects_client.move_project.return_value = operation
-        
+
         # Execute
         project = mock_resource_manager_service.move_project(
-            project_id="test-project",
-            new_parent="organizations/67890"
+            project_id="test-project", new_parent="organizations/67890"
         )
-        
+
         # Verify
-        assert project.id == "projects/test-project"  # The result comes from get_project
+        assert (
+            project.id == "projects/test-project"
+        )  # The result comes from get_project
         projects_client.move_project.assert_called_once()
-        mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
-        
+        mock_resource_manager_service._wait_for_operation.assert_called_once_with(
+            operation
+        )
+
         # Test error handling
         projects_client.move_project.side_effect = Exception("Move failed")
         with pytest.raises(Exception, match="Failed to move project"):
             mock_resource_manager_service.move_project(
-                project_id="test-project",
-                new_parent="organizations/67890"
+                project_id="test-project", new_parent="organizations/67890"
             )
-    
+
     def test_base_methods(self, mock_resource_manager_service, sample_project_proto):
         """Test the base class methods implementation."""
         # Setup for get_resource
         projects_client = mock_resource_manager_service.projects_client
         projects_client.get_project.return_value = sample_project_proto
-        
+
         # Test get_resource
         project = mock_resource_manager_service.get_resource("test-project")
         assert project.id == "projects/test-project"
-        
+
         # Setup for list_resources
         projects_client.list_projects.return_value = [sample_project_proto]
-        
+
         # Test list_resources
         projects = mock_resource_manager_service.list_resources()
         assert len(projects) == 1
         assert projects[0].id == "projects/test-project"
-        
+
         # Setup for create_resource
         project_model = Project(
             id="projects/new-project",
@@ -558,137 +590,144 @@ class TestResourceManagerService:
             project_id="new-project",
             display_name="New Project",
             parent="folders/98765",
-            tags={"env": "test"}
+            tags={"env": "test"},
         )
-        
+
         # Test create_resource
-        with patch.object(mock_resource_manager_service, 'create_project') as mock_create:
+        with patch.object(
+            mock_resource_manager_service, "create_project"
+        ) as mock_create:
             mock_create.return_value = project_model
             created = mock_resource_manager_service.create_resource(project_model)
             assert created.id == "projects/new-project"
             mock_create.assert_called_once()
-        
+
         # Setup for update_resource
         project_model.display_name = "Updated Project"
-        
+
         # Test update_resource
-        with patch.object(mock_resource_manager_service, 'update_project') as mock_update:
+        with patch.object(
+            mock_resource_manager_service, "update_project"
+        ) as mock_update:
             mock_update.return_value = project_model
             updated = mock_resource_manager_service.update_resource(project_model)
             assert updated.id == "projects/new-project"
             assert updated.display_name == "Updated Project"
             mock_update.assert_called_once()
-        
+
         # Test delete_resource
-        with patch.object(mock_resource_manager_service, 'delete_project') as mock_delete:
+        with patch.object(
+            mock_resource_manager_service, "delete_project"
+        ) as mock_delete:
             mock_delete.return_value = True
             result = mock_resource_manager_service.delete_resource("test-project")
             assert result is True
             mock_delete.assert_called_once_with("test-project")
-    
+
     def test_search_folders(self, mock_resource_manager_service, sample_folder_proto):
         """Test searching for folders."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
         folders_client.list_folders.return_value = [sample_folder_proto]
-        
+
         # Test with parent filter
         query = "parent:organizations/12345"
         folders = mock_resource_manager_service.search_folders(query)
-        
+
         # Verify results
         assert len(folders) == 1
         assert folders[0].id == "folders/test-folder"
         assert folders[0].folder_id == "test-folder"
         assert folders[0].display_name == "Test Folder"
-        
+
         # Verify client was called correctly with parent
         folders_client.list_folders.assert_called_once()
-        request = folders_client.list_folders.call_args[1]['request']
+        request = folders_client.list_folders.call_args[1]["request"]
         assert request.parent == "organizations/12345"
-        
+
         # Test with state filter
         folders_client.list_folders.reset_mock()
         query = "parent:organizations/12345 state:ACTIVE"
         folders = mock_resource_manager_service.search_folders(query)
-        
+
         # Verify client was called
         folders_client.list_folders.assert_called_once()
-        
+
         # Test with display name filter
         folders_client.list_folders.reset_mock()
         query = "parent:organizations/12345 displayName:Test"
         folders = mock_resource_manager_service.search_folders(query)
-        
+
         # Verify client was called
         folders_client.list_folders.assert_called_once()
-        
+
         # Test with invalid parent format
         folders_client.list_folders.reset_mock()
         folders_client.list_folders.side_effect = ValueError("Invalid parent format")
-        
+
         # Should return empty list on error
         folders = mock_resource_manager_service.search_folders("parent:invalid-format")
         assert len(folders) == 0
-        
+
         # Test with no parent filter (should return empty list)
         folders_client.list_folders.reset_mock()
         folders_client.list_folders.side_effect = None
         folders = mock_resource_manager_service.search_folders("state:ACTIVE")
         assert len(folders) == 0
         assert not folders_client.list_folders.called
-    
+
     def test_get_folder_iam_policy(self, mock_resource_manager_service):
         """Test getting IAM policy for a folder."""
         # Setup
         folders_client = mock_resource_manager_service.folders_client
-        
+
         # Create a mock IAM policy
         from google.iam.v1 import policy_pb2
+
         policy = policy_pb2.Policy()
         policy.version = 1
-        
+
         # Add a binding
         binding = policy_pb2.Binding()
         binding.role = "roles/owner"
         binding.members.append("user:test@example.com")
         policy.bindings.append(binding)
-        
+
         # Set etag
         policy.etag = b"test-etag"
-        
+
         # Configure mock
         folders_client.get_iam_policy.return_value = policy
-        
+
         # Execute
         result = mock_resource_manager_service.get_folder_iam_policy("test-folder")
-        
+
         # Verify result structure
-        assert result['version'] == 1
-        assert len(result['bindings']) == 1
-        assert result['bindings'][0]['role'] == "roles/owner"
-        assert result['bindings'][0]['members'] == ["user:test@example.com"]
-        assert result['etag'] == "test-etag"
-        
+        assert result["version"] == 1
+        assert len(result["bindings"]) == 1
+        assert result["bindings"][0]["role"] == "roles/owner"
+        assert result["bindings"][0]["members"] == ["user:test@example.com"]
+        assert result["etag"] == "test-etag"
+
         # Verify client was called correctly
         folders_client.get_iam_policy.assert_called_once()
-        request = folders_client.get_iam_policy.call_args[1]['request']
+        request = folders_client.get_iam_policy.call_args[1]["request"]
         assert request.resource == "folders/test-folder"
-        
+
         # Test with already formatted name
         folders_client.get_iam_policy.reset_mock()
         mock_resource_manager_service.get_folder_iam_policy("folders/another-folder")
-        request = folders_client.get_iam_policy.call_args[1]['request']
+        request = folders_client.get_iam_policy.call_args[1]["request"]
         assert request.resource == "folders/another-folder"
-        
+
         # Test error handling
         folders_client.get_iam_policy.reset_mock()
         folders_client.get_iam_policy.side_effect = Exception("Test error")
-        
+
         # The method should now handle the exception internally and return a minimal policy
         result = mock_resource_manager_service.get_folder_iam_policy("test-folder")
-        
+
         # Should return a minimal policy structure
-        assert 'version' in result
-        assert 'bindings' in result
-        assert 'etag' in result
+        assert "version" in result
+        assert "bindings" in result
+        assert "etag" in result

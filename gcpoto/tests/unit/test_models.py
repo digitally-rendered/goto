@@ -14,12 +14,9 @@ def test_gcp_resource_model_creation():
     """Test creating a GCPResource instance."""
     # Test creating a resource with required fields
     resource = GCPResource(
-        id="test-id",
-        name="test-resource",
-        type="test-type",
-        project="test-project"
+        id="test-id", name="test-resource", type="test-type", project="test-project"
     )
-    
+
     assert resource.id == "test-id"
     assert resource.name == "test-resource"
     assert resource.type == "test-type"
@@ -34,7 +31,7 @@ def test_gcp_resource_with_optional_fields():
     # Create timestamp objects
     created = datetime.fromisoformat("2023-01-01T00:00:00")
     updated = datetime.fromisoformat("2023-01-02T00:00:00")
-    
+
     # Test creating a resource with all fields
     resource = GCPResource(
         id="test-id",
@@ -43,9 +40,9 @@ def test_gcp_resource_with_optional_fields():
         project="test-project",
         labels={"env": "test", "owner": "tester"},
         created=created,
-        updated=updated
+        updated=updated,
     )
-    
+
     assert resource.id == "test-id"
     assert resource.name == "test-resource"
     assert resource.type == "test-type"
@@ -60,7 +57,7 @@ def test_gcp_resource_validation():
     # Test missing required fields
     with pytest.raises(ValidationError):
         GCPResource(id="test-id")
-    
+
     with pytest.raises(ValidationError):
         GCPResource(id="test-id", name="test-resource")
 
@@ -68,12 +65,9 @@ def test_gcp_resource_validation():
 def test_gcp_resource_to_dict():
     """Test converting a GCPResource to a dictionary."""
     resource = GCPResource(
-        id="test-id",
-        name="test-resource",
-        type="test-type",
-        project="test-project"
+        id="test-id", name="test-resource", type="test-type", project="test-project"
     )
-    
+
     resource_dict = resource.to_dict()
     assert resource_dict["id"] == "test-id"
     assert resource_dict["name"] == "test-resource"
@@ -93,11 +87,11 @@ def test_gcp_resource_from_api_response():
         "projectId": "my-project",
         "labels": {"env": "prod"},
         "creationTimestamp": "2023-01-01T00:00:00Z",
-        "updateTime": "2023-01-02T00:00:00Z"
+        "updateTime": "2023-01-02T00:00:00Z",
     }
-    
+
     resource = GCPResource.from_api_response(api_response)
-    
+
     assert resource.id == "123456789"
     assert resource.name == "my-resource"
     assert resource.type == "instance"
@@ -111,7 +105,7 @@ def test_gcp_resource_from_api_response():
 def test_json_schema_representation():
     """Test the JSON Schema representation of the model."""
     schema = GCPResource.model_json_schema()
-    
+
     # Verify the schema has the expected structure
     assert "$schema" in json.dumps(schema)
     assert "title" in schema
@@ -121,7 +115,7 @@ def test_json_schema_representation():
     assert "name" in schema["properties"]
     assert "type" in schema["properties"]
     assert "project" in schema["properties"]
-    
+
     # Verify that our model schema is using elements from our JSON schema
     assert "id" in BASE_RESOURCE_SCHEMA["properties"]
     assert "name" in BASE_RESOURCE_SCHEMA["properties"]

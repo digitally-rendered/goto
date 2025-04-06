@@ -8,17 +8,18 @@ from gcpoto.models.base import GCPResource
 
 class ComputeInstance(GCPResource):
     """Model for a Google Compute Engine instance."""
+
     machine_type: str
     status: str
     zone: str
-    
+
     @classmethod
-    def from_api_response(cls, response: Dict[str, Any]) -> 'ComputeInstance':
+    def from_api_response(cls, response: Dict[str, Any]) -> "ComputeInstance":
         """Create an instance from API response.
-        
+
         Args:
             response: The API response dictionary
-            
+
         Returns:
             A new ComputeInstance instance
         """
@@ -32,20 +33,20 @@ class ComputeInstance(GCPResource):
             zone=response.get("zone", "").split("/")[-1],
             labels=response.get("labels", {}),
             created=response.get("creationTimestamp"),
-            updated=response.get("lastStartTimestamp")
+            updated=response.get("lastStartTimestamp"),
         )
 
 
 class ComputeService(GCPService[ComputeInstance]):
     """Service for interacting with Google Compute Engine."""
-    
+
     def __init__(
         self,
         project_id: str,
         credentials_file: Optional[str] = None,
     ):
         """Initialize the compute service.
-        
+
         Args:
             project_id: The GCP project ID
             credentials_file: Path to service account credentials file
@@ -57,59 +58,56 @@ class ComputeService(GCPService[ComputeInstance]):
             credentials_file=credentials_file,
             resource_model=ComputeInstance,
         )
-    
+
     def list_resources(self, zone: str, **kwargs) -> List[ComputeInstance]:
         """List compute instances in the specified zone.
-        
+
         Args:
             zone: The zone to list instances from
             **kwargs: Additional parameters to pass to the list request
-            
+
         Returns:
             A list of ComputeInstance instances
         """
         request = self.service.instances().list(
-            project=self.project_id,
-            zone=zone,
-            **kwargs
+            project=self.project_id, zone=zone, **kwargs
         )
         response = request.execute()
-        
+
         instances = []
         for item in response.get("items", []):
             instances.append(self._parse_response(item))
-        
+
         return instances
-    
+
     def get_resource(self, resource_id: str, zone: str, **kwargs) -> ComputeInstance:
         """Get a specific instance by name.
-        
+
         Args:
             resource_id: The name of the instance to retrieve
             zone: The zone the instance is in
             **kwargs: Additional parameters to pass to the get request
-            
+
         Returns:
             A ComputeInstance instance
         """
         request = self.service.instances().get(
-            project=self.project_id,
-            zone=zone,
-            instance=resource_id,
-            **kwargs
+            project=self.project_id, zone=zone, instance=resource_id, **kwargs
         )
         response = request.execute()
-        
+
         return self._parse_response(response)
-    
-    def create_resource(self, resource: ComputeInstance, zone: str, **kwargs) -> ComputeInstance:
+
+    def create_resource(
+        self, resource: ComputeInstance, zone: str, **kwargs
+    ) -> ComputeInstance:
         """Create a new compute instance.
-        
+
         Args:
             resource: The instance model to create
             zone: The zone to create the instance in
             **kwargs: Additional parameters to pass to the create request
-            
+
         Returns:
             The created ComputeInstance instance
         """
@@ -120,34 +118,28 @@ class ComputeService(GCPService[ComputeInstance]):
             "machineType": f"zones/{zone}/machineTypes/{resource.machine_type}",
             "labels": resource.labels or {},
         }
-        
+
         request = self.service.instances().insert(
-            project=self.project_id,
-            zone=zone,
-            body=body,
-            **kwargs
+            project=self.project_id, zone=zone, body=body, **kwargs
         )
         response = request.execute()
-        
+
         return self._parse_response(response)
-    
+
     def delete_resource(self, resource_id: str, zone: str, **kwargs) -> bool:
         """Delete an instance by name.
-        
+
         Args:
             resource_id: The name of the instance to delete
             zone: The zone the instance is in
             **kwargs: Additional parameters to pass to the delete request
-            
+
         Returns:
             True if the deletion was successful
         """
         request = self.service.instances().delete(
-            project=self.project_id,
-            zone=zone,
-            instance=resource_id,
-            **kwargs
+            project=self.project_id, zone=zone, instance=resource_id, **kwargs
         )
         request.execute()
-        
+
         return True

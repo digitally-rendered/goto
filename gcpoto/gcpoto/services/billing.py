@@ -92,17 +92,16 @@ class BillingService(GCPService):
         Returns:
             List[BillingAccount]: List of BillingAccount objects.
         """
-        request = billing_v1.ListBillingAccountsRequest()
-
-        # We'll filter the open accounts in our code instead of using the API filter
-        # to avoid potential filter syntax issues
+        # Apply filter for open accounts if requested
+        filter_str = "open = true" if only_open else ""
+        request = billing_v1.ListBillingAccountsRequest(filter=filter_str)
 
         accounts = []
         for account in self.cloud_billing_client.list_billing_accounts(request=request):
             # Skip closed accounts if only_open is True
             if only_open and not account.open:
                 continue
-                
+
             accounts.append(
                 BillingAccount.from_api_response(
                     {
@@ -154,10 +153,15 @@ class BillingService(GCPService):
             )
         except Exception as e:
             # Log the original exception details
-            print(f"Error in get_billing_account for {billing_account_id}: {type(e).__name__} - {e}")
+            print(
+                f"Error in get_billing_account for {billing_account_id}: {type(e).__name__} - {e}"
+            )
             import traceback
+
             traceback.print_exc()
-            raise Exception(f"Failed to get billing account '{billing_account_id}': {e}") from e
+            raise Exception(
+                f"Failed to get billing account '{billing_account_id}': {e}"
+            ) from e
 
     def get_project_billing_info(self, project_id: str) -> ProjectBillingInfo:
         """Get billing information for a project.

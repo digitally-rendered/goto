@@ -13,16 +13,16 @@ from gcpoto.models.pubsub import PubSubTopic, PubSubSubscription
 
 class PubSubService(GCPService[PubSubTopic]):
     """Service for interacting with Google Cloud Pub/Sub."""
-    
+
     def __init__(
         self,
         project_id: str,
         credentials_file: Optional[str] = None,
         credentials: Optional[Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """Initialize the Pub/Sub service.
-        
+
         Args:
             project_id: The GCP project ID to use for API calls
             credentials_file: Optional path to a service account credentials file
@@ -32,80 +32,86 @@ class PubSubService(GCPService[PubSubTopic]):
         # Pass service-specific parameters to the base class
         super().__init__(
             project_id=project_id,
-            service_name='pubsub',
+            service_name="pubsub",
             credentials_file=credentials_file,
             resource_model=PubSubTopic,
-            **kwargs
+            **kwargs,
         )
-        
+
         # Initialize the Google Cloud Pub/Sub clients
         # Get credentials instance for publisher/subscriber
         pub_credentials = None
         if credentials_file:
             pub_credentials = service_account.Credentials.from_service_account_file(
-                credentials_file,
-                scopes=['https://www.googleapis.com/auth/pubsub']
+                credentials_file, scopes=["https://www.googleapis.com/auth/pubsub"]
             )
         elif credentials:
             pub_credentials = credentials
-            
+
         self.publisher = pubsub_v1.PublisherClient(credentials=pub_credentials)
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pub_credentials)
-    
+
     def list_resources(self, **kwargs) -> List[PubSubTopic]:
         """List Pub/Sub topics in the project.
-        
+
         Args:
             **kwargs: Additional parameters to pass to the list request
-            
+
         Returns:
             A list of PubSubTopic instances
         """
-        request = self.service.projects().topics().list(
-            project=f"projects/{self.project_id}",
-            **kwargs
+        request = (
+            self.service.projects()
+            .topics()
+            .list(project=f"projects/{self.project_id}", **kwargs)
         )
-        
+
         topics = []
         while request is not None:
             response = request.execute()
-            for topic_data in response.get('topics', []):
-                topics.append(PubSubTopic.from_api_response(topic_data, self.project_id))
-            
+            for topic_data in response.get("topics", []):
+                topics.append(
+                    PubSubTopic.from_api_response(topic_data, self.project_id)
+                )
+
             # Get the next page of results
             request = self.service.projects().topics().list_next(request, response)
-        
+
         return topics
-    
+
     def get_topic(self, topic_name: str) -> PubSubTopic:
         """Get a specific Pub/Sub topic by name.
-        
+
         Args:
             topic_name: The name of the topic to retrieve
-            
+
         Returns:
             A PubSubTopic instance
         """
         # Check if we received just the name or the full path
-        if '/' not in topic_name:
+        if "/" not in topic_name:
             full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
         else:
             full_topic_path = topic_name
-        
+
         request = self.service.projects().topics().get(topic=full_topic_path)
         response = request.execute()
-        
+
         return PubSubTopic.from_api_response(response, self.project_id)
-    
-    def create_topic(self, topic_name: str, labels: Optional[Dict[str, str]] = None, 
-                     tags: Optional[Dict[str, str]] = None,
-                     kms_key_name: Optional[str] = None, 
-                     message_storage_policy: Optional[Dict[str, List[str]]] = None,
-                     schema_settings: Optional[Dict[str, str]] = None,
-                     message_retention_duration: Optional[str] = None,
-                     **kwargs) -> PubSubTopic:
+
+    def create_topic(
+        self,
+        topic_name: str,
+        labels: Optional[Dict[str, str]] = None,
+        tags: Optional[Dict[str, str]] = None,
+        kms_key_name: Optional[str] = None,
+        message_storage_policy: Optional[Dict[str, List[str]]] = None,
+        schema_settings: Optional[Dict[str, str]] = None,
+        message_retention_duration: Optional[str] = None,
+        **kwargs,
+    ) -> PubSubTopic:
         """Create a new Pub/Sub topic.
-        
+
         Args:
             topic_name: The name of the topic to create
             labels: Optional labels to apply to the topic
@@ -115,51 +121,50 @@ class PubSubService(GCPService[PubSubTopic]):
             schema_settings: Optional schema validation settings
             message_retention_duration: Optional message retention duration
             **kwargs: Additional parameters to pass to the create request
-            
+
         Returns:
             A PubSubTopic instance for the newly created topic
         """
         # Check if we received just the name or the full path
-        if '/' not in topic_name:
+        if "/" not in topic_name:
             full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
         else:
             full_topic_path = topic_name
             # Extract the short name for error messages
-            topic_name = full_topic_path.split('/')[-1]
-        
+            topic_name = full_topic_path.split("/")[-1]
+
         # Prepare the request body
         body = {}
-        
+
         if labels:
-            body['labels'] = labels
-        
+            body["labels"] = labels
+
         # Process tags (will be added to labels for Pub/Sub)
         body = self._process_tags(body, tags)
-        
+
         if kms_key_name:
-            body['kmsKeyName'] = kms_key_name
-        
+            body["kmsKeyName"] = kms_key_name
+
         if message_storage_policy:
-            body['messageStoragePolicy'] = message_storage_policy
-        
+            body["messageStoragePolicy"] = message_storage_policy
+
         if schema_settings:
-            body['schemaSettings'] = schema_settings
-        
+            body["schemaSettings"] = schema_settings
+
         if message_retention_duration:
-            body['messageRetentionDuration'] = message_retention_duration
-        
+            body["messageRetentionDuration"] = message_retention_duration
+
         # Add any additional kwargs to the body
         for key, value in kwargs.items():
-            if key not in ['topic']:
+            if key not in ["topic"]:
                 body[key] = value
-        
+
         try:
-            request = self.service.projects().topics().create(
-                name=full_topic_path, 
-                body=body
+            request = (
+                self.service.projects().topics().create(name=full_topic_path, body=body)
             )
             response = request.execute()
-            
+
             # Create the topic object and add the tags explicitly
             topic = PubSubTopic.from_api_response(response, self.project_id)
             if tags:
@@ -169,149 +174,181 @@ class PubSubService(GCPService[PubSubTopic]):
             if e.resp.status == 409:  # Conflict - topic already exists
                 raise ValueError(f"Topic '{topic_name}' already exists")
             raise
-    
+
     def delete_topic(self, topic_name: str) -> bool:
         """Delete a Pub/Sub topic.
-        
+
         Args:
             topic_name: The name of the topic to delete
-            
+
         Returns:
             True if the deletion was successful
         """
         # Check if we received just the name or the full path
-        if '/' not in topic_name:
+        if "/" not in topic_name:
             full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
         else:
             full_topic_path = topic_name
-        
+
         request = self.service.projects().topics().delete(topic=full_topic_path)
         request.execute()
-        
+
         return True
-    
-    def publish_message(self, topic_name: str, data: Union[str, bytes], 
-                         attributes: Optional[Dict[str, str]] = None) -> str:
+
+    def publish_message(
+        self,
+        topic_name: str,
+        data: Union[str, bytes],
+        attributes: Optional[Dict[str, str]] = None,
+    ) -> str:
         """Publish a message to a Pub/Sub topic.
-        
+
         Args:
             topic_name: The name of the topic to publish to
             data: The message data to publish (string or bytes)
             attributes: Optional attributes to include with the message
-            
+
         Returns:
             The published message ID
         """
         # Check if we received just the name or the full path
-        if '/' not in topic_name:
+        if "/" not in topic_name:
             full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
         else:
             full_topic_path = topic_name
-        
+
         # Convert string data to bytes if needed
         if isinstance(data, str):
-            data = data.encode('utf-8')
-        
+            data = data.encode("utf-8")
+
         # Publish the message
         future = self.publisher.publish(full_topic_path, data, **(attributes or {}))
         message_id = future.result()
-        
+
         return message_id
-    
-    def list_subscriptions(self, topic_name: Optional[str] = None, **kwargs) -> List[PubSubSubscription]:
+
+    def list_subscriptions(
+        self, topic_name: Optional[str] = None, **kwargs
+    ) -> List[PubSubSubscription]:
         """List Pub/Sub subscriptions in the project, optionally filtered by topic.
-        
+
         Args:
             topic_name: Optional topic name to filter subscriptions by
             **kwargs: Additional parameters to pass to the list request
-            
+
         Returns:
             A list of PubSubSubscription instances
         """
         if topic_name:
             # Check if we received just the name or the full path
-            if '/' not in topic_name:
+            if "/" not in topic_name:
                 full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
             else:
                 full_topic_path = topic_name
-            
-            request = self.service.projects().topics().subscriptions().list(
-                topic=full_topic_path,
-                **kwargs
+
+            request = (
+                self.service.projects()
+                .topics()
+                .subscriptions()
+                .list(topic=full_topic_path, **kwargs)
             )
         else:
-            request = self.service.projects().subscriptions().list(
-                project=f"projects/{self.project_id}",
-                **kwargs
+            request = (
+                self.service.projects()
+                .subscriptions()
+                .list(project=f"projects/{self.project_id}", **kwargs)
             )
-        
+
         subscriptions = []
-        
+
         while request is not None:
             response = request.execute()
-            
+
             # The response format differs depending on whether we list by topic or by project
             if topic_name:
                 # For topic subscriptions, the response contains just subscription names
-                for subscription_path in response.get('subscriptions', []):
+                for subscription_path in response.get("subscriptions", []):
                     # Get the full subscription details
-                    sub_request = self.service.projects().subscriptions().get(
-                        subscription=subscription_path
+                    sub_request = (
+                        self.service.projects()
+                        .subscriptions()
+                        .get(subscription=subscription_path)
                     )
                     sub_response = sub_request.execute()
-                    subscriptions.append(PubSubSubscription.from_api_response(
-                        sub_response, self.project_id
-                    ))
+                    subscriptions.append(
+                        PubSubSubscription.from_api_response(
+                            sub_response, self.project_id
+                        )
+                    )
             else:
                 # For project subscriptions, the response contains the full subscription details
-                for subscription_data in response.get('subscriptions', []):
-                    subscriptions.append(PubSubSubscription.from_api_response(
-                        subscription_data, self.project_id
-                    ))
-            
+                for subscription_data in response.get("subscriptions", []):
+                    subscriptions.append(
+                        PubSubSubscription.from_api_response(
+                            subscription_data, self.project_id
+                        )
+                    )
+
             # Get the next page of results
             if topic_name:
-                request = self.service.projects().topics().subscriptions().list_next(request, response)
+                request = (
+                    self.service.projects()
+                    .topics()
+                    .subscriptions()
+                    .list_next(request, response)
+                )
             else:
-                request = self.service.projects().subscriptions().list_next(request, response)
-        
+                request = (
+                    self.service.projects().subscriptions().list_next(request, response)
+                )
+
         return subscriptions
-    
+
     def get_subscription(self, subscription_name: str) -> PubSubSubscription:
         """Get a specific Pub/Sub subscription by name.
-        
+
         Args:
             subscription_name: The name of the subscription to retrieve
-            
+
         Returns:
             A PubSubSubscription instance
         """
         # Check if we received just the name or the full path
-        if '/' not in subscription_name:
-            full_subscription_path = f"projects/{self.project_id}/subscriptions/{subscription_name}"
+        if "/" not in subscription_name:
+            full_subscription_path = (
+                f"projects/{self.project_id}/subscriptions/{subscription_name}"
+            )
         else:
             full_subscription_path = subscription_name
-        
-        request = self.service.projects().subscriptions().get(subscription=full_subscription_path)
+
+        request = (
+            self.service.projects()
+            .subscriptions()
+            .get(subscription=full_subscription_path)
+        )
         response = request.execute()
-        
+
         return PubSubSubscription.from_api_response(response, self.project_id)
-    
-    def create_subscription(self, subscription_name: str, topic_name: str, 
-                             ack_deadline_seconds: Optional[int] = None,
-                             push_config: Optional[Dict[str, Any]] = None,
-                             retain_acked_messages: Optional[bool] = None,
-                             message_retention_duration: Optional[str] = None,
-                             labels: Optional[Dict[str, str]] = None,
-                             tags: Optional[Dict[str, str]] = None,
-                             enable_message_ordering: Optional[bool] = None,
-                             expiration_policy: Optional[Dict[str, str]] = None,
-                             filter_expr: Optional[str] = None,
-                             dead_letter_policy: Optional[Dict[str, Any]] = None,
-                             retry_policy: Optional[Dict[str, str]] = None,
-                             **kwargs) -> PubSubSubscription:
+
+    def create_subscription(
+        self,
+        subscription_name: str,
+        topic_name: str,
+        ack_deadline_seconds: Optional[int] = None,
+        push_config: Optional[Dict[str, Any]] = None,
+        retain_acked_messages: Optional[bool] = None,
+        message_retention_duration: Optional[str] = None,
+        labels: Optional[Dict[str, str]] = None,
+        tags: Optional[Dict[str, str]] = None,
+        enable_message_ordering: Optional[bool] = None,
+        expiration_policy: Optional[Dict[str, str]] = None,
+        filter_expr: Optional[str] = None,
+        dead_letter_policy: Optional[Dict[str, Any]] = None,
+        retry_policy: Optional[Dict[str, str]] = None,
+        **kwargs,
+    ) -> PubSubSubscription:
         """Create a new Pub/Sub subscription.
-        
+
         Args:
             subscription_name: The name of the subscription to create
             topic_name: The name of the topic the subscription is for
@@ -327,76 +364,79 @@ class PubSubService(GCPService[PubSubTopic]):
             dead_letter_policy: Optional dead letter policy
             retry_policy: Optional retry policy
             **kwargs: Additional parameters to pass to the create request
-            
+
         Returns:
             A PubSubSubscription instance for the newly created subscription
         """
         # Process subscription name
-        if '/' not in subscription_name:
-            full_subscription_path = f"projects/{self.project_id}/subscriptions/{subscription_name}"
+        if "/" not in subscription_name:
+            full_subscription_path = (
+                f"projects/{self.project_id}/subscriptions/{subscription_name}"
+            )
         else:
             full_subscription_path = subscription_name
             # Extract the short name for error messages
-            subscription_name = full_subscription_path.split('/')[-1]
-        
+            subscription_name = full_subscription_path.split("/")[-1]
+
         # Process topic name
-        if '/' not in topic_name:
+        if "/" not in topic_name:
             full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
         else:
             full_topic_path = topic_name
-        
+
         # Prepare the request body
-        body = {
-            'topic': full_topic_path
-        }
-        
+        body = {"topic": full_topic_path}
+
         if ack_deadline_seconds is not None:
-            body['ackDeadlineSeconds'] = ack_deadline_seconds
-        
+            body["ackDeadlineSeconds"] = ack_deadline_seconds
+
         if push_config is not None:
-            body['pushConfig'] = push_config
-        
+            body["pushConfig"] = push_config
+
         if retain_acked_messages is not None:
-            body['retainAckedMessages'] = retain_acked_messages
-        
+            body["retainAckedMessages"] = retain_acked_messages
+
         if message_retention_duration is not None:
-            body['messageRetentionDuration'] = message_retention_duration
-        
+            body["messageRetentionDuration"] = message_retention_duration
+
         if labels is not None:
-            body['labels'] = labels
-            
+            body["labels"] = labels
+
         # Process tags (will be added to labels for Pub/Sub)
         body = self._process_tags(body, tags)
-        
+
         if enable_message_ordering is not None:
-            body['enableMessageOrdering'] = enable_message_ordering
-        
+            body["enableMessageOrdering"] = enable_message_ordering
+
         if expiration_policy is not None:
-            body['expirationPolicy'] = expiration_policy
-        
+            body["expirationPolicy"] = expiration_policy
+
         if filter_expr is not None:
-            body['filter'] = filter_expr
-        
+            body["filter"] = filter_expr
+
         if dead_letter_policy is not None:
-            body['deadLetterPolicy'] = dead_letter_policy
-        
+            body["deadLetterPolicy"] = dead_letter_policy
+
         if retry_policy is not None:
-            body['retryPolicy'] = retry_policy
-        
+            body["retryPolicy"] = retry_policy
+
         # Add any additional kwargs to the body
         for key, value in kwargs.items():
-            if key not in ['name', 'subscription']:
+            if key not in ["name", "subscription"]:
                 body[key] = value
-        
+
         try:
-            request = self.service.projects().subscriptions().create(
-                name=full_subscription_path, 
-                body=body
+            request = (
+                self.service.projects()
+                .subscriptions()
+                .create(name=full_subscription_path, body=body)
             )
             response = request.execute()
-            
+
             # Create the subscription object and add the tags explicitly
-            subscription = PubSubSubscription.from_api_response(response, self.project_id)
+            subscription = PubSubSubscription.from_api_response(
+                response, self.project_id
+            )
             if tags:
                 subscription.tags = tags
             return subscription
@@ -404,78 +444,95 @@ class PubSubService(GCPService[PubSubTopic]):
             if e.resp.status == 409:  # Conflict - subscription already exists
                 raise ValueError(f"Subscription '{subscription_name}' already exists")
             raise
-    
+
     def delete_subscription(self, subscription_name: str) -> bool:
         """Delete a Pub/Sub subscription.
-        
+
         Args:
             subscription_name: The name of the subscription to delete
-            
+
         Returns:
             True if the deletion was successful
         """
         # Check if we received just the name or the full path
-        if '/' not in subscription_name:
-            full_subscription_path = f"projects/{self.project_id}/subscriptions/{subscription_name}"
+        if "/" not in subscription_name:
+            full_subscription_path = (
+                f"projects/{self.project_id}/subscriptions/{subscription_name}"
+            )
         else:
             full_subscription_path = subscription_name
-        
-        request = self.service.projects().subscriptions().delete(subscription=full_subscription_path)
+
+        request = (
+            self.service.projects()
+            .subscriptions()
+            .delete(subscription=full_subscription_path)
+        )
         request.execute()
-        
+
         return True
-    
-    def pull_messages(self, subscription_name: str, max_messages: int = 10, 
-                       return_immediately: bool = False) -> List[Dict[str, Any]]:
+
+    def pull_messages(
+        self,
+        subscription_name: str,
+        max_messages: int = 10,
+        return_immediately: bool = False,
+    ) -> List[Dict[str, Any]]:
         """Pull messages from a Pub/Sub subscription.
-        
+
         Args:
             subscription_name: The name of the subscription to pull messages from
             max_messages: Maximum number of messages to pull (default: 10)
             return_immediately: Whether to return immediately if no messages are available
-            
+
         Returns:
             A list of received messages
         """
         # Check if we received just the name or the full path
-        if '/' not in subscription_name:
-            full_subscription_path = f"projects/{self.project_id}/subscriptions/{subscription_name}"
+        if "/" not in subscription_name:
+            full_subscription_path = (
+                f"projects/{self.project_id}/subscriptions/{subscription_name}"
+            )
         else:
             full_subscription_path = subscription_name
-        
-        request = self.service.projects().subscriptions().pull(
-            subscription=full_subscription_path,
-            body={
-                'maxMessages': max_messages,
-                'returnImmediately': return_immediately
-            }
+
+        request = (
+            self.service.projects()
+            .subscriptions()
+            .pull(
+                subscription=full_subscription_path,
+                body={
+                    "maxMessages": max_messages,
+                    "returnImmediately": return_immediately,
+                },
+            )
         )
         response = request.execute()
-        
-        return response.get('receivedMessages', [])
-    
+
+        return response.get("receivedMessages", [])
+
     def acknowledge_messages(self, subscription_name: str, ack_ids: List[str]) -> bool:
         """Acknowledge messages from a Pub/Sub subscription.
-        
+
         Args:
             subscription_name: The name of the subscription to acknowledge messages for
             ack_ids: List of acknowledgement IDs to acknowledge
-            
+
         Returns:
             True if the acknowledgement was successful
         """
         # Check if we received just the name or the full path
-        if '/' not in subscription_name:
-            full_subscription_path = f"projects/{self.project_id}/subscriptions/{subscription_name}"
+        if "/" not in subscription_name:
+            full_subscription_path = (
+                f"projects/{self.project_id}/subscriptions/{subscription_name}"
+            )
         else:
             full_subscription_path = subscription_name
-        
-        request = self.service.projects().subscriptions().acknowledge(
-            subscription=full_subscription_path,
-            body={
-                'ackIds': ack_ids
-            }
+
+        request = (
+            self.service.projects()
+            .subscriptions()
+            .acknowledge(subscription=full_subscription_path, body={"ackIds": ack_ids})
         )
         request.execute()
-        
+
         return True

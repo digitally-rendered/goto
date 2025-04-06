@@ -12,7 +12,7 @@ def test_project_model():
     # Test model creation with all attributes
     created_time = datetime.now()
     deleted_time = None
-    
+
     project = Project(
         id="projects/test-project",
         name="projects/test-project",
@@ -27,9 +27,9 @@ def test_project_model():
         delete_time=deleted_time,
         etag="etag123",
         labels={"env": "test"},
-        tags={"owner": "test-team"}
+        tags={"owner": "test-team"},
     )
-    
+
     # Verify attributes
     assert project.id == "projects/test-project"
     assert project.project_id == "test-project"
@@ -52,16 +52,16 @@ def test_project_validators():
         name="test-project",  # Missing prefix
         display_name="Test Project",
         type="resourcemanager.project",
-        project="test-project"
+        project="test-project",
     )
     assert project.name == "projects/test-project"
-    
+
     # Test id validator
     project = Project(
         project_id="test-project",
         display_name="Test Project",
         type="resourcemanager.project",
-        project="test-project"
+        project="test-project",
     )
     assert project.id == "projects/test-project"
 
@@ -78,11 +78,11 @@ def test_project_from_api_response():
         "state": "ACTIVE",
         "createTime": "2023-01-01T12:00:00Z",
         "etag": "etag123",
-        "labels": {"environment": "development", "team": "engineering"}
+        "labels": {"environment": "development", "team": "engineering"},
     }
-    
+
     project = Project.from_api_response(response)
-    
+
     assert project.project_id == "test-project"
     assert project.project_number == "123456789012"
     assert project.display_name == "Test Project"
@@ -91,25 +91,25 @@ def test_project_from_api_response():
     assert project.etag == "etag123"
     assert project.labels == {"environment": "development", "team": "engineering"}
     assert project.tags == {"environment": "development", "team": "engineering"}
-    
+
     # Test with minimal response
     minimal_response = {
         "name": "projects/minimal-project",
         "displayName": "Minimal Project",
     }
-    
+
     minimal_project = Project.from_api_response(minimal_response)
     assert minimal_project.project_id == "minimal-project"
     assert minimal_project.display_name == "Minimal Project"
     assert minimal_project.parent is None
-    
+
     # Test with empty name but projectId present
     alt_response = {
         "projectId": "alt-project",
         "displayName": "Alternative Project",
-        "state": "ACTIVE"
+        "state": "ACTIVE",
     }
-    
+
     alt_project = Project.from_api_response(alt_response)
     assert alt_project.project_id == "alt-project"
 
@@ -119,7 +119,7 @@ def test_folder_model():
     # Test model creation with all attributes
     created_time = datetime.now()
     updated_time = datetime.now()
-    
+
     folder = Folder(
         id="folders/12345",
         name="folders/12345",
@@ -134,9 +134,9 @@ def test_folder_model():
         delete_time=None,
         etag="folder-etag-123",
         labels={"env": "prod"},
-        tags={"purpose": "organization"}
+        tags={"purpose": "organization"},
     )
-    
+
     # Verify attributes
     assert folder.id == "folders/12345"
     assert folder.folder_id == "12345"
@@ -160,17 +160,17 @@ def test_folder_validators():
         display_name="Another Folder",
         parent="folders/12345",
         type="resourcemanager.folder",
-        project="test-project"
+        project="test-project",
     )
     assert folder.name == "folders/67890"
-    
+
     # Test id validator
     folder = Folder(
         folder_id="67890",
         display_name="Another Folder",
         parent="folders/12345",
         type="resourcemanager.folder",
-        project="test-project"
+        project="test-project",
     )
     assert folder.id == "folders/67890"
 
@@ -186,11 +186,11 @@ def test_folder_from_api_response():
         "createTime": "2023-02-01T10:00:00Z",
         "updateTime": "2023-02-02T15:30:00Z",
         "etag": "folder-etag-456",
-        "labels": {"department": "finance"}
+        "labels": {"department": "finance"},
     }
-    
+
     folder = Folder.from_api_response(response)
-    
+
     assert folder.folder_id == "12345"
     assert folder.display_name == "API Test Folder"
     assert folder.parent == "organizations/67890"
@@ -198,27 +198,27 @@ def test_folder_from_api_response():
     assert folder.etag == "folder-etag-456"
     assert folder.labels == {"department": "finance"}
     assert folder.tags == {"department": "finance"}
-    
+
     # Test with project in parent
     project_parent_response = {
         "name": "folders/56789",
         "displayName": "Project Parent Folder",
         "parent": "projects/test-project",
     }
-    
+
     project_folder = Folder.from_api_response(project_parent_response)
     assert project_folder.folder_id == "56789"
     assert project_folder.parent == "projects/test-project"
     assert project_folder.project == "test-project"
-    
+
     # Test with explicit project field
     explicit_project_response = {
         "name": "folders/98765",
         "displayName": "Explicit Project Folder",
         "parent": "organizations/67890",
-        "project": "explicit-project"
+        "project": "explicit-project",
     }
-    
+
     explicit_folder = Folder.from_api_response(explicit_project_response)
     assert explicit_folder.folder_id == "98765"
     assert explicit_folder.project == "explicit-project"
