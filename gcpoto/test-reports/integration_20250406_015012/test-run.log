@@ -1,0 +1,1355 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.2, pytest-8.3.5, pluggy-1.5.0 -- /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.13.2', 'Platform': 'macOS-15.4-arm64-arm-64bit-Mach-O', 'Packages': {'pytest': '8.3.5', 'pluggy': '1.5.0'}, 'Plugins': {'html': '4.1.1', 'json-report': '1.5.0', 'metadata': '3.1.1', 'cov': '6.1.1', 'xdist': '3.6.1'}}
+rootdir: /Users/draw/development/goto/gcpoto
+configfile: pytest.ini
+plugins: html-4.1.1, json-report-1.5.0, metadata-3.1.1, cov-6.1.1, xdist-3.6.1
+created: 10/10 workers
+10 workers [44 items]
+
+scheduling tests via LoadScheduling
+
+tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_billing_account 
+tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_create_update_delete_budget 
+tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_enable_disable_project_billing 
+tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_skus 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_publish_and_pull_messages 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_topic_with_tags 
+tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_search_billing_accounts 
+tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_list_project_billing_info 
+tests/integration/test_billing_enhanced_integration.py::TestBillingBudgetEnhancedIntegration::test_validate_budget_structure 
+tests/integration/test_billing_integration.py::TestBillingIntegration::test_get_project_billing_info 
+[gw7] [  2%] SKIPPED tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_list_project_billing_info 
+[gw3] [  4%] SKIPPED tests/integration/test_billing_enhanced_integration.py::TestBillingBudgetEnhancedIntegration::test_validate_budget_structure 
+[gw6] [  6%] SKIPPED tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_create_update_delete_budget 
+tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_create_last_period_budget 
+tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_billing_accounts 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_topics 
+[gw6] [  9%] SKIPPED tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_create_last_period_budget 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_subscriptions_for_topic 
+[gw2] [ 11%] ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_search_billing_accounts 
+tests/integration/test_billing_enhanced_integration.py::TestBillingBudgetEnhancedIntegration::test_get_budget 
+[gw2] [ 13%] SKIPPED tests/integration/test_billing_enhanced_integration.py::TestBillingBudgetEnhancedIntegration::test_get_budget 
+tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_iam_policy 
+[gw1] [ 15%] ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_enable_disable_project_billing 
+tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_sku_pricing 
+[gw1] [ 18%] ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_sku_pricing 
+tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_list_project_tags 
+[gw0] [ 20%] ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_billing_account 
+tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_list_project_billing_info 
+[gw0] [ 22%] ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_list_project_billing_info 
+tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_search_folders 
+[gw0] [ 25%] SKIPPED tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_search_folders 
+tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_get_folder 
+[gw0] [ 27%] SKIPPED tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_get_folder 
+tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_get_folder_iam_policy 
+[gw0] [ 29%] SKIPPED tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_get_folder_iam_policy 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_list_projects 
+[gw2] [ 31%] ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_iam_policy 
+tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_effective_iam_policy 
+[gw2] [ 34%] ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_effective_iam_policy 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_project 
+[gw2] [ 36%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_project 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_folder 
+[gw2] [ 38%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_folder 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_subfolder_hierarchy 
+[gw2] [ 40%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_subfolder_hierarchy 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_move_project_between_folders 
+[gw2] [ 43%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_move_project_between_folders 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_list_folders_in_organization 
+[gw2] [ 45%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_list_folders_in_organization 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_list_buckets 
+[gw1] [ 47%] ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_list_project_tags 
+tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_list_folders 
+[gw1] [ 50%] SKIPPED tests/integration/test_resource_manager_enhanced_integration.py::TestFolderEnhancedIntegration::test_list_folders 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_upload_download 
+[gw0] [ 52%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_list_projects 
+tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_get_project 
+[gw0] [ 54%] ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_get_project 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_upload_with_metadata 
+[gw4] [ 56%] PASSED tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_skus 
+tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_list_budgets 
+[gw4] [ 59%] SKIPPED tests/integration/test_billing_integration.py::TestBillingBudgetIntegration::test_list_budgets 
+[gw3] [ 61%] FAILED tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_billing_accounts 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_filter 
+[gw1] [ 63%] ERROR tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_upload_download 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_delete 
+[gw5] [ 65%] SKIPPED tests/integration/test_billing_integration.py::TestBillingIntegration::test_get_project_billing_info 
+tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_services 
+[gw5] [ 68%] PASSED tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_services 
+[gw3] [ 70%] ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_filter 
+[gw2] [ 72%] PASSED tests/integration/test_storage_integration.py::TestStorageIntegration::test_list_buckets 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_create_get_bucket_with_tags 
+[gw2] [ 75%] ERROR tests/integration/test_storage_integration.py::TestStorageIntegration::test_create_get_bucket_with_tags 
+[gw6] [ 77%] ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_subscriptions_for_topic 
+tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_ancestors 
+[gw6] [ 79%] ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_ancestors 
+[gw0] [ 81%] FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_upload_with_metadata 
+tests/integration/test_storage_integration.py::TestStorageIntegration::test_list_objects_with_prefix 
+[gw0] [ 84%] FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_list_objects_with_prefix 
+[gw8] [ 86%] ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_topic_with_tags 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_subscription_with_tags 
+[gw8] [ 88%] ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_subscription_with_tags 
+[gw1] [ 90%] FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_delete 
+[gw9] [ 93%] FAILED tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_publish_and_pull_messages 
+tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_dead_letter 
+[gw9] [ 95%] ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_dead_letter 
+[gw7] [ 97%] FAILED tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_topics 
+tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_search_projects 
+[gw7] [100%] ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_search_projects 
+ERROR: Coverage failure: total of 29 is less than fail-under=100
+
+
+==================================== ERRORS ====================================
+_ ERROR at setup of TestBillingEnhancedIntegration.test_search_billing_accounts _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture billing_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_billing_enhanced_integration.py:19:  def billing_service(test_project_id: str, credentials_file: str) -> gcpoto.services.billing.BillingService
+_ ERROR at setup of TestBillingEnhancedIntegration.test_enable_disable_project_billing _
+[gw1] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture billing_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_billing_enhanced_integration.py:19:  def billing_service(test_project_id: str, credentials_file: str) -> gcpoto.services.billing.BillingService
+____ ERROR at setup of TestBillingEnhancedIntegration.test_get_sku_pricing _____
+[gw1] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture billing_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_billing_enhanced_integration.py:19:  def billing_service(test_project_id: str, credentials_file: str) -> gcpoto.services.billing.BillingService
+__ ERROR at setup of TestBillingEnhancedIntegration.test_get_billing_account ___
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture billing_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_billing_enhanced_integration.py:19:  def billing_service(test_project_id: str, credentials_file: str) -> gcpoto.services.billing.BillingService
+_ ERROR at setup of TestBillingEnhancedIntegration.test_list_project_billing_info _
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture billing_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_billing_enhanced_integration.py:19:  def billing_service(test_project_id: str, credentials_file: str) -> gcpoto.services.billing.BillingService
+_ ERROR at setup of TestResourceManagerEnhancedIntegration.test_get_project_iam_policy _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_enhanced_integration.py:19:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerEnhancedIntegration.test_get_effective_iam_policy _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_enhanced_integration.py:19:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerCreation.test_create_update_delete_project _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerCreation.test_create_update_delete_folder _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerCreation.test_create_subfolder_hierarchy _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerCreation.test_move_project_between_folders _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerCreation.test_list_folders_in_organization _
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_ ERROR at setup of TestResourceManagerEnhancedIntegration.test_list_project_tags _
+[gw1] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_enhanced_integration.py:19:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_____ ERROR at setup of TestResourceManagerIntegration.test_list_projects ______
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+______ ERROR at setup of TestResourceManagerIntegration.test_get_project _______
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_integration.py:20:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+_____ ERROR at setup of TestStorageIntegration.test_object_upload_download _____
+[gw1] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+storage_service = <gcpoto.services.storage.StorageService object at 0x1149df770>
+test_bucket_name = 'gcpoto-test-5602061a-bucket-43dec440'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_bucket' for <Function test_object_upload_download>>
+
+    @pytest.fixture(scope="module")
+    def test_bucket(storage_service: StorageService, test_bucket_name: str,
+                   common_tags: Dict[str, str], request) -> StorageBucket:
+        """Create a test bucket and clean it up after tests.
+    
+        Args:
+            storage_service: The storage service to use.
+            test_bucket_name: Name for the test bucket.
+            common_tags: Tags to apply to the bucket.
+            request: The pytest request fixture.
+    
+        Returns:
+            StorageBucket: The created bucket.
+    
+        Yields:
+            StorageBucket: The created bucket.
+        """
+        # Create a new bucket for testing
+>       bucket = storage_service.create_bucket(
+            bucket_name=test_bucket_name,
+            location="us-central1",
+            storage_class="STANDARD",
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+E       AttributeError: 'StorageService' object has no attribute 'create_bucket'
+
+tests/integration/test_storage_integration.py:99: AttributeError
+____ ERROR at setup of TestPubSubIntegration.test_subscription_with_filter _____
+[gw3] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x123bfae40>
+test_topic_name = 'gcpoto-test-4d9910e0-topic-c1834341'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_topic' for <Function test_subscription_with_filter>>
+
+    @pytest.fixture(scope="module")
+    def test_topic(pubsub_service: PubSubService, test_topic_name: str,
+                  common_tags: Dict[str, str], request) -> PubSubTopic:
+        """Create a test topic and clean it up after tests.
+    
+        Args:
+            pubsub_service: The Pub/Sub service to use.
+            test_topic_name: Name for the test topic.
+            common_tags: Tags to apply to the topic.
+            request: The pytest request fixture.
+    
+        Returns:
+            PubSubTopic: The created topic.
+        """
+        # Create a new topic for testing
+>       topic = pubsub_service.create_topic(
+            topic_name=test_topic_name,
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+
+tests/integration/test_pubsub_integration.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:161: in create_topic
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x124aa0830>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x123cd9950>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics/gcpoto-test-4d9910e0-topic-c1834341?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'consumer': 'projects/default-456005', 'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'containerInfo': 'default-456005', 'serviceTitle': 'Cloud Pub/Sub API', 'service': 'pubsub.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+------------------------------ Captured log setup ------------------------------
+WARNING  googleapiclient.http:http.py:140 Encountered 403 Forbidden with reason "PERMISSION_DENIED"
+__ ERROR at setup of TestStorageIntegration.test_create_get_bucket_with_tags ___
+[gw2] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+storage_service = <gcpoto.services.storage.StorageService object at 0x118ddf770>
+test_bucket_name = 'gcpoto-test-e23d354d-bucket-f8c0f579'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_bucket' for <Function test_create_get_bucket_with_tags>>
+
+    @pytest.fixture(scope="module")
+    def test_bucket(storage_service: StorageService, test_bucket_name: str,
+                   common_tags: Dict[str, str], request) -> StorageBucket:
+        """Create a test bucket and clean it up after tests.
+    
+        Args:
+            storage_service: The storage service to use.
+            test_bucket_name: Name for the test bucket.
+            common_tags: Tags to apply to the bucket.
+            request: The pytest request fixture.
+    
+        Returns:
+            StorageBucket: The created bucket.
+    
+        Yields:
+            StorageBucket: The created bucket.
+        """
+        # Create a new bucket for testing
+>       bucket = storage_service.create_bucket(
+            bucket_name=test_bucket_name,
+            location="us-central1",
+            storage_class="STANDARD",
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+E       AttributeError: 'StorageService' object has no attribute 'create_bucket'
+
+tests/integration/test_storage_integration.py:99: AttributeError
+__ ERROR at setup of TestPubSubIntegration.test_list_subscriptions_for_topic ___
+[gw6] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x1053fae40>
+test_topic_name = 'gcpoto-test-11fe825b-topic-cd6dacff'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_topic' for <Function test_list_subscriptions_for_topic>>
+
+    @pytest.fixture(scope="module")
+    def test_topic(pubsub_service: PubSubService, test_topic_name: str,
+                  common_tags: Dict[str, str], request) -> PubSubTopic:
+        """Create a test topic and clean it up after tests.
+    
+        Args:
+            pubsub_service: The Pub/Sub service to use.
+            test_topic_name: Name for the test topic.
+            common_tags: Tags to apply to the topic.
+            request: The pytest request fixture.
+    
+        Returns:
+            PubSubTopic: The created topic.
+        """
+        # Create a new topic for testing
+>       topic = pubsub_service.create_topic(
+            topic_name=test_topic_name,
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+
+tests/integration/test_pubsub_integration.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:161: in create_topic
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x105547cb0>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x1054e16d0>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics/gcpoto-test-11fe825b-topic-cd6dacff?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'containerInfo': 'default-456005', 'serviceTitle': 'Cloud Pub/Sub API', 'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'consumer': 'projects/default-456005', 'service': 'pubsub.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+------------------------------ Captured log setup ------------------------------
+WARNING  googleapiclient.http:http.py:140 Encountered 403 Forbidden with reason "PERMISSION_DENIED"
+_ ERROR at setup of TestResourceManagerEnhancedIntegration.test_get_project_ancestors _
+[gw6] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_enhanced_integration.py:19:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+___ ERROR at setup of TestPubSubIntegration.test_create_get_topic_with_tags ____
+[gw8] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x106a26e40>
+test_topic_name = 'gcpoto-test-f3c52f4c-topic-62216220'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_topic' for <Function test_create_get_topic_with_tags>>
+
+    @pytest.fixture(scope="module")
+    def test_topic(pubsub_service: PubSubService, test_topic_name: str,
+                  common_tags: Dict[str, str], request) -> PubSubTopic:
+        """Create a test topic and clean it up after tests.
+    
+        Args:
+            pubsub_service: The Pub/Sub service to use.
+            test_topic_name: Name for the test topic.
+            common_tags: Tags to apply to the topic.
+            request: The pytest request fixture.
+    
+        Returns:
+            PubSubTopic: The created topic.
+        """
+        # Create a new topic for testing
+>       topic = pubsub_service.create_topic(
+            topic_name=test_topic_name,
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+
+tests/integration/test_pubsub_integration.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:161: in create_topic
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x106b3bcb0>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x106ad9310>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics/gcpoto-test-f3c52f4c-topic-62216220?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'containerInfo': 'default-456005', 'serviceTitle': 'Cloud Pub/Sub API', 'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'consumer': 'projects/default-456005', 'service': 'pubsub.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+------------------------------ Captured log setup ------------------------------
+WARNING  googleapiclient.http:http.py:140 Encountered 403 Forbidden with reason "PERMISSION_DENIED"
+_ ERROR at setup of TestPubSubIntegration.test_create_get_subscription_with_tags _
+[gw8] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x106a26e40>
+test_topic_name = 'gcpoto-test-f3c52f4c-topic-62216220'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_topic' for <Function test_create_get_topic_with_tags>>
+
+    @pytest.fixture(scope="module")
+    def test_topic(pubsub_service: PubSubService, test_topic_name: str,
+                  common_tags: Dict[str, str], request) -> PubSubTopic:
+        """Create a test topic and clean it up after tests.
+    
+        Args:
+            pubsub_service: The Pub/Sub service to use.
+            test_topic_name: Name for the test topic.
+            common_tags: Tags to apply to the topic.
+            request: The pytest request fixture.
+    
+        Returns:
+            PubSubTopic: The created topic.
+        """
+        # Create a new topic for testing
+>       topic = pubsub_service.create_topic(
+            topic_name=test_topic_name,
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+
+tests/integration/test_pubsub_integration.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:161: in create_topic
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x106b3bcb0>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x106ad9310>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics/gcpoto-test-f3c52f4c-topic-62216220?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'containerInfo': 'default-456005', 'serviceTitle': 'Cloud Pub/Sub API', 'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'consumer': 'projects/default-456005', 'service': 'pubsub.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+__ ERROR at setup of TestPubSubIntegration.test_subscription_with_dead_letter __
+[gw9] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x10bb26e40>
+test_topic_name = 'gcpoto-test-b40bf2cd-topic-0d93386d'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+request = <SubRequest 'test_topic' for <Function test_subscription_with_dead_letter>>
+
+    @pytest.fixture(scope="module")
+    def test_topic(pubsub_service: PubSubService, test_topic_name: str,
+                  common_tags: Dict[str, str], request) -> PubSubTopic:
+        """Create a test topic and clean it up after tests.
+    
+        Args:
+            pubsub_service: The Pub/Sub service to use.
+            test_topic_name: Name for the test topic.
+            common_tags: Tags to apply to the topic.
+            request: The pytest request fixture.
+    
+        Returns:
+            PubSubTopic: The created topic.
+        """
+        # Create a new topic for testing
+>       topic = pubsub_service.create_topic(
+            topic_name=test_topic_name,
+            labels={"purpose": "integration-testing"},
+            tags=common_tags
+        )
+
+tests/integration/test_pubsub_integration.py:87: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:161: in create_topic
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x10bce3380>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x10bbd9310>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics/gcpoto-test-b40bf2cd-topic-0d93386d?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'containerInfo': 'default-456005', 'serviceTitle': 'Cloud Pub/Sub API', 'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'consumer': 'projects/default-456005', 'service': 'pubsub.googleapis.com'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+------------------------------ Captured log setup ------------------------------
+WARNING  googleapiclient.http:http.py:140 Encountered 403 Forbidden with reason "PERMISSION_DENIED"
+_ ERROR at setup of TestResourceManagerEnhancedIntegration.test_search_projects _
+[gw7] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+ScopeMismatch: You tried to access the module scoped fixture resource_manager_service with a session scoped request object. Requesting fixture stack:
+tests/integration/conftest.py:415:  def cleanup_all_resources(resource_tracker: tests.integration.conftest.ResourceTracker, storage_service: gcpoto.services.storage.StorageService, pubsub_service: gcpoto.services.pubsub.PubSubService, billing_service: gcpoto.services.billing.BillingService, resource_manager_service: gcpoto.services.resource_manager.ResourceManagerService)
+Requested fixture:
+tests/integration/test_resource_manager_enhanced_integration.py:19:  def resource_manager_service(test_project_id: str, credentials_file: str) -> gcpoto.services.resource_manager.ResourceManagerService
+=================================== FAILURES ===================================
+______________ TestBillingIntegration.test_list_billing_accounts _______________
+[gw3] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_billing_integration.TestBillingIntegration object at 0x123ae60d0>
+billing_service = <gcpoto.services.billing.BillingService object at 0x123f45a90>
+
+    def test_list_billing_accounts(self, billing_service: BillingService):
+        """Test listing billing accounts."""
+>       accounts = billing_service.list_billing_accounts()
+
+tests/integration/test_billing_integration.py:42: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/billing.py:103: in list_billing_accounts
+    BillingAccount.from_api_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = <class 'gcpoto.models.billing.BillingAccount'>
+response = {'billingAccountId': 'ABCDEF-123456-789012', 'displayName': 'Mock Billing Account', 'masterBillingAccount': None, 'name': 'billingAccounts/ABCDEF-123456-789012', ...}
+
+    @classmethod
+    def from_api_response(cls, response: Dict[str, Any]) -> "BillingAccount":
+        """Create a BillingAccount instance from a GCP API response.
+    
+        Args:
+            response: The GCP API response dictionary.
+    
+        Returns:
+            BillingAccount: A new BillingAccount instance.
+        """
+        # Extract billing_account_id from name if present
+        billing_account_id = response.get("name", "").split("/")[-1]
+    
+        # Add billing_account_id to the response dict if not already present
+        if "billingAccountId" not in response and billing_account_id:
+            response["billingAccountId"] = billing_account_id
+    
+        # Handle potential camelCase vs snake_case inconsistencies
+        normalized_response = {
+            "name": response.get("name"),
+            "billing_account_id": response.get(
+                "billingAccountId", billing_account_id
+            ),
+            "display_name": response.get("displayName"),
+            "open": response.get("open"),
+            "master_billing_account": response.get("masterBillingAccount"),
+        }
+        # Filter out None values to let Pydantic handle defaults
+        filtered_response = {k: v for k, v in normalized_response.items() if v is not None}
+>       return cls(**filtered_response)
+E       pydantic_core._pydantic_core.ValidationError: 2 validation errors for BillingAccount
+E       type
+E         Field required [type=missing, input_value={'name': 'billingAccounts...s/ABCDEF-123456-789012'}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+E       project
+E         Field required [type=missing, input_value={'name': 'billingAccounts...s/ABCDEF-123456-789012'}, input_type=dict]
+E           For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+gcpoto/models/billing.py:71: ValidationError
+_______________ TestStorageIntegration.test_upload_with_metadata _______________
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_storage_integration.TestStorageIntegration object at 0x1067967b0>
+storage_service = <gcpoto.services.storage.StorageService object at 0x1066df770>
+test_bucket_name = 'gcpoto-test-d5168fc4-bucket-70ed1e0f'
+test_file = '/var/folders/gn/v8ycbcw91tqdt_zxw1xwxb_r0000gn/T/tmpff_cvwk0.txt'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+
+    def test_upload_with_metadata(self, storage_service: StorageService,
+                                test_bucket_name: str,
+                                test_file: str,
+                                common_tags: Dict[str, str]):
+        """Test uploading an object with custom metadata and tags."""
+        object_name = f"metadata-test-{uuid.uuid4().hex}.txt"
+        custom_metadata = {
+            "description": "Test file with custom metadata",
+            "created-by": "integration-test",
+            "sensitivity": "low"
+        }
+    
+        # Upload with custom metadata and tags
+>       storage_service.upload(
+            bucket_name=test_bucket_name,
+            source_file=test_file,
+            destination_blob_name=object_name,
+            metadata=custom_metadata,
+            tags={**common_tags, "purpose": "metadata-test"}
+        )
+E       AttributeError: 'StorageService' object has no attribute 'upload'
+
+tests/integration/test_storage_integration.py:247: AttributeError
+_____________ TestStorageIntegration.test_list_objects_with_prefix _____________
+[gw0] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_storage_integration.TestStorageIntegration object at 0x10675e690>
+storage_service = <gcpoto.services.storage.StorageService object at 0x1066df770>
+test_bucket_name = 'gcpoto-test-d5168fc4-bucket-70ed1e0f'
+test_file = '/var/folders/gn/v8ycbcw91tqdt_zxw1xwxb_r0000gn/T/tmpff_cvwk0.txt'
+common_tags = {'auto-delete': 'true', 'created-by': 'gcpoto-integration-tests', 'environment': 'test', 'purpose': 'testing'}
+
+    def test_list_objects_with_prefix(self, storage_service: StorageService,
+                                    test_bucket_name: str,
+                                    test_file: str,
+                                    common_tags: Dict[str, str]):
+        """Test listing objects with a prefix filter."""
+        # Create a folder structure
+        prefix = f"test-folder-{uuid.uuid4().hex[:8]}"
+        object_names = [
+            f"{prefix}/file1.txt",
+            f"{prefix}/file2.txt",
+            f"{prefix}/subfolder/file3.txt",
+            f"{prefix}/subfolder/file4.txt"
+        ]
+    
+        # Upload multiple files
+        for obj_name in object_names:
+>           storage_service.upload(
+                bucket_name=test_bucket_name,
+                source_file=test_file,
+                destination_blob_name=obj_name,
+                tags=common_tags
+            )
+E           AttributeError: 'StorageService' object has no attribute 'upload'
+
+tests/integration/test_storage_integration.py:280: AttributeError
+__________________ TestStorageIntegration.test_object_delete ___________________
+[gw1] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_storage_integration.TestStorageIntegration object at 0x114aa8c30>
+storage_service = <gcpoto.services.storage.StorageService object at 0x1149df770>
+test_bucket_name = 'gcpoto-test-5602061a-bucket-43dec440'
+test_object_name = 'test-object-b29f167a10fc434a82820d7b50f107e7.txt'
+
+    def test_object_delete(self, storage_service: StorageService,
+                         test_bucket_name: str,
+                         test_object_name: str):
+        """Test deleting an object."""
+        # Delete the test object
+>       storage_service.delete_object(
+            bucket_name=test_bucket_name,
+            object_name=test_object_name
+        )
+
+tests/integration/test_storage_integration.py:225: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/storage.py:240: in delete_object
+    request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x114f506e0>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x114b25400>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 404 when requesting https://storage.googleapis.com/storage/v1/b/gcpoto-test-5602061a-bucket-43dec440/o/test-object-b29f167a10fc434a82820d7b50f107e7.txt? returned "The specified bucket does not exist.". Details: "[{'message': 'The specified bucket does not exist.', 'domain': 'global', 'reason': 'notFound'}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+_____________ TestPubSubIntegration.test_publish_and_pull_messages _____________
+[gw9] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_pubsub_integration.TestPubSubIntegration object at 0x10b893820>
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x10bb26e40>
+test_topic_name = 'gcpoto-test-b40bf2cd-topic-0d93386d'
+test_subscription_name = 'gcpoto-test-b40bf2cd-sub-6a05f8b1'
+
+    def test_publish_and_pull_messages(self, pubsub_service: PubSubService,
+                                     test_topic_name: str,
+                                     test_subscription_name: str):
+        """Test publishing messages to a topic and pulling them from a subscription."""
+        # Publish multiple messages
+        msg_count = 5
+        sent_messages = []
+        sent_attributes = []
+    
+        for i in range(msg_count):
+            msg_data = f"Test message {i} - {uuid.uuid4().hex}"
+            attributes = {
+                "message_id": str(i),
+                "timestamp": str(time.time()),
+                "test_run": "integration"
+            }
+    
+            # Publish the message
+>           message_id = pubsub_service.publish_message(
+                topic_name=test_topic_name,
+                data=msg_data,
+                attributes=attributes
+            )
+
+tests/integration/test_pubsub_integration.py:300: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:217: in publish_message
+    message_id = future.result()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/cloud/pubsub_v1/publisher/futures.py:66: in result
+    return super().result(timeout=timeout)
+../../../.pyenv/versions/3.13.2/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+../../../.pyenv/versions/3.13.2/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/cloud/pubsub_v1/publisher/_batch/thread.py:323: in _commit
+    response = self._client._gapic_publish(
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/cloud/pubsub_v1/publisher/client.py:295: in _gapic_publish
+    return super().publish(*args, **kwargs)
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/pubsub_v1/services/publisher/client.py:1114: in publish
+    response = rpc(
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/gapic_v1/method.py:131: in __call__
+    return wrapped_func(*args, **kwargs)
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py:293: in retry_wrapped_func
+    return retry_target(
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py:153: in retry_target
+    _retry_error_helper(
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/retry/retry_base.py:212: in _retry_error_helper
+    raise final_exc from source_exc
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/retry/retry_unary.py:144: in retry_target
+    result = target()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/timeout.py:170: in func_with_timeout
+    return func(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = (topic: "projects/default-456005/topics/gcpoto-test-b40bf2cd-topic-0d93386d"
+messages {
+  data: "Test message 0 - 13fb...ributes {
+    key: "test_run"
+    value: "integration"
+  }
+  attributes {
+    key: "message_id"
+    value: "0"
+  }
+}
+,)
+kwargs = {'metadata': [('x-goog-request-params', 'topic=projects/default-456005/topics/gcpoto-test-b40bf2cd-topic-0d93386d'), ('x-goog-api-client', 'gl-python/3.13.2 grpc/1.71.0 gax/2.24.2 gccl/2.29.0')], 'timeout': 60}
+
+    @functools.wraps(callable_)
+    def error_remapped_callable(*args, **kwargs):
+        try:
+            return callable_(*args, **kwargs)
+        except grpc.RpcError as exc:
+>           raise exceptions.from_grpc_error(exc) from exc
+E           google.api_core.exceptions.PermissionDenied: 403 Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: "SERVICE_DISABLED"
+E           domain: "googleapis.com"
+E           metadata {
+E             key: "service"
+E             value: "pubsub.googleapis.com"
+E           }
+E           metadata {
+E             key: "serviceTitle"
+E             value: "Cloud Pub/Sub API"
+E           }
+E           metadata {
+E             key: "containerInfo"
+E             value: "default-456005"
+E           }
+E           metadata {
+E             key: "consumer"
+E             value: "projects/default-456005"
+E           }
+E           metadata {
+E             key: "activationUrl"
+E             value: "https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005"
+E           }
+E           , locale: "en-US"
+E           message: "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
+E           , links {
+E             description: "Google developers console API activation"
+E             url: "https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005"
+E           }
+E           ]
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/google/api_core/grpc_helpers.py:78: PermissionDenied
+____________________ TestPubSubIntegration.test_list_topics ____________________
+[gw7] darwin -- Python 3.13.2 /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/bin/python
+
+self = <tests.integration.test_pubsub_integration.TestPubSubIntegration object at 0x107be6e90>
+pubsub_service = <gcpoto.services.pubsub.PubSubService object at 0x107dfae40>
+
+    def test_list_topics(self, pubsub_service: PubSubService):
+        """Test listing topics in the project."""
+>       topics = pubsub_service.list_resources()
+
+tests/integration/test_pubsub_integration.py:230: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+gcpoto/services/pubsub.py:71: in list_resources
+    response = request.execute()
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/_helpers.py:130: in positional_wrapper
+    return wrapped(*args, **kwargs)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <googleapiclient.http.HttpRequest object at 0x11004ba10>
+http = <google_auth_httplib2.AuthorizedHttp object at 0x107fd9950>
+num_retries = 0
+
+    @util.positional(1)
+    def execute(self, http=None, num_retries=0):
+        """Execute the request.
+    
+        Args:
+          http: httplib2.Http, an http object to be used in place of the
+                one the HttpRequest request object was constructed with.
+          num_retries: Integer, number of times to retry with randomized
+                exponential backoff. If all retries fail, the raised HttpError
+                represents the last request. If zero (default), we attempt the
+                request only once.
+    
+        Returns:
+          A deserialized object model of the response body as determined
+          by the postproc.
+    
+        Raises:
+          googleapiclient.errors.HttpError if the response was not a 2xx.
+          httplib2.HttpLib2Error if a transport error has occurred.
+        """
+        if http is None:
+            http = self.http
+    
+        if self.resumable:
+            body = None
+            while body is None:
+                _, body = self.next_chunk(http=http, num_retries=num_retries)
+            return body
+    
+        # Non-resumable case.
+    
+        if "content-length" not in self.headers:
+            self.headers["content-length"] = str(self.body_size)
+        # If the request URI is too long then turn it into a POST request.
+        # Assume that a GET request never contains a request body.
+        if len(self.uri) > MAX_URI_LENGTH and self.method == "GET":
+            self.method = "POST"
+            self.headers["x-http-method-override"] = "GET"
+            self.headers["content-type"] = "application/x-www-form-urlencoded"
+            parsed = urllib.parse.urlparse(self.uri)
+            self.uri = urllib.parse.urlunparse(
+                (parsed.scheme, parsed.netloc, parsed.path, parsed.params, None, None)
+            )
+            self.body = parsed.query
+            self.headers["content-length"] = str(len(self.body))
+    
+        # Handle retries for server-side errors.
+        resp, content = _retry_request(
+            http,
+            num_retries,
+            "request",
+            self._sleep,
+            self._rand,
+            str(self.uri),
+            method=str(self.method),
+            body=self.body,
+            headers=self.headers,
+        )
+    
+        for callback in self.response_callbacks:
+            callback(resp)
+        if resp.status >= 300:
+>           raise HttpError(resp, content, uri=self.uri)
+E           googleapiclient.errors.HttpError: <HttpError 403 when requesting https://pubsub.googleapis.com/v1/projects/default-456005/topics?alt=json returned "Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.". Details: "[{'@type': 'type.googleapis.com/google.rpc.ErrorInfo', 'reason': 'SERVICE_DISABLED', 'domain': 'googleapis.com', 'metadata': {'activationUrl': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005', 'containerInfo': 'default-456005', 'service': 'pubsub.googleapis.com', 'consumer': 'projects/default-456005', 'serviceTitle': 'Cloud Pub/Sub API'}}, {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage', 'locale': 'en-US', 'message': 'Cloud Pub/Sub API has not been used in project default-456005 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.'}, {'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Google developers console API activation', 'url': 'https://console.developers.google.com/apis/api/pubsub.googleapis.com/overview?project=default-456005'}]}]">
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/googleapiclient/http.py:938: HttpError
+------------------------------ Captured log call -------------------------------
+WARNING  googleapiclient.http:http.py:140 Encountered 403 Forbidden with reason "PERMISSION_DENIED"
+=============================== warnings summary ===============================
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/pydantic/_internal/_config.py:323: 44 warnings
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/pydantic/_internal/_fields.py:198: 11 warnings
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/pydantic/_internal/_fields.py:198: UserWarning: Field name "schema" in "SchemaSettings" shadows an attribute in parent "BaseModel"
+    warnings.warn(
+
+gcpoto/models/resource_manager.py:21: 11 warnings
+  /Users/draw/development/goto/gcpoto/gcpoto/models/resource_manager.py:21: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator('name', pre=True)
+
+gcpoto/models/resource_manager.py:31: 11 warnings
+  /Users/draw/development/goto/gcpoto/gcpoto/models/resource_manager.py:31: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator('id', pre=True)
+
+gcpoto/models/resource_manager.py:85: 11 warnings
+  /Users/draw/development/goto/gcpoto/gcpoto/models/resource_manager.py:85: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator('name', pre=True)
+
+gcpoto/models/resource_manager.py:95: 11 warnings
+  /Users/draw/development/goto/gcpoto/gcpoto/models/resource_manager.py:95: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    @validator('id', pre=True)
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: 11 warnings
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: verbose
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: 11 warnings
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: xvs
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+../../../Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: 11 warnings
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/config/__init__.py:1441: PytestConfigWarning: Unknown config option: xvs_processes
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_services
+  /Users/draw/Library/Caches/pypoetry/virtualenvs/gcpoto-n42R05u4-py3.13/lib/python3.13/site-packages/_pytest/python.py:163: PytestReturnNotNoneWarning: Expected None, but tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_services returned '6F81-5844-456A', which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+--------------------------------- JSON report ----------------------------------
+report saved to: test-reports/integration_20250406_015012/test-report.json
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.13.2-final-0 _______________
+
+Name                                  Stmts   Miss  Cover   Missing
+-------------------------------------------------------------------
+gcpoto/__init__.py                        3      0   100%
+gcpoto/cli/__init__.py                    0      0   100%
+gcpoto/cli/main.py                      327    327     0%   3-573
+gcpoto/models/__init__.py                 0      0   100%
+gcpoto/models/base.py                    20      2    90%   31, 45
+gcpoto/models/billing.py                 89     31    65%   28, 31, 57, 91, 94-97, 105, 151-163, 169-174, 190-211
+gcpoto/models/pubsub.py                  98     51    48%   59-82, 185-241
+gcpoto/models/resource_manager.py        68     34    50%   24-29, 34-36, 49-56, 88-93, 98-100, 113-128
+gcpoto/models/storage_object.py          36     10    72%   47-64
+gcpoto/schemas/__init__.py                0      0   100%
+gcpoto/schemas/base.py                    4      0   100%
+gcpoto/schemas/pubsub.py                  7      0   100%
+gcpoto/schemas/storage_object.py          4      0   100%
+gcpoto/services/__init__.py               0      0   100%
+gcpoto/services/base.py                  40      9    78%   52, 73, 86, 99, 112, 125, 146, 150, 167
+gcpoto/services/billing.py              229    177    23%   36-46, 60-84, 98, 115, 129-150, 200-237, 251-269, 281-303, 318-336, 366-463, 492-611, 626-638, 676, 717-722, 733, 744
+gcpoto/services/compute.py               33     33     0%   3-153
+gcpoto/services/pubsub.py               173    120    31%   45, 50, 72-78, 90-98, 126-128, 140, 143, 146, 149, 153-154, 164-167, 170, 183-191, 209, 219, 231-278, 290-298, 335-406, 418-426, 441-455, 468-481
+gcpoto/services/resource_manager.py     188    147    22%   44-45, 65-85, 99-119, 140-171, 190-232, 249-262, 276-290, 303-321, 335-352, 370-392, 407-430, 446-459, 473-487, 503-522, 538-557, 571-593, 604, 615, 626, 643, 659
+gcpoto/services/storage.py              111     79    29%   27, 54-79, 92-107, 123-156, 173-218, 237, 242, 277, 291-294, 306-322, 334-337
+-------------------------------------------------------------------
+TOTAL                                  1430   1020    29%
+Coverage HTML written to dir test-reports/integration_20250406_015012/coverage_html
+Coverage JSON written to file test-reports/integration_20250406_015012/coverage.json
+FAIL Required test coverage of 100% not reached. Total coverage: 28.67%
+- Generated html report: file:///Users/draw/development/goto/gcpoto/test-reports/integration_20250406_015012/test-report.html -
+=========================== short test summary info ============================
+FAILED tests/integration/test_billing_integration.py::TestBillingIntegration::test_list_billing_accounts
+FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_upload_with_metadata
+FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_list_objects_with_prefix
+FAILED tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_delete
+FAILED tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_publish_and_pull_messages
+FAILED tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_topics
+ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_search_billing_accounts
+ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_enable_disable_project_billing
+ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_sku_pricing
+ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_get_billing_account
+ERROR tests/integration/test_billing_enhanced_integration.py::TestBillingEnhancedIntegration::test_list_project_billing_info
+ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_iam_policy
+ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_effective_iam_policy
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_project
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_update_delete_folder
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_create_subfolder_hierarchy
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_move_project_between_folders
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerCreation::test_list_folders_in_organization
+ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_list_project_tags
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_list_projects
+ERROR tests/integration/test_resource_manager_integration.py::TestResourceManagerIntegration::test_get_project
+ERROR tests/integration/test_storage_integration.py::TestStorageIntegration::test_object_upload_download
+ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_filter
+ERROR tests/integration/test_storage_integration.py::TestStorageIntegration::test_create_get_bucket_with_tags
+ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_list_subscriptions_for_topic
+ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_get_project_ancestors
+ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_topic_with_tags
+ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_create_get_subscription_with_tags
+ERROR tests/integration/test_pubsub_integration.py::TestPubSubIntegration::test_subscription_with_dead_letter
+ERROR tests/integration/test_resource_manager_enhanced_integration.py::TestResourceManagerEnhancedIntegration::test_search_projects
+= 6 failed, 3 passed, 11 skipped, 133 warnings, 24 errors in 72.07s (0:01:12) ==
