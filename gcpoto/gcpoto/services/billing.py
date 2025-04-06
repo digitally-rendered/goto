@@ -94,11 +94,15 @@ class BillingService(GCPService):
         """
         request = billing_v1.ListBillingAccountsRequest()
 
-        if only_open:
-            request.filter = "open:true"
+        # We'll filter the open accounts in our code instead of using the API filter
+        # to avoid potential filter syntax issues
 
         accounts = []
         for account in self.cloud_billing_client.list_billing_accounts(request=request):
+            # Skip closed accounts if only_open is True
+            if only_open and not account.open:
+                continue
+                
             accounts.append(
                 BillingAccount.from_api_response(
                     {

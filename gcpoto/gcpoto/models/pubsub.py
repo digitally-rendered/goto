@@ -38,6 +38,25 @@ class PubSubTopic(GCPResource):
     satisfies_pzs: Optional[bool] = Field(
         None, description="Whether this topic satisfies the requirements for Assured Workloads"
     )
+    _tags: Optional[Dict[str, str]] = None
+    
+    def get_tag(self, key: str, default: Any = None) -> Any:
+        """Get a tag value by key, falling back to labels.
+        
+        Args:
+            key: The tag key to look up
+            default: Default value to return if key not found
+            
+        Returns:
+            The tag value or default if not found
+        """
+        # First check explicit tags, then fall back to labels
+        if self._tags and key in self._tags:
+            return self._tags[key]
+        elif self.labels and key in self.labels:
+            return self.labels[key]
+        else:
+            return default
 
     class Config:
         """Pydantic model configuration."""
@@ -79,7 +98,7 @@ class PubSubTopic(GCPResource):
             if schema and encoding:
                 schema_settings = SchemaSettings(schema=schema, encoding=encoding)
         
-        return cls(
+        instance = cls(
             id=full_name,  # Use the full name as ID for uniqueness
             name=topic_name,
             type="pubsub.topic",
@@ -93,6 +112,12 @@ class PubSubTopic(GCPResource):
             created=response.get("created"),
             updated=response.get("updated")
         )
+        
+        # Initialize _tags from labels if present
+        if response.get("labels"):
+            instance._tags = response["labels"]
+            
+        return instance
 
 
 class PushConfig(BaseModel):
@@ -164,6 +189,25 @@ class PubSubSubscription(GCPResource):
     enable_message_ordering: Optional[bool] = Field(
         None, description="Whether to enable message ordering for this subscription"
     )
+    _tags: Optional[Dict[str, str]] = None
+    
+    def get_tag(self, key: str, default: Any = None) -> Any:
+        """Get a tag value by key, falling back to labels.
+        
+        Args:
+            key: The tag key to look up
+            default: Default value to return if key not found
+            
+        Returns:
+            The tag value or default if not found
+        """
+        # First check explicit tags, then fall back to labels
+        if self._tags and key in self._tags:
+            return self._tags[key]
+        elif self.labels and key in self.labels:
+            return self.labels[key]
+        else:
+            return default
 
     class Config:
         """Pydantic model configuration."""
@@ -238,7 +282,7 @@ class PubSubSubscription(GCPResource):
             if ttl:
                 expiration_policy = ExpirationPolicy(ttl=ttl)
         
-        return cls(
+        instance = cls(
             id=full_name,  # Use the full name as ID for uniqueness
             name=subscription_name,
             type="pubsub.subscription",
@@ -258,3 +302,9 @@ class PubSubSubscription(GCPResource):
             created=response.get("created"),
             updated=response.get("updated")
         )
+        
+        # Initialize _tags from labels if present
+        if response.get("labels"):
+            instance._tags = response["labels"]
+            
+        return instance

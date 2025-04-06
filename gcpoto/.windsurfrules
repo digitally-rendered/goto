@@ -3,3 +3,10 @@ this application is meant to be stateless and request responses should be self c
 the accept header should be used to determine the output format\
 the content-type header should be used to determine the input format
 content type and schema validation are interdependent
+we don't use mocks for integration tests
+unit tests can use mocks
+unit tets should test the full request and response cycle
+unit tests should test all public methods and properties
+unit tests should test all exception cases
+unit tests need 100% coverage
+integration tests don't

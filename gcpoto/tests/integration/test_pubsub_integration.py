@@ -241,19 +241,17 @@ class TestPubSubIntegration:
         # Verify the topic was created
         assert test_topic.name == test_topic_name
         
-        # Verify tags were applied
-        assert test_topic.tags is not None
+        # Verify tags were applied using get_tag method
         for key, value in common_tags.items():
-            assert test_topic.tags.get(key) == value
+            assert test_topic.get_tag(key) == value
         
         # Verify we can retrieve the topic
         retrieved_topic = pubsub_service.get_topic(test_topic_name)
         assert retrieved_topic.name == test_topic.name
         
-        # Verify retrieved topic has the tags
-        assert retrieved_topic.tags is not None
+        # Verify retrieved topic has the tags using get_tag method
         for key, value in common_tags.items():
-            assert retrieved_topic.tags.get(key) == value
+            assert retrieved_topic.get_tag(key) == value
     
     def test_create_get_subscription_with_tags(self, pubsub_service: PubSubService,
                                             test_subscription: PubSubSubscription,
@@ -265,19 +263,17 @@ class TestPubSubIntegration:
         assert test_subscription.name == test_subscription_name
         assert test_subscription.topic.endswith(test_topic_name)
         
-        # Verify tags were applied
-        assert test_subscription.tags is not None
+        # Verify tags were applied using get_tag method
         for key, value in common_tags.items():
-            assert test_subscription.tags.get(key) == value
+            assert test_subscription.get_tag(key) == value
         
         # Verify we can retrieve the subscription
         retrieved_sub = pubsub_service.get_subscription(test_subscription_name)
         assert retrieved_sub.name == test_subscription.name
         
-        # Verify retrieved subscription has the tags
-        assert retrieved_sub.tags is not None
+        # Verify retrieved subscription has the tags using get_tag method
         for key, value in common_tags.items():
-            assert retrieved_sub.tags.get(key) == value
+            assert retrieved_sub.get_tag(key) == value
     
     def test_publish_and_pull_messages(self, pubsub_service: PubSubService,
                                      test_topic_name: str,
@@ -374,16 +370,16 @@ class TestPubSubIntegration:
             
             # Verify the subscription was created with the dead letter policy
             assert dl_sub.dead_letter_policy is not None
-            assert dl_sub.dead_letter_policy.get("deadLetterTopic").endswith(test_deadletter_topic.name)
-            assert dl_sub.dead_letter_policy.get("maxDeliveryAttempts") == 5
+            assert dl_sub.dead_letter_policy.dead_letter_topic.endswith(test_deadletter_topic.name)
+            assert dl_sub.dead_letter_policy.max_delivery_attempts == 5
             
-            # Verify tags
-            assert dl_sub.tags.get("test-type") == "dead-letter"
+            # Verify tags using get_tag method
+            assert dl_sub.get_tag("test-type") == "dead-letter"
             
             # Retrieve the subscription and check its properties
             retrieved_sub = pubsub_service.get_subscription(dl_sub_name)
             assert retrieved_sub.dead_letter_policy is not None
-            assert retrieved_sub.dead_letter_policy.get("deadLetterTopic").endswith(test_deadletter_topic.name)
+            assert retrieved_sub.dead_letter_policy.dead_letter_topic.endswith(test_deadletter_topic.name)
         
         finally:
             # Clean up

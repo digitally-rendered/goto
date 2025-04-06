@@ -49,6 +49,7 @@ def mock_folders_client():
         mock_client.return_value.delete_folder.return_value = None
         mock_client.return_value.undelete_folder.return_value = None
         mock_client.return_value.move_folder.return_value = None
+        mock_client.return_value.get_iam_policy.return_value = None
         
         yield mock_client.return_value
 
@@ -74,7 +75,8 @@ def sample_project_proto():
     project = resourcemanager_v3.Project()
     project.name = "projects/test-project"
     project.project_id = "test-project"
-    project.project_number = "12345678"
+    # Note: We're skipping project_number as it doesn't seem to be directly accessible in the proto
+    # In real responses, the service will extract it properly
     project.display_name = "Test Project"
     project.parent = "folders/98765"
     project.state = resourcemanager_v3.Project.State.ACTIVE
@@ -375,6 +377,11 @@ class TestResourceManagerService:
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
         folders_client.create_folder.assert_called_once()
+        
+        # Verify the actual request structure
+        request = folders_client.create_folder.call_args[1]['request']
+        assert request.folder.display_name == "Test Folder"
+        assert request.folder.parent == "organizations/12345"
         mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
         
         # Test error handling
@@ -404,6 +411,13 @@ class TestResourceManagerService:
         # Verify
         assert folder.id == "folders/test-folder"  # The result comes from get_folder
         folders_client.update_folder.assert_called_once()
+        
+        # Verify the update request structure
+        request = folders_client.update_folder.call_args[1]['request']
+        assert request.folder.display_name == "Updated Folder"
+        # Field mask is a FieldMask object with a paths attribute that contains the field names
+        assert 'display_name' in request.update_mask.paths
+        
         mock_resource_manager_service._wait_for_operation.assert_called_once_with(operation)
         
         # Test error handling
@@ -571,3 +585,110 @@ class TestResourceManagerService:
             result = mock_resource_manager_service.delete_resource("test-project")
             assert result is True
             mock_delete.assert_called_once_with("test-project")
+    
+    def test_search_folders(self, mock_resource_manager_service, sample_folder_proto):
+        """Test searching for folders."""
+        # Setup
+        folders_client = mock_resource_manager_service.folders_client
+        folders_client.list_folders.return_value = [sample_folder_proto]
+        
+        # Test with parent filter
+        query = "parent:organizations/12345"
+        folders = mock_resource_manager_service.search_folders(query)
+        
+        # Verify results
+        assert len(folders) == 1
+        assert folders[0].id == "folders/test-folder"
+        assert folders[0].folder_id == "test-folder"
+        assert folders[0].display_name == "Test Folder"
+        
+        # Verify client was called correctly with parent
+        folders_client.list_folders.assert_called_once()
+        request = folders_client.list_folders.call_args[1]['request']
+        assert request.parent == "organizations/12345"
+        
+        # Test with state filter
+        folders_client.list_folders.reset_mock()
+        query = "parent:organizations/12345 state:ACTIVE"
+        folders = mock_resource_manager_service.search_folders(query)
+        
+        # Verify client was called
+        folders_client.list_folders.assert_called_once()
+        
+        # Test with display name filter
+        folders_client.list_folders.reset_mock()
+        query = "parent:organizations/12345 displayName:Test"
+        folders = mock_resource_manager_service.search_folders(query)
+        
+        # Verify client was called
+        folders_client.list_folders.assert_called_once()
+        
+        # Test with invalid parent format
+        folders_client.list_folders.reset_mock()
+        folders_client.list_folders.side_effect = ValueError("Invalid parent format")
+        
+        # Should return empty list on error
+        folders = mock_resource_manager_service.search_folders("parent:invalid-format")
+        assert len(folders) == 0
+        
+        # Test with no parent filter (should return empty list)
+        folders_client.list_folders.reset_mock()
+        folders_client.list_folders.side_effect = None
+        folders = mock_resource_manager_service.search_folders("state:ACTIVE")
+        assert len(folders) == 0
+        assert not folders_client.list_folders.called
+    
+    def test_get_folder_iam_policy(self, mock_resource_manager_service):
+        """Test getting IAM policy for a folder."""
+        # Setup
+        folders_client = mock_resource_manager_service.folders_client
+        
+        # Create a mock IAM policy
+        from google.iam.v1 import policy_pb2
+        policy = policy_pb2.Policy()
+        policy.version = 1
+        
+        # Add a binding
+        binding = policy_pb2.Binding()
+        binding.role = "roles/owner"
+        binding.members.append("user:test@example.com")
+        policy.bindings.append(binding)
+        
+        # Set etag
+        policy.etag = b"test-etag"
+        
+        # Configure mock
+        folders_client.get_iam_policy.return_value = policy
+        
+        # Execute
+        result = mock_resource_manager_service.get_folder_iam_policy("test-folder")
+        
+        # Verify result structure
+        assert result['version'] == 1
+        assert len(result['bindings']) == 1
+        assert result['bindings'][0]['role'] == "roles/owner"
+        assert result['bindings'][0]['members'] == ["user:test@example.com"]
+        assert result['etag'] == "test-etag"
+        
+        # Verify client was called correctly
+        folders_client.get_iam_policy.assert_called_once()
+        request = folders_client.get_iam_policy.call_args[1]['request']
+        assert request.resource == "folders/test-folder"
+        
+        # Test with already formatted name
+        folders_client.get_iam_policy.reset_mock()
+        mock_resource_manager_service.get_folder_iam_policy("folders/another-folder")
+        request = folders_client.get_iam_policy.call_args[1]['request']
+        assert request.resource == "folders/another-folder"
+        
+        # Test error handling
+        folders_client.get_iam_policy.reset_mock()
+        folders_client.get_iam_policy.side_effect = Exception("Test error")
+        
+        # The method should now handle the exception internally and return a minimal policy
+        result = mock_resource_manager_service.get_folder_iam_policy("test-folder")
+        
+        # Should return a minimal policy structure
+        assert 'version' in result
+        assert 'bindings' in result
+        assert 'etag' in result
