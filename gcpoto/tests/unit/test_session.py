@@ -148,6 +148,10 @@ class TestGetAvailableServices:
         assert "bigquery" in services
         assert "api_gateway" in services
         assert "compute" in services
+        assert "alloydb" in services
+        assert "cloud_build" in services
+        assert "vertex_ai" in services
+        assert "vpn" in services
 
     def test_matches_registry(self):
         """Test that the list matches the registry keys."""

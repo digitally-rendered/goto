@@ -59,6 +59,60 @@ def _register_services():
         "cdn": ("gcpoto.services.cdn", "CDNService"),
         "vertex_ai": ("gcpoto.services.vertex_ai", "VertexAIService"),
         "api_gateway": ("gcpoto.services.api_gateway", "APIGatewayService"),
+        "alloydb": ("gcpoto.services.alloydb", "AlloyDBService"),
+        "batch": ("gcpoto.services.batch", "BatchService"),
+        "binary_auth": ("gcpoto.services.binary_auth", "BinaryAuthService"),
+        "certificate_manager": (
+            "gcpoto.services.certificate_manager",
+            "CertificateManagerService",
+        ),
+        "cloud_build": ("gcpoto.services.cloud_build", "CloudBuildService"),
+        "cloud_deploy": ("gcpoto.services.cloud_deploy", "CloudDeployService"),
+        "cloud_nat": ("gcpoto.services.cloud_nat", "CloudNATService"),
+        "composer": ("gcpoto.services.composer", "ComposerService"),
+        "data_catalog": ("gcpoto.services.data_catalog", "DataCatalogService"),
+        "datastream": ("gcpoto.services.datastream", "DatastreamService"),
+        "dialogflow": ("gcpoto.services.dialogflow", "DialogflowService"),
+        "document_ai": ("gcpoto.services.document_ai", "DocumentAIService"),
+        "endpoints": ("gcpoto.services.endpoints", "EndpointsService"),
+        "error_reporting": (
+            "gcpoto.services.error_reporting",
+            "ErrorReportingService",
+        ),
+        "natural_language": (
+            "gcpoto.services.natural_language",
+            "NaturalLanguageService",
+        ),
+        "profiler": ("gcpoto.services.profiler", "ProfilerService"),
+        "pubsub_lite": ("gcpoto.services.pubsub_lite", "PubSubLiteService"),
+        "security_center": (
+            "gcpoto.services.security_center",
+            "SecurityCenterService",
+        ),
+        "service_directory": (
+            "gcpoto.services.service_directory",
+            "ServiceDirectoryService",
+        ),
+        "speech": ("gcpoto.services.speech", "SpeechService"),
+        "trace": ("gcpoto.services.trace", "TraceService"),
+        "translation": ("gcpoto.services.translation", "TranslationService"),
+        "vision": ("gcpoto.services.vision", "VisionService"),
+        "vpn": ("gcpoto.services.vpn", "VPNService"),
+        "apigee": ("gcpoto.services.apigee", "ApigeeService"),
+        "data_fusion": ("gcpoto.services.data_fusion", "DataFusionService"),
+        "vmware_engine": (
+            "gcpoto.services.vmware_engine",
+            "VMwareEngineService",
+        ),
+        "datastore": ("gcpoto.services.datastore", "DatastoreService"),
+        "network_security": (
+            "gcpoto.services.network_security",
+            "NetworkSecurityService",
+        ),
+        "web_security_scanner": (
+            "gcpoto.services.web_security_scanner",
+            "WebSecurityScannerService",
+        ),
     }
     _SERVICE_REGISTRY.update(services)
 
