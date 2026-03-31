@@ -5,12 +5,16 @@ import time
 import logging
 from typing import Dict, List, Optional, Any, Union
 
+from google.auth import default as google_auth_default
 from google.cloud import resourcemanager_v3
 from google.iam.v1 import iam_policy_pb2, policy_pb2
 from google.longrunning import operations_pb2
+from google.oauth2 import service_account
 
 from gcpoto.models.resource_manager import Project, Folder
 from gcpoto.services.base import GCPService
+
+logger = logging.getLogger(__name__)
 
 
 class ResourceManagerService(GCPService):
@@ -49,17 +53,13 @@ class ResourceManagerService(GCPService):
             google.auth.credentials.Credentials: The credentials to use for API requests.
         """
         if self.credentials_file:
-            from google.oauth2 import service_account
-
             return service_account.Credentials.from_service_account_file(
                 self.credentials_file,
                 scopes=["https://www.googleapis.com/auth/cloud-platform"],
             )
         else:
             # Use application default credentials
-            from google.auth import default
-
-            credentials, _ = default(
+            credentials, _ = google_auth_default(
                 scopes=["https://www.googleapis.com/auth/cloud-platform"]
             )
             return credentials
@@ -182,7 +182,7 @@ class ResourceManagerService(GCPService):
                 ]
         except Exception as e:
             # Log the error and return an empty list
-            print(f"Error searching projects: {e}")
+            logger.error("Error searching projects: %s", e)
             return []
 
     def get_project(self, project_id: str) -> Project:
@@ -492,9 +492,7 @@ class ResourceManagerService(GCPService):
 
             return folders
         except Exception as e:
-            import logging
-
-            logging.warning(f"Error listing folders: {e}")
+            logger.warning("Error listing folders: %s", e)
             raise Exception(f"Failed to list folders: {e}")
 
     def search_folders(self, query: str) -> List[Folder]:
@@ -528,10 +526,8 @@ class ResourceManagerService(GCPService):
                 try:
                     all_folders = self.list_folders(parent_filter)
                 except Exception as e:
-                    import logging
-
-                    logging.warning(
-                        f"Could not list folders with parent {parent_filter}: {e}"
+                    logger.warning(
+                        "Could not list folders with parent %s: %s", parent_filter, e
                     )
                     # Fall back to an empty list rather than failing completely
                     all_folders = []
@@ -562,9 +558,7 @@ class ResourceManagerService(GCPService):
 
             return all_folders
         except Exception as e:
-            import logging
-
-            logging.warning(f"Error searching folders: {e}")
+            logger.warning("Error searching folders: %s", e)
             return []  # Return empty list on error for better test resilience
 
     def get_folder_iam_policy(self, folder_id: str) -> Dict[str, Any]:
@@ -619,9 +613,7 @@ class ResourceManagerService(GCPService):
 
             return policy_dict
         except Exception as e:
-            import logging
-
-            logging.warning(f"Error getting folder IAM policy: {e}")
+            logger.warning("Error getting folder IAM policy: %s", e)
             # Return a minimal policy structure to allow tests to continue
             return {"version": 1, "bindings": [], "etag": ""}
 
@@ -676,9 +668,7 @@ class ResourceManagerService(GCPService):
 
             return Folder.from_api_response(folder_data)
         except Exception as e:
-            import logging
-
-            logging.warning(f"Error getting folder {folder_id}: {e}")
+            logger.warning("Error getting folder %s: %s", folder_id, e)
 
             # We don't want to use mocks for integration tests
             # Properly propagate the error for both test and non-test mode

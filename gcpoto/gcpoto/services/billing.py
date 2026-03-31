@@ -1,13 +1,17 @@
 """Service for interacting with Google Cloud Platform Billing."""
 
+import logging
 import time
 from typing import Dict, List, Optional, Any, Union
 
 from google.cloud import billing_v1
 from google.api_core import exceptions
+from google.oauth2 import service_account
 
 from gcpoto.models.billing import BillingAccount, ProjectBillingInfo, BillingBudget
 from gcpoto.services.base import GCPService
+
+logger = logging.getLogger(__name__)
 
 
 class BillingService(GCPService):
@@ -137,8 +141,8 @@ class BillingService(GCPService):
                 else f"billingAccounts/{billing_account_id}"
             )
             account = self.cloud_billing_client.get_billing_account(name=name)
-            # Print raw response for debugging
-            print(f"Raw API response for get_billing_account({name}): {account}")
+            # Log raw response for debugging
+            logger.debug("Raw API response for get_billing_account(%s): %s", name, account)
 
             # Convert to our model
             return BillingAccount.from_api_response(
@@ -153,12 +157,11 @@ class BillingService(GCPService):
             )
         except Exception as e:
             # Log the original exception details
-            print(
-                f"Error in get_billing_account for {billing_account_id}: {type(e).__name__} - {e}"
+            logger.error(
+                "Error in get_billing_account for %s: %s - %s",
+                billing_account_id, type(e).__name__, e,
+                exc_info=True,
             )
-            import traceback
-
-            traceback.print_exc()
             raise Exception(
                 f"Failed to get billing account '{billing_account_id}': {e}"
             ) from e

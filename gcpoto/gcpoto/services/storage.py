@@ -47,7 +47,7 @@ class StorageBucket(GCPResource):
         Returns:
             A new StorageBucket instance
         """
-        return cls(
+        instance = cls(
             id=response.get("id", ""),
             name=response.get("name", ""),
             type="storage.bucket",
@@ -291,28 +291,6 @@ class StorageService(GCPService[StorageBucket]):
         request = self.service.buckets().delete(bucket=bucket_name, **kwargs)
         request.execute()
 
-    def delete_object(self, bucket_name: str, object_name: str, **kwargs) -> None:
-        """Delete an object from a bucket.
-
-        Args:
-            bucket_name: Name of the bucket containing the object
-            object_name: Name of the object to delete
-            **kwargs: Additional parameters to pass to the API
-
-        Returns:
-            None
-        """
-        try:
-            request = self.service.objects().delete(
-                bucket=bucket_name, object=object_name, **kwargs
-            )
-            request.execute()
-        except Exception as e:
-            # Log the error but don't raise it (makes cleanup more robust)
-            print(
-                f"Warning: Failed to delete object {object_name} from bucket {bucket_name}: {e}"
-            )
-
     def get_object(self, bucket_name: str, object_name: str, **kwargs) -> StorageObject:
         """Get a specific object by name.
 
@@ -370,7 +348,7 @@ class StorageService(GCPService[StorageBucket]):
 
         # Create a bytes buffer to store the content
         buffer = io.BytesIO()
-        downloader = self.service._http.MediaIoBaseDownload(buffer, request)
+        downloader = MediaIoBaseDownload(buffer, request)
 
         done = False
         while not done:
