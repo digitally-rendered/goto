@@ -3,17 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.security_center import Finding, Source
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -63,7 +58,7 @@ class SecurityCenterService(GCPService[Finding]):
 
         sources = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for source_data in response.get("sources", []):
                 sources.append(Source.from_api_response(source_data))
             request = self.service.organizations().sources().list_next(
@@ -88,23 +83,11 @@ class SecurityCenterService(GCPService[Finding]):
         """
         logger.info("Getting SCC source %s", source_name)
 
-        try:
-            request = self.service.organizations().sources().get(
-                name=source_name
-            )
-            response = request.execute()
-            return Source.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Source", source_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.organizations().sources().get(
+            name=source_name
+        )
+        response = self._execute(request, "Source", source_name)
+        return Source.from_api_response(response)
     def list_findings(
         self, source_name: str, filter_str: Optional[str] = None
     ) -> List[Finding]:
@@ -130,7 +113,7 @@ class SecurityCenterService(GCPService[Finding]):
 
         findings = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for finding_data in response.get("listFindingsResults", []):
                 finding_response = finding_data.get("finding", finding_data)
                 findings.append(Finding.from_api_response(finding_response))
@@ -158,26 +141,14 @@ class SecurityCenterService(GCPService[Finding]):
         """
         logger.info("Getting finding %s", finding_name)
 
-        try:
-            request = (
-                self.service.organizations()
-                .sources()
-                .findings()
-                .get(name=finding_name)
-            )
-            response = request.execute()
-            return Finding.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Finding", finding_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.organizations()
+            .sources()
+            .findings()
+            .get(name=finding_name)
+        )
+        response = self._execute(request, "Finding", finding_name)
+        return Finding.from_api_response(response)
     def set_finding_state(self, finding_name: str, state: str) -> Finding:
         """Set the state of a finding.
 
@@ -194,27 +165,15 @@ class SecurityCenterService(GCPService[Finding]):
         """
         logger.info("Setting finding %s state to %s", finding_name, state)
 
-        try:
-            body = {"state": state}
-            request = (
-                self.service.organizations()
-                .sources()
-                .findings()
-                .setState(name=finding_name, body=body)
-            )
-            response = request.execute()
-            return Finding.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Finding", finding_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        body = {"state": state}
+        request = (
+            self.service.organizations()
+            .sources()
+            .findings()
+            .setState(name=finding_name, body=body)
+        )
+        response = self._execute(request, "Finding", finding_name)
+        return Finding.from_api_response(response)
     def update_security_marks(
         self, finding_name: str, marks: Dict[str, str]
     ) -> Finding:
@@ -233,29 +192,17 @@ class SecurityCenterService(GCPService[Finding]):
         """
         logger.info("Updating security marks on finding %s", finding_name)
 
-        try:
-            body = {"securityMarks": {"marks": marks}}
-            request = (
-                self.service.organizations()
-                .sources()
-                .findings()
-                .updateSecurityMarks(
-                    name=f"{finding_name}/securityMarks", body=body
-                )
+        body = {"securityMarks": {"marks": marks}}
+        request = (
+            self.service.organizations()
+            .sources()
+            .findings()
+            .updateSecurityMarks(
+                name=f"{finding_name}/securityMarks", body=body
             )
-            response = request.execute()
-            return Finding.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Finding", finding_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request, "Finding", finding_name)
+        return Finding.from_api_response(response)
     def create_source(
         self,
         organization_id: str,
@@ -285,18 +232,9 @@ class SecurityCenterService(GCPService[Finding]):
         if description:
             body["description"] = description
 
-        try:
-            request = self.service.organizations().sources().create(
-                parent=f"organizations/{organization_id}", body=body
-            )
-            response = request.execute()
-            logger.info("Created SCC source %s", display_name)
-            return Source.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.organizations().sources().create(
+            parent=f"organizations/{organization_id}", body=body
+        )
+        response = self._execute(request)
+        logger.info("Created SCC source %s", display_name)
+        return Source.from_api_response(response)

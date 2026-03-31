@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.scheduler import SchedulerJob
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 def format_job_path(project_id: str, location: str, job_name: str) -> str:
     """Return full projects/{project}/locations/{location}/jobs/{job} path.
@@ -34,7 +24,6 @@ def format_job_path(project_id: str, location: str, job_name: str) -> str:
         return f"projects/{project_id}/locations/{location}/jobs/{job_name}"
     return job_name
 
-
 def format_location_path(project_id: str, location: str) -> str:
     """Return full projects/{project}/locations/{location} path.
 
@@ -46,7 +35,6 @@ def format_location_path(project_id: str, location: str) -> str:
         The fully-qualified location resource path.
     """
     return f"projects/{project_id}/locations/{location}"
-
 
 class SchedulerService(GCPService[SchedulerJob]):
     """Service for interacting with Google Cloud Scheduler."""
@@ -94,7 +82,7 @@ class SchedulerService(GCPService[SchedulerJob]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for job_data in response.get("jobs", []):
                 jobs.append(
                     SchedulerJob.from_api_response(job_data, self.project_id)
@@ -122,25 +110,13 @@ class SchedulerService(GCPService[SchedulerJob]):
         """
         full_name = format_job_path(self.project_id, location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .get(name=full_name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .get(name=full_name)
+        )
+        response = self._execute(request, "SchedulerJob", job_name)
         logger.info("Retrieved job %s", job_name)
         return SchedulerJob.from_api_response(response, self.project_id)
 
@@ -201,25 +177,13 @@ class SchedulerService(GCPService[SchedulerJob]):
         for key, value in kwargs.items():
             body[key] = value
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ValueError(f"Job '{job_name}' already exists")
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
         logger.info("Created job %s in location %s", job_name, location)
         return SchedulerJob.from_api_response(response, self.project_id)
 
@@ -243,25 +207,13 @@ class SchedulerService(GCPService[SchedulerJob]):
 
         update_mask = ",".join(update_fields.keys())
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .patch(name=full_name, body=body, updateMask=update_mask)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .patch(name=full_name, body=body, updateMask=update_mask)
+        )
+        response = self._execute(request, "SchedulerJob", job_name)
         logger.info("Updated job %s", job_name)
         return SchedulerJob.from_api_response(response, self.project_id)
 
@@ -277,25 +229,13 @@ class SchedulerService(GCPService[SchedulerJob]):
         """
         full_name = format_job_path(self.project_id, location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .delete(name=full_name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .delete(name=full_name)
+        )
+        self._execute(request, "SchedulerJob", job_name)
         logger.info("Deleted job %s", job_name)
         return True
 
@@ -311,25 +251,13 @@ class SchedulerService(GCPService[SchedulerJob]):
         """
         full_name = format_job_path(self.project_id, location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .pause(name=full_name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .pause(name=full_name, body={})
+        )
+        response = self._execute(request, "SchedulerJob", job_name)
         logger.info("Paused job %s", job_name)
         return SchedulerJob.from_api_response(response, self.project_id)
 
@@ -345,25 +273,13 @@ class SchedulerService(GCPService[SchedulerJob]):
         """
         full_name = format_job_path(self.project_id, location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .resume(name=full_name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .resume(name=full_name, body={})
+        )
+        response = self._execute(request, "SchedulerJob", job_name)
         logger.info("Resumed job %s", job_name)
         return SchedulerJob.from_api_response(response, self.project_id)
 
@@ -379,24 +295,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         """
         full_name = format_job_path(self.project_id, location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .run(name=full_name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SchedulerJob", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .run(name=full_name, body={})
+        )
+        response = self._execute(request, "SchedulerJob", job_name)
         logger.info("Triggered run for job %s", job_name)
         return SchedulerJob.from_api_response(response, self.project_id)

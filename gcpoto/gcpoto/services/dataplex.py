@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dataplex import Lake, Zone, Asset
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class DataplexService(GCPService[Lake]):
     """Service for interacting with Google Cloud Dataplex."""
@@ -65,7 +55,7 @@ class DataplexService(GCPService[Lake]):
 
         lakes = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("lakes", []):
                 lakes.append(
                     Lake.from_api_response(item, self.project_id)
@@ -94,19 +84,13 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("lake", lake_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .get(name=name)
+        )
+        response = self._execute(request, "lake", lake_id)
         logger.debug("Retrieved lake %s", lake_id)
         return Lake.from_api_response(response, self.project_id)
 
@@ -137,27 +121,17 @@ class DataplexService(GCPService[Lake]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .create(
-                    parent=parent,
-                    lakeId=lake_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .create(
+                parent=parent,
+                lakeId=lake_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug("Created lake %s in %s", lake_id, location)
         return Lake.from_api_response(response, self.project_id)
 
@@ -183,23 +157,17 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=update_fields,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=update_fields,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("lake", lake_id)
-            raise
-
+        )
+        response = self._execute(request, "lake", lake_id)
         logger.debug("Updated lake %s", lake_id)
         return Lake.from_api_response(response, self.project_id)
 
@@ -217,15 +185,9 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}"
         )
-        try:
-            self.service.projects().locations().lakes().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("lake", lake_id)
-            raise
-
+        self.service.projects().locations().lakes().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted lake %s", lake_id)
         return True
 
@@ -255,7 +217,7 @@ class DataplexService(GCPService[Lake]):
 
         zones = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("zones", []):
                 zones.append(
                     Zone.from_api_response(item, self.project_id)
@@ -290,20 +252,14 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .zones()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("zone", zone_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .zones()
+            .get(name=name)
+        )
+        response = self._execute(request, "zone", zone_id)
         logger.debug("Retrieved zone %s", zone_id)
         return Zone.from_api_response(response, self.project_id)
 
@@ -341,28 +297,18 @@ class DataplexService(GCPService[Lake]):
         if discovery_spec is not None:
             body["discoverySpec"] = discovery_spec
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .zones()
-                .create(
-                    parent=parent,
-                    zoneId=zone_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .zones()
+            .create(
+                parent=parent,
+                zoneId=zone_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created zone %s in lake %s", zone_id, lake_id
         )
@@ -385,15 +331,9 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}"
         )
-        try:
-            self.service.projects().locations().lakes().zones().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("zone", zone_id)
-            raise
-
+        self.service.projects().locations().lakes().zones().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted zone %s", zone_id)
         return True
 
@@ -427,7 +367,7 @@ class DataplexService(GCPService[Lake]):
 
         assets = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("assets", []):
                 assets.append(
                     Asset.from_api_response(item, self.project_id)
@@ -468,21 +408,15 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}/assets/{asset_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .zones()
-                .assets()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("asset", asset_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .zones()
+            .assets()
+            .get(name=name)
+        )
+        response = self._execute(request, "asset", asset_id)
         logger.debug("Retrieved asset %s", asset_id)
         return Asset.from_api_response(response, self.project_id)
 
@@ -517,29 +451,19 @@ class DataplexService(GCPService[Lake]):
         if discovery_spec is not None:
             body["discoverySpec"] = discovery_spec
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .zones()
-                .assets()
-                .create(
-                    parent=parent,
-                    assetId=asset_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .zones()
+            .assets()
+            .create(
+                parent=parent,
+                assetId=asset_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created asset %s in zone %s", asset_id, zone_id
         )
@@ -567,20 +491,14 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}/assets/{asset_id}"
         )
-        try:
-            (
-                self.service.projects()
-                .locations()
-                .lakes()
-                .zones()
-                .assets()
-                .delete(name=name)
-                .execute()
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("asset", asset_id)
-            raise
-
+        (
+            self.service.projects()
+            .locations()
+            .lakes()
+            .zones()
+            .assets()
+            .delete(name=name)
+            .execute()
+        )
         logger.debug("Deleted asset %s", asset_id)
         return True

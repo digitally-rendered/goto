@@ -4,21 +4,11 @@ import logging
 from typing import List, Optional, Dict, Any
 
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.workflows import Workflow, WorkflowExecution
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class WorkflowsService(GCPService[Workflow]):
     """Service for interacting with Google Cloud Workflows."""
@@ -133,7 +123,7 @@ class WorkflowsService(GCPService[Workflow]):
 
         workflows = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for workflow_data in response.get("workflows", []):
                 workflows.append(
                     Workflow.from_api_response(
@@ -165,25 +155,13 @@ class WorkflowsService(GCPService[Workflow]):
         """
         name = self._format_workflow_path(location, workflow_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .workflows()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("workflow", workflow_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .workflows()
+            .get(name=name)
+        )
+        response = self._execute(request, "workflow", workflow_name)
         logger.debug("Retrieved workflow %s", workflow_name)
         return Workflow.from_api_response(response, self.project_id)
 
@@ -224,31 +202,17 @@ class WorkflowsService(GCPService[Workflow]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .workflows()
-                .create(
-                    parent=parent,
-                    body=body,
-                    workflowId=workflow_name,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .workflows()
+            .create(
+                parent=parent,
+                body=body,
+                workflowId=workflow_name,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Workflow '{workflow_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        )
+        response = self._execute(request)
         logger.debug("Created workflow %s in %s", workflow_name, location)
         return Workflow.from_api_response(response, self.project_id)
 
@@ -285,25 +249,13 @@ class WorkflowsService(GCPService[Workflow]):
 
         update_mask = ",".join(update_mask_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .workflows()
-                .patch(name=name, body=body, updateMask=update_mask)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("workflow", workflow_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .workflows()
+            .patch(name=name, body=body, updateMask=update_mask)
+        )
+        response = self._execute(request, "workflow", workflow_name)
         logger.debug("Updated workflow %s in %s", workflow_name, location)
         return Workflow.from_api_response(response, self.project_id)
 
@@ -319,25 +271,13 @@ class WorkflowsService(GCPService[Workflow]):
         """
         name = self._format_workflow_path(location, workflow_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .workflows()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("workflow", workflow_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .workflows()
+            .delete(name=name)
+        )
+        self._execute(request, "workflow", workflow_name)
         logger.debug("Deleted workflow %s in %s", workflow_name, location)
         return True
 
@@ -363,26 +303,14 @@ class WorkflowsService(GCPService[Workflow]):
         if argument is not None:
             body["argument"] = argument
 
-        try:
-            request = (
-                self._executions_service.projects()
-                .locations()
-                .workflows()
-                .executions()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("workflow", workflow_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self._executions_service.projects()
+            .locations()
+            .workflows()
+            .executions()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request, "workflow", workflow_name)
         logger.debug("Executed workflow %s", workflow_name)
         return WorkflowExecution.from_api_response(
             response, self.project_id
@@ -408,26 +336,14 @@ class WorkflowsService(GCPService[Workflow]):
             location, workflow_name, execution_id
         )
 
-        try:
-            request = (
-                self._executions_service.projects()
-                .locations()
-                .workflows()
-                .executions()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("execution", execution_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self._executions_service.projects()
+            .locations()
+            .workflows()
+            .executions()
+            .get(name=name)
+        )
+        response = self._execute(request, "execution", execution_id)
         logger.debug(
             "Retrieved execution %s for workflow %s",
             execution_id,
@@ -465,7 +381,7 @@ class WorkflowsService(GCPService[Workflow]):
 
         executions = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for exec_data in response.get("executions", []):
                 executions.append(
                     WorkflowExecution.from_api_response(
@@ -508,26 +424,14 @@ class WorkflowsService(GCPService[Workflow]):
             location, workflow_name, execution_id
         )
 
-        try:
-            request = (
-                self._executions_service.projects()
-                .locations()
-                .workflows()
-                .executions()
-                .cancel(name=name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("execution", execution_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self._executions_service.projects()
+            .locations()
+            .workflows()
+            .executions()
+            .cancel(name=name, body={})
+        )
+        response = self._execute(request, "execution", execution_id)
         logger.debug(
             "Cancelled execution %s for workflow %s",
             execution_id,

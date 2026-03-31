@@ -3,18 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.errors import HttpError
-
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_sql import SQLInstance, SQLDatabase, SQLUser, SQLBackupRun
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
-    APIError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudSQLService(GCPService[SQLInstance]):
     """Service for interacting with Google Cloud SQL."""
@@ -49,13 +41,10 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             A list of SQLInstance instances
         """
-        try:
-            request = self.service.instances().list(
-                project=self.project_id, **kwargs
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = self.service.instances().list(
+            project=self.project_id, **kwargs
+        )
+        response = self._execute(request)
         return [
             SQLInstance.from_api_response(item)
             for item in response.get("items", [])
@@ -70,17 +59,11 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             An SQLInstance instance
         """
-        try:
-            request = self.service.instances().get(
-                project=self.project_id, instance=instance_name
-            )
-            response = request.execute()
-            return SQLInstance.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().get(
+            project=self.project_id, instance=instance_name
+        )
+        response = self._execute(request, "SQLInstance", instance_name)
+        return SQLInstance.from_api_response(response)
     def create_instance(
         self,
         instance_name: str,
@@ -116,19 +99,11 @@ class CloudSQLService(GCPService[SQLInstance]):
         if labels:
             body["settings"]["userLabels"] = labels
 
-        try:
-            request = self.service.instances().insert(
-                project=self.project_id, body=body
-            )
-            response = request.execute()
-            return SQLInstance.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"SQLInstance '{instance_name}' already exists"
-                )
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().insert(
+            project=self.project_id, body=body
+        )
+        response = self._execute(request)
+        return SQLInstance.from_api_response(response)
     def delete_instance(self, instance_name: str) -> bool:
         """Delete a Cloud SQL instance.
 
@@ -138,17 +113,11 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             True if the deletion was successful
         """
-        try:
-            request = self.service.instances().delete(
-                project=self.project_id, instance=instance_name
-            )
-            request.execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().delete(
+            project=self.project_id, instance=instance_name
+        )
+        self._execute(request, "SQLInstance", instance_name)
+        return True
     def restart_instance(self, instance_name: str) -> Dict:
         """Restart a Cloud SQL instance.
 
@@ -158,18 +127,10 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             The operation response dictionary
         """
-        try:
-            request = self.service.instances().restart(
-                project=self.project_id, instance=instance_name
-            )
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
-    # --- Database methods ---
-
+        request = self.service.instances().restart(
+            project=self.project_id, instance=instance_name
+        )
+        return self._execute(request, "SQLInstance", instance_name)
     def list_databases(self, instance_name: str) -> List[SQLDatabase]:
         """List databases in a Cloud SQL instance.
 
@@ -179,13 +140,10 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             A list of SQLDatabase instances
         """
-        try:
-            request = self.service.databases().list(
-                project=self.project_id, instance=instance_name
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = self.service.databases().list(
+            project=self.project_id, instance=instance_name
+        )
+        response = self._execute(request)
         return [
             SQLDatabase.from_api_response(item)
             for item in response.get("items", [])
@@ -203,19 +161,13 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             An SQLDatabase instance
         """
-        try:
-            request = self.service.databases().get(
-                project=self.project_id,
-                instance=instance_name,
-                database=database_name,
-            )
-            response = request.execute()
-            return SQLDatabase.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLDatabase", database_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.databases().get(
+            project=self.project_id,
+            instance=instance_name,
+            database=database_name,
+        )
+        response = self._execute(request, "SQLDatabase", database_name)
+        return SQLDatabase.from_api_response(response)
     def create_database(
         self,
         instance_name: str,
@@ -241,19 +193,11 @@ class CloudSQLService(GCPService[SQLInstance]):
             "collation": collation,
         }
 
-        try:
-            request = self.service.databases().insert(
-                project=self.project_id, instance=instance_name, body=body
-            )
-            response = request.execute()
-            return SQLDatabase.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"SQLDatabase '{database_name}' already exists"
-                )
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.databases().insert(
+            project=self.project_id, instance=instance_name, body=body
+        )
+        response = self._execute(request)
+        return SQLDatabase.from_api_response(response)
     def delete_database(
         self, instance_name: str, database_name: str
     ) -> bool:
@@ -266,21 +210,13 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             True if the deletion was successful
         """
-        try:
-            request = self.service.databases().delete(
-                project=self.project_id,
-                instance=instance_name,
-                database=database_name,
-            )
-            request.execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLDatabase", database_name)
-            raise APIError(e.resp.status, str(e))
-
-    # --- User methods ---
-
+        request = self.service.databases().delete(
+            project=self.project_id,
+            instance=instance_name,
+            database=database_name,
+        )
+        self._execute(request, "SQLDatabase", database_name)
+        return True
     def list_users(self, instance_name: str) -> List[SQLUser]:
         """List users in a Cloud SQL instance.
 
@@ -290,13 +226,10 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             A list of SQLUser instances
         """
-        try:
-            request = self.service.users().list(
-                project=self.project_id, instance=instance_name
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = self.service.users().list(
+            project=self.project_id, instance=instance_name
+        )
+        response = self._execute(request)
         return [
             SQLUser.from_api_response(item)
             for item in response.get("items", [])
@@ -327,19 +260,11 @@ class CloudSQLService(GCPService[SQLInstance]):
             "host": host,
         }
 
-        try:
-            request = self.service.users().insert(
-                project=self.project_id, instance=instance_name, body=body
-            )
-            response = request.execute()
-            return SQLUser.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"SQLUser '{username}' already exists"
-                )
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.users().insert(
+            project=self.project_id, instance=instance_name, body=body
+        )
+        response = self._execute(request)
+        return SQLUser.from_api_response(response)
     def delete_user(
         self,
         instance_name: str,
@@ -356,22 +281,14 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             True if the deletion was successful
         """
-        try:
-            request = self.service.users().delete(
-                project=self.project_id,
-                instance=instance_name,
-                name=username,
-                host=host,
-            )
-            request.execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SQLUser", username)
-            raise APIError(e.resp.status, str(e))
-
-    # --- Backup methods ---
-
+        request = self.service.users().delete(
+            project=self.project_id,
+            instance=instance_name,
+            name=username,
+            host=host,
+        )
+        self._execute(request, "SQLUser", username)
+        return True
     def list_backup_runs(self, instance_name: str) -> List[SQLBackupRun]:
         """List backup runs for a Cloud SQL instance.
 
@@ -381,13 +298,10 @@ class CloudSQLService(GCPService[SQLInstance]):
         Returns:
             A list of SQLBackupRun instances
         """
-        try:
-            request = self.service.backupRuns().list(
-                project=self.project_id, instance=instance_name
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = self.service.backupRuns().list(
+            project=self.project_id, instance=instance_name
+        )
+        response = self._execute(request)
         return [
             SQLBackupRun.from_api_response(item)
             for item in response.get("items", [])

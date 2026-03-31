@@ -3,18 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.datastore import Entity, EntityResult
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
+from gcpoto.exceptions import APIError
 
 logger = logging.getLogger(__name__)
 
@@ -60,28 +52,18 @@ class DatastoreService(GCPService[Entity]):
 
         body = {"keys": keys}
 
-        try:
-            request = self.service.projects().lookup(
-                projectId=self.project_id, body=body
+        request = self.service.projects().lookup(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
+
+        results = []
+        for entity_result in response.get("found", []):
+            results.append(
+                EntityResult.from_api_response(entity_result, self.project_id)
             )
-            response = request.execute()
 
-            results = []
-            for entity_result in response.get("found", []):
-                results.append(
-                    EntityResult.from_api_response(entity_result, self.project_id)
-                )
-
-            return results
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return results
     def run_query(
         self,
         kind: str,
@@ -140,29 +122,19 @@ class DatastoreService(GCPService[Entity]):
 
         body = {"query": query}
 
-        try:
-            request = self.service.projects().runQuery(
-                projectId=self.project_id, body=body
+        request = self.service.projects().runQuery(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
+
+        results = []
+        batch = response.get("batch", {})
+        for entity_result in batch.get("entityResults", []):
+            results.append(
+                EntityResult.from_api_response(entity_result, self.project_id)
             )
-            response = request.execute()
 
-            results = []
-            batch = response.get("batch", {})
-            for entity_result in batch.get("entityResults", []):
-                results.append(
-                    EntityResult.from_api_response(entity_result, self.project_id)
-                )
-
-            return results
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return results
     def upsert(self, entities: List[Dict[str, Any]]) -> List[Entity]:
         """Upsert entities into Datastore.
 
@@ -184,31 +156,21 @@ class DatastoreService(GCPService[Entity]):
         mutations = [{"upsert": entity} for entity in entities]
         body = {"mutations": mutations}
 
-        try:
-            request = self.service.projects().commit(
-                projectId=self.project_id, body=body
-            )
-            response = request.execute()
+        request = self.service.projects().commit(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
 
-            results = []
-            for mutation_result in response.get("mutationResults", []):
-                key = mutation_result.get("key", {})
-                results.append(
-                    Entity.from_api_response(
-                        {"key": key, "properties": {}}, self.project_id
-                    )
+        results = []
+        for mutation_result in response.get("mutationResults", []):
+            key = mutation_result.get("key", {})
+            results.append(
+                Entity.from_api_response(
+                    {"key": key, "properties": {}}, self.project_id
                 )
+            )
 
-            return results
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return results
     def delete(self, keys: List[Dict[str, Any]]) -> bool:
         """Delete entities by key.
 
@@ -228,20 +190,10 @@ class DatastoreService(GCPService[Entity]):
         mutations = [{"delete": key} for key in keys]
         body = {"mutations": mutations}
 
-        try:
-            self.service.projects().commit(
-                projectId=self.project_id, body=body
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        self.service.projects().commit(
+            projectId=self.project_id, body=body
+        ).execute()
+        return True
     def allocate_ids(self, kind: str, count: int) -> List[Dict[str, Any]]:
         """Allocate IDs for incomplete keys.
 
@@ -272,21 +224,11 @@ class DatastoreService(GCPService[Entity]):
 
         body = {"keys": keys}
 
-        try:
-            request = self.service.projects().allocateIds(
-                projectId=self.project_id, body=body
-            )
-            response = request.execute()
-            return response.get("keys", [])
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.projects().allocateIds(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
+        return response.get("keys", [])
     def begin_transaction(self) -> str:
         """Begin a new transaction.
 
@@ -298,21 +240,11 @@ class DatastoreService(GCPService[Entity]):
         """
         logger.debug("Beginning transaction in project %s", self.project_id)
 
-        try:
-            request = self.service.projects().beginTransaction(
-                projectId=self.project_id, body={}
-            )
-            response = request.execute()
-            return response.get("transaction", "")
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.projects().beginTransaction(
+            projectId=self.project_id, body={}
+        )
+        response = self._execute(request)
+        return response.get("transaction", "")
     def commit(
         self,
         mutations: List[Dict[str, Any]],
@@ -342,20 +274,10 @@ class DatastoreService(GCPService[Entity]):
         else:
             body["mode"] = "NON_TRANSACTIONAL"
 
-        try:
-            request = self.service.projects().commit(
-                projectId=self.project_id, body=body
-            )
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.projects().commit(
+            projectId=self.project_id, body=body
+        )
+        return self._execute(request)
     def rollback(self, transaction: str) -> bool:
         """Roll back a transaction.
 
@@ -372,16 +294,7 @@ class DatastoreService(GCPService[Entity]):
 
         body = {"transaction": transaction}
 
-        try:
-            self.service.projects().rollback(
-                projectId=self.project_id, body=body
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
+        self.service.projects().rollback(
+            projectId=self.project_id, body=body
+        ).execute()
+        return True

@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dataflow import DataflowJob, DataflowTemplate
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class DataflowService(GCPService[DataflowJob]):
     """Service for interacting with Google Cloud Dataflow."""
@@ -67,7 +57,7 @@ class DataflowService(GCPService[DataflowJob]):
 
         jobs = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for job_data in response.get("jobs", []):
                 jobs.append(
                     DataflowJob.from_api_response(job_data, self.project_id)
@@ -93,23 +83,17 @@ class DataflowService(GCPService[DataflowJob]):
         Returns:
             A DataflowJob instance
         """
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .get(
-                    projectId=self.project_id,
-                    location=location,
-                    jobId=job_id,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .get(
+                projectId=self.project_id,
+                location=location,
+                jobId=job_id,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_id)
-            raise
-
+        )
+        response = self._execute(request, "job", job_id)
         logger.debug("Retrieved job %s", job_id)
         return DataflowJob.from_api_response(response, self.project_id)
 
@@ -125,27 +109,17 @@ class DataflowService(GCPService[DataflowJob]):
         Returns:
             A DataflowJob instance for the newly created job
         """
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .create(
-                    projectId=self.project_id,
-                    location=location,
-                    body=job_body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .create(
+                projectId=self.project_id,
+                location=location,
+                body=job_body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug("Created job in %s", location)
         return DataflowJob.from_api_response(response, self.project_id)
 
@@ -164,24 +138,18 @@ class DataflowService(GCPService[DataflowJob]):
         """
         body = {"requestedState": requested_state}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .update(
-                    projectId=self.project_id,
-                    location=location,
-                    jobId=job_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .update(
+                projectId=self.project_id,
+                location=location,
+                jobId=job_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_id)
-            raise
-
+        )
+        response = self._execute(request, "job", job_id)
         logger.debug("Updated job %s to state %s", job_id, requested_state)
         return DataflowJob.from_api_response(response, self.project_id)
 
@@ -239,30 +207,18 @@ class DataflowService(GCPService[DataflowJob]):
         if environment is not None:
             launch_params["environment"] = environment
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .templates()
-                .launch(
-                    projectId=self.project_id,
-                    location=location,
-                    gcsPath=template_gcs_path,
-                    body={"launchParameters": launch_params},
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .templates()
+            .launch(
+                projectId=self.project_id,
+                location=location,
+                gcsPath=template_gcs_path,
+                body={"launchParameters": launch_params},
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("template", template_gcs_path)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request, "template", template_gcs_path)
         logger.debug(
             "Launched template %s as job %s in %s",
             template_gcs_path,
@@ -313,7 +269,7 @@ class DataflowService(GCPService[DataflowJob]):
 
         messages = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for message in response.get("jobMessages", []):
                 messages.append(message)
 

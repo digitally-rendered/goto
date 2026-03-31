@@ -3,17 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.binary_auth import Policy, Attestor
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -56,23 +51,11 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Getting Binary Authorization policy for project %s", self.project_id)
 
-        try:
-            request = self.service.projects().getPolicy(
-                name=f"projects/{self.project_id}/policy"
-            )
-            response = request.execute()
-            return Policy.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Policy", self.project_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().getPolicy(
+            name=f"projects/{self.project_id}/policy"
+        )
+        response = self._execute(request, "Policy", self.project_id)
+        return Policy.from_api_response(response)
     def update_policy(self, policy_body: Dict[str, Any]) -> Policy:
         """Update the Binary Authorization policy for the project.
 
@@ -90,22 +73,12 @@ class BinaryAuthService(GCPService[Policy]):
             self.project_id,
         )
 
-        try:
-            request = self.service.projects().updatePolicy(
-                name=f"projects/{self.project_id}/policy",
-                body=policy_body,
-            )
-            response = request.execute()
-            return Policy.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().updatePolicy(
+            name=f"projects/{self.project_id}/policy",
+            body=policy_body,
+        )
+        response = self._execute(request)
+        return Policy.from_api_response(response)
     def list_attestors(self) -> List[Attestor]:
         """List all attestors in the project.
 
@@ -123,7 +96,7 @@ class BinaryAuthService(GCPService[Policy]):
 
         attestors = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for attestor_data in response.get("attestors", []):
                 attestors.append(Attestor.from_api_response(attestor_data))
             request = self.service.projects().attestors().list_next(
@@ -147,23 +120,11 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Getting attestor %s", attestor_id)
 
-        try:
-            request = self.service.projects().attestors().get(
-                name=f"projects/{self.project_id}/attestors/{attestor_id}"
-            )
-            response = request.execute()
-            return Attestor.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Attestor", attestor_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().attestors().get(
+            name=f"projects/{self.project_id}/attestors/{attestor_id}"
+        )
+        response = self._execute(request, "Attestor", attestor_id)
+        return Attestor.from_api_response(response)
     def create_attestor(
         self, attestor_id: str, attestor_body: Dict[str, Any]
     ) -> Attestor:
@@ -181,24 +142,14 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Creating attestor %s", attestor_id)
 
-        try:
-            request = self.service.projects().attestors().create(
-                parent=f"projects/{self.project_id}",
-                attestorId=attestor_id,
-                body=attestor_body,
-            )
-            response = request.execute()
-            logger.info("Created attestor %s", attestor_id)
-            return Attestor.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().attestors().create(
+            parent=f"projects/{self.project_id}",
+            attestorId=attestor_id,
+            body=attestor_body,
+        )
+        response = self._execute(request)
+        logger.info("Created attestor %s", attestor_id)
+        return Attestor.from_api_response(response)
     def update_attestor(
         self, attestor_id: str, attestor_body: Dict[str, Any]
     ) -> Attestor:
@@ -217,25 +168,13 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Updating attestor %s", attestor_id)
 
-        try:
-            request = self.service.projects().attestors().update(
-                name=f"projects/{self.project_id}/attestors/{attestor_id}",
-                body=attestor_body,
-            )
-            response = request.execute()
-            logger.info("Updated attestor %s", attestor_id)
-            return Attestor.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Attestor", attestor_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().attestors().update(
+            name=f"projects/{self.project_id}/attestors/{attestor_id}",
+            body=attestor_body,
+        )
+        response = self._execute(request, "Attestor", attestor_id)
+        logger.info("Updated attestor %s", attestor_id)
+        return Attestor.from_api_response(response)
     def delete_attestor(self, attestor_id: str) -> bool:
         """Delete an attestor.
 
@@ -251,19 +190,8 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Deleting attestor %s", attestor_id)
 
-        try:
-            self.service.projects().attestors().delete(
-                name=f"projects/{self.project_id}/attestors/{attestor_id}"
-            ).execute()
-            logger.info("Deleted attestor %s", attestor_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Attestor", attestor_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        self.service.projects().attestors().delete(
+            name=f"projects/{self.project_id}/attestors/{attestor_id}"
+        ).execute()
+        logger.info("Deleted attestor %s", attestor_id)
+        return True

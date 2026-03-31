@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dns import ManagedZone, ResourceRecordSet
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,7 +57,7 @@ class DNSService(GCPService[ManagedZone]):
 
         zones = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for zone_data in response.get("managedZones", []):
                 zones.append(ManagedZone.from_api_response(zone_data))
             request = self.service.managedZones().list_next(request, response)
@@ -84,23 +79,11 @@ class DNSService(GCPService[ManagedZone]):
         """
         logger.info("Getting DNS managed zone %s", zone_name)
 
-        try:
-            request = self.service.managedZones().get(
-                project=self.project_id, managedZone=zone_name
-            )
-            response = request.execute()
-            return ManagedZone.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedZone", zone_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.managedZones().get(
+            project=self.project_id, managedZone=zone_name
+        )
+        response = self._execute(request, "ManagedZone", zone_name)
+        return ManagedZone.from_api_response(response)
     def create_zone(
         self,
         zone_name: str,
@@ -137,26 +120,12 @@ class DNSService(GCPService[ManagedZone]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = self.service.managedZones().create(
-                project=self.project_id, body=body
-            )
-            response = request.execute()
-            logger.info("Created DNS managed zone %s", zone_name)
-            return ManagedZone.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ManagedZone '{zone_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.managedZones().create(
+            project=self.project_id, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created DNS managed zone %s", zone_name)
+        return ManagedZone.from_api_response(response)
     def delete_zone(self, zone_name: str) -> bool:
         """Delete a DNS managed zone.
 
@@ -172,23 +141,11 @@ class DNSService(GCPService[ManagedZone]):
         """
         logger.info("Deleting DNS managed zone %s", zone_name)
 
-        try:
-            self.service.managedZones().delete(
-                project=self.project_id, managedZone=zone_name
-            ).execute()
-            logger.info("Deleted DNS managed zone %s", zone_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedZone", zone_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.managedZones().delete(
+            project=self.project_id, managedZone=zone_name
+        ).execute()
+        logger.info("Deleted DNS managed zone %s", zone_name)
+        return True
     def update_zone(
         self,
         zone_name: str,
@@ -217,24 +174,12 @@ class DNSService(GCPService[ManagedZone]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = self.service.managedZones().patch(
-                project=self.project_id, managedZone=zone_name, body=body
-            )
-            response = request.execute()
-            logger.info("Updated DNS managed zone %s", zone_name)
-            return ManagedZone.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedZone", zone_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.managedZones().patch(
+            project=self.project_id, managedZone=zone_name, body=body
+        )
+        response = self._execute(request, "ManagedZone", zone_name)
+        logger.info("Updated DNS managed zone %s", zone_name)
+        return ManagedZone.from_api_response(response)
     def list_record_sets(self, zone_name: str, **kwargs) -> List[ResourceRecordSet]:
         """List resource record sets in a managed zone.
 
@@ -257,7 +202,7 @@ class DNSService(GCPService[ManagedZone]):
 
         record_sets = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for rrset_data in response.get("rrsets", []):
                 record_sets.append(
                     ResourceRecordSet.from_api_response(rrset_data, zone_name)
@@ -289,28 +234,14 @@ class DNSService(GCPService[ManagedZone]):
             "Getting record set %s (type %s) in zone %s", name, type, zone_name
         )
 
-        try:
-            request = self.service.resourceRecordSets().get(
-                project=self.project_id,
-                managedZone=zone_name,
-                name=name,
-                type=type,
-            )
-            response = request.execute()
-            return ResourceRecordSet.from_api_response(response, zone_name)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ResourceRecordSet", f"{name} ({type})"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.resourceRecordSets().get(
+            project=self.project_id,
+            managedZone=zone_name,
+            name=name,
+            type=type,
+        )
+        response = self._execute(request, "ResourceRecordSet", f)
+        return ResourceRecordSet.from_api_response(response, zone_name)
     def create_record_set(
         self,
         zone_name: str,
@@ -346,31 +277,17 @@ class DNSService(GCPService[ManagedZone]):
             "rrdatas": rrdatas,
         }
 
-        try:
-            request = self.service.resourceRecordSets().create(
-                project=self.project_id, managedZone=zone_name, body=body
-            )
-            response = request.execute()
-            logger.info(
-                "Created record set %s (type %s) in zone %s",
-                name,
-                type,
-                zone_name,
-            )
-            return ResourceRecordSet.from_api_response(response, zone_name)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ResourceRecordSet '{name}' (type {type}) already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.resourceRecordSets().create(
+            project=self.project_id, managedZone=zone_name, body=body
+        )
+        response = self._execute(request)
+        logger.info(
+            "Created record set %s (type %s) in zone %s",
+            name,
+            type,
+            zone_name,
+        )
+        return ResourceRecordSet.from_api_response(response, zone_name)
     def delete_record_set(
         self, zone_name: str, name: str, type: str
     ) -> bool:
@@ -395,33 +312,19 @@ class DNSService(GCPService[ManagedZone]):
             zone_name,
         )
 
-        try:
-            self.service.resourceRecordSets().delete(
-                project=self.project_id,
-                managedZone=zone_name,
-                name=name,
-                type=type,
-            ).execute()
-            logger.info(
-                "Deleted record set %s (type %s) from zone %s",
-                name,
-                type,
-                zone_name,
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ResourceRecordSet", f"{name} ({type})"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.resourceRecordSets().delete(
+            project=self.project_id,
+            managedZone=zone_name,
+            name=name,
+            type=type,
+        ).execute()
+        logger.info(
+            "Deleted record set %s (type %s) from zone %s",
+            name,
+            type,
+            zone_name,
+        )
+        return True
     def update_record_set(
         self,
         zone_name: str,
@@ -459,31 +362,18 @@ class DNSService(GCPService[ManagedZone]):
         if rrdatas is not None:
             body["rrdatas"] = rrdatas
 
-        try:
-            request = self.service.resourceRecordSets().patch(
-                project=self.project_id,
-                managedZone=zone_name,
-                name=name,
-                type=type,
-                body=body,
-            )
-            response = request.execute()
-            logger.info(
-                "Updated record set %s (type %s) in zone %s",
-                name,
-                type,
-                zone_name,
-            )
-            return ResourceRecordSet.from_api_response(response, zone_name)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ResourceRecordSet", f"{name} ({type})"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.resourceRecordSets().patch(
+            project=self.project_id,
+            managedZone=zone_name,
+            name=name,
+            type=type,
+            body=body,
+        )
+        response = self._execute(request, "ResourceRecordSet", f)
+        logger.info(
+            "Updated record set %s (type %s) in zone %s",
+            name,
+            type,
+            zone_name,
+        )
+        return ResourceRecordSet.from_api_response(response, zone_name)

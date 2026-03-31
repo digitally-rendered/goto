@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.vmware_engine import PrivateCloud, Cluster
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class VMwareEngineService(GCPService[PrivateCloud]):
     """Service for interacting with Google Cloud VMware Engine."""
@@ -52,7 +50,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .privateClouds()
             .list(parent=parent)
         )
-        response = request.execute()
+        response = self._execute(request)
         clouds = [
             PrivateCloud.from_api_response(item)
             for item in response.get("privateClouds", [])
@@ -86,7 +84,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .privateClouds()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return PrivateCloud.from_api_response(response)
 
     def create_private_cloud(
@@ -130,7 +128,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .privateClouds()
             .create(parent=parent, privateCloudId=cloud_name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Private cloud creation initiated for %s", cloud_name
         )
@@ -160,7 +158,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .privateClouds()
             .delete(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Private cloud deletion initiated for %s", cloud_name
         )
@@ -195,7 +193,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .clusters()
             .list(parent=parent)
         )
-        response = request.execute()
+        response = self._execute(request)
         clusters = [
             Cluster.from_api_response(item)
             for item in response.get("clusters", [])
@@ -233,7 +231,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .clusters()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Cluster.from_api_response(response)
 
     def create_cluster(
@@ -275,7 +273,7 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .clusters()
             .create(parent=parent, clusterId=cluster_name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Cluster creation initiated for %s", cluster_name)
         return response
 
@@ -305,6 +303,6 @@ class VMwareEngineService(GCPService[PrivateCloud]):
             .clusters()
             .delete(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Cluster deletion initiated for %s", cluster_name)
         return response

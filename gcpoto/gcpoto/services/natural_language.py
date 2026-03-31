@@ -3,20 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.natural_language import NLResult
-from gcpoto.exceptions import (
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class NaturalLanguageService(GCPService[NLResult]):
     """Service for interacting with Google Cloud Natural Language."""
@@ -90,19 +81,9 @@ class NaturalLanguageService(GCPService[NLResult]):
         document = self._build_document(content, content_type, language)
         body = {"document": document}
 
-        try:
-            request = self.service.documents().analyzeSentiment(body=body)
-            response = request.execute()
-            return NLResult.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.documents().analyzeSentiment(body=body)
+        response = self._execute(request)
+        return NLResult.from_api_response(response)
     def analyze_entities(
         self,
         content: str,
@@ -126,19 +107,9 @@ class NaturalLanguageService(GCPService[NLResult]):
         document = self._build_document(content, content_type, language)
         body = {"document": document}
 
-        try:
-            request = self.service.documents().analyzeEntities(body=body)
-            response = request.execute()
-            return NLResult.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.documents().analyzeEntities(body=body)
+        response = self._execute(request)
+        return NLResult.from_api_response(response)
     def analyze_syntax(
         self,
         content: str,
@@ -162,19 +133,9 @@ class NaturalLanguageService(GCPService[NLResult]):
         document = self._build_document(content, content_type, language)
         body = {"document": document}
 
-        try:
-            request = self.service.documents().analyzeSyntax(body=body)
-            response = request.execute()
-            return NLResult.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.documents().analyzeSyntax(body=body)
+        response = self._execute(request)
+        return NLResult.from_api_response(response)
     def classify_text(
         self,
         content: str,
@@ -196,19 +157,9 @@ class NaturalLanguageService(GCPService[NLResult]):
         document = self._build_document(content, content_type)
         body = {"document": document}
 
-        try:
-            request = self.service.documents().classifyText(body=body)
-            response = request.execute()
-            return NLResult.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.documents().classifyText(body=body)
+        response = self._execute(request)
+        return NLResult.from_api_response(response)
     def annotate_text(
         self,
         content: str,
@@ -238,15 +189,6 @@ class NaturalLanguageService(GCPService[NLResult]):
             "features": features,
         }
 
-        try:
-            request = self.service.documents().annotateText(body=body)
-            response = request.execute()
-            return NLResult.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.documents().annotateText(body=body)
+        response = self._execute(request)
+        return NLResult.from_api_response(response)

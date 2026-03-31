@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.media_cdn import EdgeCacheService, EdgeCacheOrigin
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class MediaCDNService(GCPService[EdgeCacheService]):
     """Service for interacting with Google Cloud Media CDN."""
@@ -54,7 +52,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheServices()
             .list(parent=parent)
         )
-        response = request.execute()
+        response = self._execute(request)
         services = [
             EdgeCacheService.from_api_response(item)
             for item in response.get("edgeCacheServices", [])
@@ -88,7 +86,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheServices()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return EdgeCacheService.from_api_response(response)
 
     def create_edge_cache_service(
@@ -133,7 +131,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
                 body=body,
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache service creation initiated for %s", service_name
         )
@@ -169,7 +167,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheServices()
             .patch(name=name, updateMask=update_mask, body=update_fields)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache service update initiated for %s", service_name
         )
@@ -199,7 +197,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheServices()
             .delete(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache service deletion initiated for %s", service_name
         )
@@ -227,7 +225,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheOrigins()
             .list(parent=parent)
         )
-        response = request.execute()
+        response = self._execute(request)
         origins = [
             EdgeCacheOrigin.from_api_response(item)
             for item in response.get("edgeCacheOrigins", [])
@@ -261,7 +259,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheOrigins()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return EdgeCacheOrigin.from_api_response(response)
 
     def create_edge_cache_origin(
@@ -306,7 +304,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
                 body=body,
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache origin creation initiated for %s", origin_name
         )
@@ -342,7 +340,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheOrigins()
             .patch(name=name, updateMask=update_mask, body=update_fields)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache origin update initiated for %s", origin_name
         )
@@ -372,7 +370,7 @@ class MediaCDNService(GCPService[EdgeCacheService]):
             .edgeCacheOrigins()
             .delete(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Edge cache origin deletion initiated for %s", origin_name
         )

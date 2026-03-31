@@ -3,22 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.batch import BatchJob, BatchTask
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class BatchService(GCPService[BatchJob]):
     """Service for interacting with Google Cloud Batch."""
@@ -110,7 +99,7 @@ class BatchService(GCPService[BatchJob]):
 
         jobs = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("jobs", []):
                 jobs.append(
                     BatchJob.from_api_response(item, self.project_id)
@@ -138,25 +127,13 @@ class BatchService(GCPService[BatchJob]):
         """
         name = self._format_job_path(location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .get(name=name)
+        )
+        response = self._execute(request, "job", job_name)
         logger.debug("Retrieved job %s", job_name)
         return BatchJob.from_api_response(response, self.project_id)
 
@@ -192,27 +169,13 @@ class BatchService(GCPService[BatchJob]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .create(parent=parent, body=body, jobId=job_id)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Job '{job_id}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .create(parent=parent, body=body, jobId=job_id)
+        )
+        response = self._execute(request)
         logger.debug("Created job %s in %s", job_id, location)
         return BatchJob.from_api_response(response, self.project_id)
 
@@ -228,25 +191,13 @@ class BatchService(GCPService[BatchJob]):
         """
         name = self._format_job_path(location, job_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .jobs()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .jobs()
+            .delete(name=name)
+        )
+        self._execute(request, "job", job_name)
         logger.debug("Deleted job %s in %s", job_name, location)
         return True
 
@@ -281,7 +232,7 @@ class BatchService(GCPService[BatchJob]):
 
         tasks = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("tasks", []):
                 tasks.append(
                     BatchTask.from_api_response(item, self.project_id)

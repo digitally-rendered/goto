@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.vertex_ai import (
@@ -13,16 +11,8 @@ from gcpoto.models.vertex_ai import (
     VertexEndpoint,
     TrainingPipeline,
 )
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class VertexAIService(GCPService[VertexDataset]):
     """Service for interacting with Google Cloud Vertex AI."""
@@ -125,7 +115,7 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("datasets", []):
                 datasets.append(
                     VertexDataset.from_api_response(item, self.project_id)
@@ -158,23 +148,11 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_dataset_name(location, dataset_id)
-        try:
-            request = self.service.projects().locations().datasets().get(
-                name=name
-            )
-            response = request.execute()
-            return VertexDataset.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("dataset", dataset_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().locations().datasets().get(
+            name=name
+        )
+        response = self._execute(request, "dataset", dataset_id)
+        return VertexDataset.from_api_response(response, self.project_id)
     def create_dataset(
         self,
         location: str,
@@ -214,21 +192,11 @@ class VertexAIService(GCPService[VertexDataset]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = self.service.projects().locations().datasets().create(
-                parent=parent, body=body
-            )
-            response = request.execute()
-            return VertexDataset.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().locations().datasets().create(
+            parent=parent, body=body
+        )
+        response = self._execute(request)
+        return VertexDataset.from_api_response(response, self.project_id)
     def delete_dataset(self, location: str, dataset_id: str) -> bool:
         """Delete a Vertex AI dataset.
 
@@ -247,24 +215,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_dataset_name(location, dataset_id)
-        try:
-            self.service.projects().locations().datasets().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("dataset", dataset_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Model methods ----
-
+        self.service.projects().locations().datasets().delete(
+            name=name
+        ).execute()
+        return True
     def list_models(self, location: str, **kwargs) -> List[VertexModel]:
         """List Vertex AI models in a location.
 
@@ -286,7 +240,7 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("models", []):
                 models.append(
                     VertexModel.from_api_response(item, self.project_id)
@@ -319,23 +273,11 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_model_name(location, model_id)
-        try:
-            request = self.service.projects().locations().models().get(
-                name=name
-            )
-            response = request.execute()
-            return VertexModel.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("model", model_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().locations().models().get(
+            name=name
+        )
+        response = self._execute(request, "model", model_id)
+        return VertexModel.from_api_response(response, self.project_id)
     def upload_model(
         self,
         location: str,
@@ -384,21 +326,11 @@ class VertexAIService(GCPService[VertexDataset]):
 
         body: Dict[str, Any] = {"model": model_body}
 
-        try:
-            request = self.service.projects().locations().models().upload(
-                parent=parent, body=body
-            )
-            response = request.execute()
-            return VertexModel.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().locations().models().upload(
+            parent=parent, body=body
+        )
+        response = self._execute(request)
+        return VertexModel.from_api_response(response, self.project_id)
     def delete_model(self, location: str, model_id: str) -> bool:
         """Delete a Vertex AI model.
 
@@ -417,24 +349,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_model_name(location, model_id)
-        try:
-            self.service.projects().locations().models().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("model", model_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Endpoint methods ----
-
+        self.service.projects().locations().models().delete(
+            name=name
+        ).execute()
+        return True
     def list_endpoints(self, location: str, **kwargs) -> List[VertexEndpoint]:
         """List Vertex AI endpoints in a location.
 
@@ -458,7 +376,7 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("endpoints", []):
                 endpoints.append(
                     VertexEndpoint.from_api_response(item, self.project_id)
@@ -491,25 +409,13 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_endpoint_name(location, endpoint_id)
-        try:
-            request = self.service.projects().locations().endpoints().get(
-                name=name
-            )
-            response = request.execute()
-            return VertexEndpoint.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("endpoint", endpoint_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().locations().endpoints().get(
+            name=name
+        )
+        response = self._execute(request, "endpoint", endpoint_id)
+        return VertexEndpoint.from_api_response(
+            response, self.project_id
+        )
     def create_endpoint(
         self,
         location: str,
@@ -546,26 +452,16 @@ class VertexAIService(GCPService[VertexDataset]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .endpoints()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return VertexEndpoint.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .endpoints()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return VertexEndpoint.from_api_response(
+            response, self.project_id
+        )
     def delete_endpoint(self, location: str, endpoint_id: str) -> bool:
         """Delete a Vertex AI endpoint.
 
@@ -584,22 +480,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_endpoint_name(location, endpoint_id)
-        try:
-            self.service.projects().locations().endpoints().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("endpoint", endpoint_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.projects().locations().endpoints().delete(
+            name=name
+        ).execute()
+        return True
     def deploy_model(
         self,
         location: str,
@@ -649,28 +533,16 @@ class VertexAIService(GCPService[VertexDataset]):
             },
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .endpoints()
-                .deployModel(endpoint=endpoint_name, body=body)
-            )
-            response = request.execute()
-            return VertexEndpoint.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("endpoint", endpoint_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .endpoints()
+            .deployModel(endpoint=endpoint_name, body=body)
+        )
+        response = self._execute(request, "endpoint", endpoint_id)
+        return VertexEndpoint.from_api_response(
+            response, self.project_id
+        )
     def undeploy_model(
         self,
         location: str,
@@ -700,28 +572,16 @@ class VertexAIService(GCPService[VertexDataset]):
             "deployedModelId": deployed_model_id,
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .endpoints()
-                .undeployModel(endpoint=endpoint_name, body=body)
-            )
-            response = request.execute()
-            return VertexEndpoint.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("endpoint", endpoint_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .endpoints()
+            .undeployModel(endpoint=endpoint_name, body=body)
+        )
+        response = self._execute(request, "endpoint", endpoint_id)
+        return VertexEndpoint.from_api_response(
+            response, self.project_id
+        )
     def predict(
         self,
         location: str,
@@ -755,28 +615,14 @@ class VertexAIService(GCPService[VertexDataset]):
         if parameters is not None:
             body["parameters"] = parameters
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .endpoints()
-                .predict(endpoint=endpoint_name, body=body)
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("endpoint", endpoint_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Training Pipeline methods ----
-
+        request = (
+            self.service.projects()
+            .locations()
+            .endpoints()
+            .predict(endpoint=endpoint_name, body=body)
+        )
+        response = self._execute(request, "endpoint", endpoint_id)
+        return response
     def list_training_pipelines(
         self, location: str, **kwargs
     ) -> List[TrainingPipeline]:
@@ -805,7 +651,7 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("trainingPipelines", []):
                 pipelines.append(
                     TrainingPipeline.from_api_response(item, self.project_id)
@@ -857,22 +703,13 @@ class VertexAIService(GCPService[VertexDataset]):
         if model_display_name is not None:
             body["modelToUpload"] = {"displayName": model_display_name}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .trainingPipelines()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return TrainingPipeline.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .trainingPipelines()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return TrainingPipeline.from_api_response(
+            response, self.project_id
+        )

@@ -3,17 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.recommendations_ai import CatalogItem, PredictionResult
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,32 +101,22 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         parent = self._catalog_items_path(location, catalog)
         logger.debug("Listing catalog items under %s", parent)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .list(parent=parent)
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .list(parent=parent)
+        )
+        response = self._execute(request)
+
+        items = []
+        for item_data in response.get("catalogItems", []):
+            items.append(
+                CatalogItem.from_api_response(item_data, self.project_id)
             )
-            response = request.execute()
 
-            items = []
-            for item_data in response.get("catalogItems", []):
-                items.append(
-                    CatalogItem.from_api_response(item_data, self.project_id)
-                )
-
-            return items
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return items
     def get_catalog_item(
         self, location: str, catalog: str, item_id: str
     ) -> CatalogItem:
@@ -152,29 +137,15 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         name = self._catalog_item_path(location, catalog, item_id)
         logger.debug("Getting catalog item %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .get(name=name)
-            )
-            response = request.execute()
-            return CatalogItem.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "recommendationengine.catalogItem", item_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .get(name=name)
+        )
+        response = self._execute(request, "recommendationengine.catalogItem", item_id)
+        return CatalogItem.from_api_response(response, self.project_id)
     def create_catalog_item(
         self,
         location: str,
@@ -214,25 +185,15 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return CatalogItem.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return CatalogItem.from_api_response(response, self.project_id)
     def update_catalog_item(
         self,
         location: str,
@@ -260,29 +221,15 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         name = self._catalog_item_path(location, catalog, item_id)
         logger.debug("Updating catalog item %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .patch(name=name, updateMask=update_mask, body=update_fields)
-            )
-            response = request.execute()
-            return CatalogItem.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "recommendationengine.catalogItem", item_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .patch(name=name, updateMask=update_mask, body=update_fields)
+        )
+        response = self._execute(request, "recommendationengine.catalogItem", item_id)
+        return CatalogItem.from_api_response(response, self.project_id)
     def delete_catalog_item(
         self, location: str, catalog: str, item_id: str
     ) -> bool:
@@ -303,28 +250,14 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         name = self._catalog_item_path(location, catalog, item_id)
         logger.debug("Deleting catalog item %s", name)
 
-        try:
-            (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .delete(name=name)
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "recommendationengine.catalogItem", item_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .delete(name=name)
+        ).execute()
+        return True
     def import_catalog_items(
         self,
         location: str,
@@ -349,24 +282,14 @@ class RecommendationsAIService(GCPService[CatalogItem]):
 
         body = {"inputConfig": input_config}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .catalogItems()
-                .import_(parent=parent, body=body)
-            )
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .catalogItems()
+            .import_(parent=parent, body=body)
+        )
+        return self._execute(request)
     def predict(
         self,
         location: str,
@@ -404,23 +327,14 @@ class RecommendationsAIService(GCPService[CatalogItem]):
         if filter_str is not None:
             body["filter"] = filter_str
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .catalogs()
-                .placements()
-                .predict(name=name, body=body)
-            )
-            response = request.execute()
-            return PredictionResult.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
+        request = (
+            self.service.projects()
+            .locations()
+            .catalogs()
+            .placements()
+            .predict(name=name, body=body)
+        )
+        response = self._execute(request)
+        return PredictionResult.from_api_response(
+            response, self.project_id
+        )

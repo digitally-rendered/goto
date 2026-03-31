@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.spanner import SpannerInstance, SpannerDatabase
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class SpannerService(GCPService[SpannerInstance]):
     """Service for interacting with Google Cloud Spanner."""
@@ -76,7 +74,7 @@ class SpannerService(GCPService[SpannerInstance]):
             parent=parent, **kwargs
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             instances = response.get("instances", [])
             all_instances.extend(
                 SpannerInstance.from_api_response(item) for item in instances
@@ -100,7 +98,7 @@ class SpannerService(GCPService[SpannerInstance]):
         name = self._instance_path(instance_id)
         logger.debug("Getting Spanner instance %s", name)
         request = self.service.projects().instances().get(name=name)
-        response = request.execute()
+        response = self._execute(request)
         return SpannerInstance.from_api_response(response)
 
     def create_instance(
@@ -151,7 +149,7 @@ class SpannerService(GCPService[SpannerInstance]):
         request = self.service.projects().instances().create(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return SpannerInstance.from_api_response(response)
 
     def update_instance(
@@ -204,7 +202,7 @@ class SpannerService(GCPService[SpannerInstance]):
         request = self.service.projects().instances().patch(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return SpannerInstance.from_api_response(response)
 
     def delete_instance(self, instance_id: str) -> bool:
@@ -219,7 +217,7 @@ class SpannerService(GCPService[SpannerInstance]):
         name = self._instance_path(instance_id)
         logger.info("Deleting Spanner instance %s", name)
         request = self.service.projects().instances().delete(name=name)
-        request.execute()
+        self._execute(request)
         return True
 
     # --- Database methods ---
@@ -243,7 +241,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             databases = response.get("databases", [])
             all_databases.extend(
                 SpannerDatabase.from_api_response(item) for item in databases
@@ -276,7 +274,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .databases()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return SpannerDatabase.from_api_response(response)
 
     def create_database(
@@ -315,7 +313,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .databases()
             .create(parent=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         return SpannerDatabase.from_api_response(response)
 
     def drop_database(
@@ -338,7 +336,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .databases()
             .dropDatabase(database=name)
         )
-        request.execute()
+        self._execute(request)
         return True
 
     def get_database_ddl(
@@ -361,7 +359,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .databases()
             .getDdl(database=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return response.get("statements", [])
 
     def update_database_ddl(
@@ -429,7 +427,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .sessions()
             .create(database=session_name, body={})
         )
-        session = create_request.execute()
+        session = self._execute(create_request)
         session_path = session["name"]
 
         try:

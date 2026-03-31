@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.certificate_manager import Certificate, CertificateMap
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -67,7 +62,7 @@ class CertificateManagerService(GCPService[Certificate]):
 
         certificates = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for cert_data in response.get("certificates", []):
                 certificates.append(Certificate.from_api_response(cert_data))
             request = (
@@ -99,26 +94,14 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificates/{cert_name}"
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .certificates()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Certificate.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Certificate", cert_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .certificates()
+            .get(name=name)
+        )
+        response = self._execute(request, "Certificate", cert_name)
+        return Certificate.from_api_response(response)
     def create_certificate(
         self,
         location: str,
@@ -161,33 +144,19 @@ class CertificateManagerService(GCPService[Certificate]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .certificates()
-                .create(
-                    parent=parent,
-                    certificateId=cert_name,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .certificates()
+            .create(
+                parent=parent,
+                certificateId=cert_name,
+                body=body,
             )
-            response = request.execute()
-            logger.info("Created certificate %s", cert_name)
-            return Certificate.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Certificate '{cert_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
+        logger.info("Created certificate %s", cert_name)
+        return Certificate.from_api_response(response)
     def delete_certificate(self, location: str, cert_name: str) -> bool:
         """Delete a certificate.
 
@@ -208,23 +177,11 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificates/{cert_name}"
 
-        try:
-            self.service.projects().locations().certificates().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted certificate %s", cert_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Certificate", cert_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.projects().locations().certificates().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted certificate %s", cert_name)
+        return True
     def list_certificate_maps(self, location: str) -> List[CertificateMap]:
         """List certificate maps in a location.
 
@@ -250,7 +207,7 @@ class CertificateManagerService(GCPService[Certificate]):
 
         maps = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for map_data in response.get("certificateMaps", []):
                 maps.append(CertificateMap.from_api_response(map_data))
             request = (
@@ -284,26 +241,14 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificateMaps/{map_name}"
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .certificateMaps()
-                .get(name=name)
-            )
-            response = request.execute()
-            return CertificateMap.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("CertificateMap", map_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .certificateMaps()
+            .get(name=name)
+        )
+        response = self._execute(request, "CertificateMap", map_name)
+        return CertificateMap.from_api_response(response)
     def create_certificate_map(
         self,
         location: str,
@@ -338,33 +283,19 @@ class CertificateManagerService(GCPService[Certificate]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .certificateMaps()
-                .create(
-                    parent=parent,
-                    certificateMapId=map_name,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .certificateMaps()
+            .create(
+                parent=parent,
+                certificateMapId=map_name,
+                body=body,
             )
-            response = request.execute()
-            logger.info("Created certificate map %s", map_name)
-            return CertificateMap.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"CertificateMap '{map_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
+        logger.info("Created certificate map %s", map_name)
+        return CertificateMap.from_api_response(response)
     def delete_certificate_map(
         self, location: str, map_name: str
     ) -> bool:
@@ -387,19 +318,8 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificateMaps/{map_name}"
 
-        try:
-            self.service.projects().locations().certificateMaps().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted certificate map %s", map_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("CertificateMap", map_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        self.service.projects().locations().certificateMaps().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted certificate map %s", map_name)
+        return True

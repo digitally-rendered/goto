@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.vpn import VPNGateway, VPNTunnel
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +61,7 @@ class VPNService(GCPService[VPNGateway]):
 
         gateways = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for gw_data in response.get("items", []):
                 gateways.append(VPNGateway.from_api_response(gw_data))
             request = self.service.vpnGateways().list_next(request, response)
@@ -93,23 +88,11 @@ class VPNService(GCPService[VPNGateway]):
             "Getting VPN gateway %s in region %s", gateway_name, region
         )
 
-        try:
-            request = self.service.vpnGateways().get(
-                project=self.project_id, region=region, vpnGateway=gateway_name
-            )
-            response = request.execute()
-            return VPNGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("VPNGateway", gateway_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.vpnGateways().get(
+            project=self.project_id, region=region, vpnGateway=gateway_name
+        )
+        response = self._execute(request, "VPNGateway", gateway_name)
+        return VPNGateway.from_api_response(response)
     def create_vpn_gateway(
         self, region: str, gateway_name: str, network: str
     ) -> VPNGateway:
@@ -136,26 +119,12 @@ class VPNService(GCPService[VPNGateway]):
             "network": network,
         }
 
-        try:
-            request = self.service.vpnGateways().insert(
-                project=self.project_id, region=region, body=body
-            )
-            response = request.execute()
-            logger.info("Created VPN gateway %s", gateway_name)
-            return VPNGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"VPNGateway '{gateway_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.vpnGateways().insert(
+            project=self.project_id, region=region, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created VPN gateway %s", gateway_name)
+        return VPNGateway.from_api_response(response)
     def delete_vpn_gateway(self, region: str, gateway_name: str) -> bool:
         """Delete a VPN gateway.
 
@@ -174,23 +143,11 @@ class VPNService(GCPService[VPNGateway]):
             "Deleting VPN gateway %s in region %s", gateway_name, region
         )
 
-        try:
-            self.service.vpnGateways().delete(
-                project=self.project_id, region=region, vpnGateway=gateway_name
-            ).execute()
-            logger.info("Deleted VPN gateway %s", gateway_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("VPNGateway", gateway_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.vpnGateways().delete(
+            project=self.project_id, region=region, vpnGateway=gateway_name
+        ).execute()
+        logger.info("Deleted VPN gateway %s", gateway_name)
+        return True
     def list_vpn_tunnels(self, region: str) -> List[VPNTunnel]:
         """List VPN tunnels in a region.
 
@@ -212,7 +169,7 @@ class VPNService(GCPService[VPNGateway]):
 
         tunnels = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for tunnel_data in response.get("items", []):
                 tunnels.append(VPNTunnel.from_api_response(tunnel_data))
             request = self.service.vpnTunnels().list_next(request, response)
@@ -237,23 +194,11 @@ class VPNService(GCPService[VPNGateway]):
             "Getting VPN tunnel %s in region %s", tunnel_name, region
         )
 
-        try:
-            request = self.service.vpnTunnels().get(
-                project=self.project_id, region=region, vpnTunnel=tunnel_name
-            )
-            response = request.execute()
-            return VPNTunnel.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("VPNTunnel", tunnel_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.vpnTunnels().get(
+            project=self.project_id, region=region, vpnTunnel=tunnel_name
+        )
+        response = self._execute(request, "VPNTunnel", tunnel_name)
+        return VPNTunnel.from_api_response(response)
     def create_vpn_tunnel(
         self,
         region: str,
@@ -292,26 +237,12 @@ class VPNService(GCPService[VPNGateway]):
             "ikeVersion": ike_version,
         }
 
-        try:
-            request = self.service.vpnTunnels().insert(
-                project=self.project_id, region=region, body=body
-            )
-            response = request.execute()
-            logger.info("Created VPN tunnel %s", tunnel_name)
-            return VPNTunnel.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"VPNTunnel '{tunnel_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.vpnTunnels().insert(
+            project=self.project_id, region=region, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created VPN tunnel %s", tunnel_name)
+        return VPNTunnel.from_api_response(response)
     def delete_vpn_tunnel(self, region: str, tunnel_name: str) -> bool:
         """Delete a VPN tunnel.
 
@@ -330,19 +261,8 @@ class VPNService(GCPService[VPNGateway]):
             "Deleting VPN tunnel %s in region %s", tunnel_name, region
         )
 
-        try:
-            self.service.vpnTunnels().delete(
-                project=self.project_id, region=region, vpnTunnel=tunnel_name
-            ).execute()
-            logger.info("Deleted VPN tunnel %s", tunnel_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("VPNTunnel", tunnel_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        self.service.vpnTunnels().delete(
+            project=self.project_id, region=region, vpnTunnel=tunnel_name
+        ).execute()
+        logger.info("Deleted VPN tunnel %s", tunnel_name)
+        return True

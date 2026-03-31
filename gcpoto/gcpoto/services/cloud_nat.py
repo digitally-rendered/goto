@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_nat import NATConfig
@@ -65,7 +63,7 @@ class CloudNATService(GCPService[NATConfig]):
 
         routers = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for router_data in response.get("items", []):
                 routers.append(router_data)
             request = self.service.routers().list_next(request, response)
@@ -88,22 +86,10 @@ class CloudNATService(GCPService[NATConfig]):
         """
         logger.info("Getting Cloud Router %s in region %s", router_name, region)
 
-        try:
-            request = self.service.routers().get(
-                project=self.project_id, region=region, router=router_name
-            )
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Router", router_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.routers().get(
+            project=self.project_id, region=region, router=router_name
+        )
+        return self._execute(request, "Router", router_name)
     def create_nat(
         self,
         region: str,
@@ -153,7 +139,7 @@ class CloudNATService(GCPService[NATConfig]):
                 router=router_name,
                 body=router,
             )
-            request.execute()
+            self._execute(request)
 
             nat_config["project"] = self.project_id
             nat_config["region"] = region
@@ -222,7 +208,7 @@ class CloudNATService(GCPService[NATConfig]):
                 router=router_name,
                 body=router,
             )
-            request.execute()
+            self._execute(request)
 
             for nat in nats:
                 if nat.get("name") == nat_name:
@@ -286,7 +272,7 @@ class CloudNATService(GCPService[NATConfig]):
                 router=router_name,
                 body=router,
             )
-            request.execute()
+            self._execute(request)
             logger.info(
                 "Deleted NAT %s from router %s", nat_name, router_name
             )
@@ -324,29 +310,18 @@ class CloudNATService(GCPService[NATConfig]):
             region,
         )
 
-        try:
-            request = self.service.routers().getNatMappingInfo(
-                project=self.project_id, region=region, router=router_name
+        request = self.service.routers().getNatMappingInfo(
+            project=self.project_id, region=region, router=router_name
+        )
+
+        mappings = []
+        while request is not None:
+            response = self._execute(request, "Router", router_name)
+            for mapping in response.get("result", []):
+                mappings.append(mapping)
+            request = self.service.routers().getNatMappingInfo_next(
+                request, response
             )
 
-            mappings = []
-            while request is not None:
-                response = request.execute()
-                for mapping in response.get("result", []):
-                    mappings.append(mapping)
-                request = self.service.routers().getNatMappingInfo_next(
-                    request, response
-                )
-
-            logger.info("Found %s NAT mappings", len(mappings))
-            return mappings
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Router", router_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        logger.info("Found %s NAT mappings", len(mappings))
+        return mappings

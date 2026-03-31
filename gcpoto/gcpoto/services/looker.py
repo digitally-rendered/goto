@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.looker import LookerInstance
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class LookerService(GCPService[LookerInstance]):
     """Service for interacting with Google Cloud Looker."""
@@ -63,7 +53,7 @@ class LookerService(GCPService[LookerInstance]):
 
         instances = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("instances", []):
                 instances.append(
                     LookerInstance.from_api_response(
@@ -100,19 +90,13 @@ class LookerService(GCPService[LookerInstance]):
             f"projects/{self.project_id}/locations/{location}"
             f"/instances/{instance_name}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .get(name=name)
+        )
+        response = self._execute(request, "instance", instance_name)
         logger.debug("Retrieved Looker instance %s", instance_name)
         return LookerInstance.from_api_response(
             response, self.project_id
@@ -149,27 +133,17 @@ class LookerService(GCPService[LookerInstance]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .create(
-                    parent=parent,
-                    instanceId=instance_name,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .create(
+                parent=parent,
+                instanceId=instance_name,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created Looker instance %s in %s",
             instance_name,
@@ -201,23 +175,17 @@ class LookerService(GCPService[LookerInstance]):
             f"projects/{self.project_id}/locations/{location}"
             f"/instances/{instance_name}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=update_fields,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=update_fields,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        )
+        response = self._execute(request, "instance", instance_name)
         logger.debug("Updated Looker instance %s", instance_name)
         return LookerInstance.from_api_response(
             response, self.project_id
@@ -239,15 +207,9 @@ class LookerService(GCPService[LookerInstance]):
             f"projects/{self.project_id}/locations/{location}"
             f"/instances/{instance_name}"
         )
-        try:
-            self.service.projects().locations().instances().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        self.service.projects().locations().instances().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted Looker instance %s", instance_name)
         return True
 
@@ -267,19 +229,13 @@ class LookerService(GCPService[LookerInstance]):
             f"projects/{self.project_id}/locations/{location}"
             f"/instances/{instance_name}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .restart(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .restart(name=name)
+        )
+        response = self._execute(request, "instance", instance_name)
         logger.debug("Restarted Looker instance %s", instance_name)
         return LookerInstance.from_api_response(
             response, self.project_id
@@ -304,19 +260,13 @@ class LookerService(GCPService[LookerInstance]):
         )
         body = {"gcsUri": gcs_uri}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .export(name=name, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .export(name=name, body=body)
+        )
+        response = self._execute(request, "instance", instance_name)
         logger.debug(
             "Exported Looker instance %s to %s",
             instance_name,
@@ -343,19 +293,13 @@ class LookerService(GCPService[LookerInstance]):
         )
         body = {"gcsUri": gcs_uri}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .import_(name=name, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("instance", instance_name)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .import_(name=name, body=body)
+        )
+        response = self._execute(request, "instance", instance_name)
         logger.debug(
             "Imported Looker instance %s from %s",
             instance_name,

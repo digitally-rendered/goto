@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.profiler import Profile
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class ProfilerService(GCPService[Profile]):
     """Service for interacting with Google Cloud Profiler."""
@@ -76,7 +66,7 @@ class ProfilerService(GCPService[Profile]):
         request = self.service.projects().profiles().create(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return Profile.from_api_response(response)
 
@@ -112,7 +102,7 @@ class ProfilerService(GCPService[Profile]):
         request = self.service.projects().profiles().createOffline(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return Profile.from_api_response(response)
 
@@ -144,7 +134,7 @@ class ProfilerService(GCPService[Profile]):
         request = self.service.projects().profiles().patch(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return Profile.from_api_response(response)
 
@@ -171,7 +161,7 @@ class ProfilerService(GCPService[Profile]):
         profiles = []
         request = self.service.projects().profiles().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("profiles", []):
                 if deployment is not None:
                     item_deployment = item.get("deployment", {})

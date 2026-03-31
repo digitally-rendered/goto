@@ -3,22 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_tasks import TaskQueue, Task
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudTasksService(GCPService[TaskQueue]):
     """Service for interacting with Google Cloud Tasks."""
@@ -112,7 +101,7 @@ class CloudTasksService(GCPService[TaskQueue]):
 
         queues = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for queue_data in response.get("queues", []):
                 queues.append(
                     TaskQueue.from_api_response(queue_data, self.project_id)
@@ -140,25 +129,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_queue_path(location, queue_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .get(name=name)
+        )
+        response = self._execute(request, "queue", queue_name)
         logger.debug("Retrieved queue %s", queue_name)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -191,27 +168,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         if retry_config is not None:
             body["retryConfig"] = retry_config
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Queue '{queue_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
         logger.debug("Created queue %s in %s", queue_name, location)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -238,25 +201,13 @@ class CloudTasksService(GCPService[TaskQueue]):
 
         update_mask = ",".join(update_fields.keys())
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .patch(name=name, body=body, updateMask=update_mask)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .patch(name=name, body=body, updateMask=update_mask)
+        )
+        response = self._execute(request, "queue", queue_name)
         logger.debug("Updated queue %s in %s", queue_name, location)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -272,25 +223,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_queue_path(location, queue_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .delete(name=name)
+        )
+        self._execute(request, "queue", queue_name)
         logger.debug("Deleted queue %s in %s", queue_name, location)
         return True
 
@@ -306,25 +245,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_queue_path(location, queue_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .pause(name=name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .pause(name=name, body={})
+        )
+        response = self._execute(request, "queue", queue_name)
         logger.debug("Paused queue %s in %s", queue_name, location)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -340,25 +267,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_queue_path(location, queue_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .resume(name=name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .resume(name=name, body={})
+        )
+        response = self._execute(request, "queue", queue_name)
         logger.debug("Resumed queue %s in %s", queue_name, location)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -374,25 +289,13 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_queue_path(location, queue_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .purge(name=name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("queue", queue_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .purge(name=name, body={})
+        )
+        response = self._execute(request, "queue", queue_name)
         logger.debug("Purged queue %s in %s", queue_name, location)
         return TaskQueue.from_api_response(response, self.project_id)
 
@@ -421,7 +324,7 @@ class CloudTasksService(GCPService[TaskQueue]):
 
         tasks = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for task_data in response.get("tasks", []):
                 tasks.append(
                     Task.from_api_response(task_data, self.project_id)
@@ -455,26 +358,14 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_task_path(location, queue_name, task_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .tasks()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("task", task_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .tasks()
+            .get(name=name)
+        )
+        response = self._execute(request, "task", task_name)
         logger.debug("Retrieved task %s from queue %s", task_name, queue_name)
         return Task.from_api_response(response, self.project_id)
 
@@ -515,7 +406,7 @@ class CloudTasksService(GCPService[TaskQueue]):
             .tasks()
             .create(parent=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.debug("Created task in queue %s", queue_name)
         return Task.from_api_response(response, self.project_id)
@@ -535,26 +426,14 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_task_path(location, queue_name, task_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .tasks()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("task", task_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .tasks()
+            .delete(name=name)
+        )
+        self._execute(request, "task", task_name)
         logger.debug(
             "Deleted task %s from queue %s", task_name, queue_name
         )
@@ -575,26 +454,14 @@ class CloudTasksService(GCPService[TaskQueue]):
         """
         name = self._format_task_path(location, queue_name, task_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .queues()
-                .tasks()
-                .run(name=name, body={})
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("task", task_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .queues()
+            .tasks()
+            .run(name=name, body={})
+        )
+        response = self._execute(request, "task", task_name)
         logger.debug(
             "Ran task %s in queue %s", task_name, queue_name
         )

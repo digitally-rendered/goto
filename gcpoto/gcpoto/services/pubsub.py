@@ -4,19 +4,11 @@ from typing import List, Optional, Dict, Any, Union
 
 from google.cloud import pubsub_v1
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.pubsub import PubSubTopic, PubSubSubscription
-from gcpoto.exceptions import (
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
-from gcpoto.utils import format_topic_path, format_subscription_path, extract_name_from_path
 
+from gcpoto.utils import format_topic_path, format_subscription_path, extract_name_from_path
 
 class PubSubService(GCPService[PubSubTopic]):
     """Service for interacting with Google Cloud Pub/Sub."""
@@ -75,7 +67,7 @@ class PubSubService(GCPService[PubSubTopic]):
 
         topics = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for topic_data in response.get("topics", []):
                 topics.append(
                     PubSubTopic.from_api_response(topic_data, self.project_id)
@@ -98,7 +90,7 @@ class PubSubService(GCPService[PubSubTopic]):
         full_topic_path = format_topic_path(self.project_id, topic_name)
 
         request = self.service.projects().topics().get(topic=full_topic_path)
-        response = request.execute()
+        response = self._execute(request)
 
         return PubSubTopic.from_api_response(response, self.project_id)
 
@@ -158,28 +150,16 @@ class PubSubService(GCPService[PubSubTopic]):
             if key not in ["topic"]:
                 body[key] = value
 
-        try:
-            request = (
-                self.service.projects().topics().create(name=full_topic_path, body=body)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects().topics().create(name=full_topic_path, body=body)
+        )
+        response = self._execute(request)
 
-            # Create the topic object and add the tags explicitly
-            topic = PubSubTopic.from_api_response(response, self.project_id)
-            if tags:
-                topic.tags = tags
-            return topic
-        except HttpError as e:
-            if e.resp.status == 409:  # Conflict - topic already exists
-                raise ValueError(f"Topic '{topic_name}' already exists")
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        # Create the topic object and add the tags explicitly
+        topic = PubSubTopic.from_api_response(response, self.project_id)
+        if tags:
+            topic.tags = tags
+        return topic
     def delete_topic(self, topic_name: str) -> bool:
         """Delete a Pub/Sub topic.
 
@@ -192,7 +172,7 @@ class PubSubService(GCPService[PubSubTopic]):
         full_topic_path = format_topic_path(self.project_id, topic_name)
 
         request = self.service.projects().topics().delete(topic=full_topic_path)
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -255,7 +235,7 @@ class PubSubService(GCPService[PubSubTopic]):
         subscriptions = []
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
 
             # The response format differs depending on whether we list by topic or by project
             if topic_name:
@@ -267,7 +247,7 @@ class PubSubService(GCPService[PubSubTopic]):
                         .subscriptions()
                         .get(subscription=subscription_path)
                     )
-                    sub_response = sub_request.execute()
+                    sub_response = self._execute(sub_request)
                     subscriptions.append(
                         PubSubSubscription.from_api_response(
                             sub_response, self.project_id
@@ -313,7 +293,7 @@ class PubSubService(GCPService[PubSubTopic]):
             .subscriptions()
             .get(subscription=full_subscription_path)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return PubSubSubscription.from_api_response(response, self.project_id)
 
@@ -404,32 +384,20 @@ class PubSubService(GCPService[PubSubTopic]):
             if key not in ["name", "subscription"]:
                 body[key] = value
 
-        try:
-            request = (
-                self.service.projects()
-                .subscriptions()
-                .create(name=full_subscription_path, body=body)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .subscriptions()
+            .create(name=full_subscription_path, body=body)
+        )
+        response = self._execute(request)
 
-            # Create the subscription object and add the tags explicitly
-            subscription = PubSubSubscription.from_api_response(
-                response, self.project_id
-            )
-            if tags:
-                subscription.tags = tags
-            return subscription
-        except HttpError as e:
-            if e.resp.status == 409:  # Conflict - subscription already exists
-                raise ValueError(f"Subscription '{subscription_name}' already exists")
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        # Create the subscription object and add the tags explicitly
+        subscription = PubSubSubscription.from_api_response(
+            response, self.project_id
+        )
+        if tags:
+            subscription.tags = tags
+        return subscription
     def delete_subscription(self, subscription_name: str) -> bool:
         """Delete a Pub/Sub subscription.
 
@@ -446,7 +414,7 @@ class PubSubService(GCPService[PubSubTopic]):
             .subscriptions()
             .delete(subscription=full_subscription_path)
         )
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -479,7 +447,7 @@ class PubSubService(GCPService[PubSubTopic]):
                 },
             )
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return response.get("receivedMessages", [])
 
@@ -500,6 +468,6 @@ class PubSubService(GCPService[PubSubTopic]):
             .subscriptions()
             .acknowledge(subscription=full_subscription_path, body={"ackIds": ack_ids})
         )
-        request.execute()
+        self._execute(request)
 
         return True

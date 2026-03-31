@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.data_catalog import EntryGroup, Entry, Tag
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class DataCatalogService(GCPService[EntryGroup]):
     """Service for interacting with Google Cloud Data Catalog."""
@@ -67,7 +57,7 @@ class DataCatalogService(GCPService[EntryGroup]):
 
         entry_groups = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("entryGroups", []):
                 entry_groups.append(
                     EntryGroup.from_api_response(item, self.project_id)
@@ -100,19 +90,13 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .entryGroups()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("entry_group", entry_group_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .entryGroups()
+            .get(name=name)
+        )
+        response = self._execute(request, "entry_group", entry_group_id)
         logger.debug("Retrieved entry group %s", entry_group_id)
         return EntryGroup.from_api_response(response, self.project_id)
 
@@ -143,27 +127,17 @@ class DataCatalogService(GCPService[EntryGroup]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .entryGroups()
-                .create(
-                    parent=parent,
-                    entryGroupId=entry_group_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .entryGroups()
+            .create(
+                parent=parent,
+                entryGroupId=entry_group_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug("Created entry group %s in %s", entry_group_id, location)
         return EntryGroup.from_api_response(response, self.project_id)
 
@@ -183,15 +157,9 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}"
         )
-        try:
-            self.service.projects().locations().entryGroups().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("entry_group", entry_group_id)
-            raise
-
+        self.service.projects().locations().entryGroups().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted entry group %s", entry_group_id)
         return True
 
@@ -221,7 +189,7 @@ class DataCatalogService(GCPService[EntryGroup]):
 
         entries = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("entries", []):
                 entries.append(
                     Entry.from_api_response(item, self.project_id)
@@ -258,20 +226,14 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}/entries/{entry_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .entryGroups()
-                .entries()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("entry", entry_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .entryGroups()
+            .entries()
+            .get(name=name)
+        )
+        response = self._execute(request, "entry", entry_id)
         logger.debug("Retrieved entry %s", entry_id)
         return Entry.from_api_response(response, self.project_id)
 
@@ -307,28 +269,18 @@ class DataCatalogService(GCPService[EntryGroup]):
         if schema is not None:
             body["schema"] = schema
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .entryGroups()
-                .entries()
-                .create(
-                    parent=parent,
-                    entryId=entry_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .entryGroups()
+            .entries()
+            .create(
+                parent=parent,
+                entryId=entry_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created entry %s in entry group %s",
             entry_id,
@@ -353,15 +305,9 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}/entries/{entry_id}"
         )
-        try:
-            self.service.projects().locations().entryGroups().entries().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("entry", entry_id)
-            raise
-
+        self.service.projects().locations().entryGroups().entries().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted entry %s", entry_id)
         return True
 
@@ -379,18 +325,8 @@ class DataCatalogService(GCPService[EntryGroup]):
         """
         body = {"scope": scope, "query": query}
 
-        try:
-            request = self.service.catalog().search(body=body)
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.catalog().search(body=body)
+        response = self._execute(request)
         results = response.get("results", [])
         logger.debug("Search returned %s results for query: %s", len(results), query)
         return results

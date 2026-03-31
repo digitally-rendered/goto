@@ -3,20 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.translation import Translation, DetectedLanguage
-from gcpoto.exceptions import (
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class TranslationService(GCPService[Translation]):
     """Service for interacting with Google Cloud Translation."""
@@ -90,24 +81,14 @@ class TranslationService(GCPService[Translation]):
         if mime_type is not None:
             body["mimeType"] = mime_type
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .translateText(parent=parent, body=body)
-            )
-            response = request.execute()
-            translations = response.get("translations", [])
-            return [Translation.from_api_response(t) for t in translations]
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .translateText(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        translations = response.get("translations", [])
+        return [Translation.from_api_response(t) for t in translations]
     def detect_language(
         self,
         content: str,
@@ -129,27 +110,17 @@ class TranslationService(GCPService[Translation]):
             "content": content,
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .detectLanguage(parent=parent, body=body)
-            )
-            response = request.execute()
-            languages = response.get("languages", [])
-            return [
-                DetectedLanguage.from_api_response(lang)
-                for lang in languages
-            ]
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .detectLanguage(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        languages = response.get("languages", [])
+        return [
+            DetectedLanguage.from_api_response(lang)
+            for lang in languages
+        ]
     def get_supported_languages(
         self,
         display_language_code: Optional[str] = None,
@@ -172,23 +143,13 @@ class TranslationService(GCPService[Translation]):
         if display_language_code is not None:
             kwargs["displayLanguageCode"] = display_language_code
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .getSupportedLanguages(**kwargs)
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .getSupportedLanguages(**kwargs)
+        )
+        response = self._execute(request)
+        return response
     def batch_translate_text(
         self,
         source_language: str,
@@ -219,19 +180,10 @@ class TranslationService(GCPService[Translation]):
             "outputConfig": output_config,
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .batchTranslateText(parent=parent, body=body)
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .batchTranslateText(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return response

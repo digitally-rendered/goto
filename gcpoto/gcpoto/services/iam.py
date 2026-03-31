@@ -3,18 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.iam import ServiceAccount, ServiceAccountKey, Role
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
+from gcpoto.exceptions import ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +71,7 @@ class IAMService(GCPService[ServiceAccount]):
 
         accounts = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for account_data in response.get("accounts", []):
                 accounts.append(ServiceAccount.from_api_response(account_data))
 
@@ -110,26 +102,12 @@ class IAMService(GCPService[ServiceAccount]):
         """
         full_name = format_service_account_path(self.project_id, email_or_uid)
 
-        try:
-            request = (
-                self.service.projects()
-                .serviceAccounts()
-                .get(name=full_name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ServiceAccount", email_or_uid
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .serviceAccounts()
+            .get(name=full_name)
+        )
+        response = self._execute(request, "ServiceAccount", email_or_uid)
         logger.info("Retrieved service account %s", email_or_uid)
         return ServiceAccount.from_api_response(response)
 
@@ -165,7 +143,7 @@ class IAMService(GCPService[ServiceAccount]):
             .serviceAccounts()
             .create(name=f"projects/{self.project_id}", body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info(
             "Created service account %s in project %s",
@@ -203,7 +181,7 @@ class IAMService(GCPService[ServiceAccount]):
             .serviceAccounts()
             .update(name=full_name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info("Updated service account %s", email)
         return ServiceAccount.from_api_response(response)
@@ -224,7 +202,7 @@ class IAMService(GCPService[ServiceAccount]):
             .serviceAccounts()
             .delete(name=full_name)
         )
-        request.execute()
+        self._execute(request)
 
         logger.info("Deleted service account %s", email)
         return True
@@ -242,7 +220,7 @@ class IAMService(GCPService[ServiceAccount]):
             .serviceAccounts()
             .enable(name=full_name, body={})
         )
-        request.execute()
+        self._execute(request)
 
         logger.info("Enabled service account %s", email)
 
@@ -259,7 +237,7 @@ class IAMService(GCPService[ServiceAccount]):
             .serviceAccounts()
             .disable(name=full_name, body={})
         )
-        request.execute()
+        self._execute(request)
 
         logger.info("Disabled service account %s", email)
 
@@ -292,7 +270,7 @@ class IAMService(GCPService[ServiceAccount]):
             .keys()
             .list(**kwargs)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         keys = [
             ServiceAccountKey.from_api_response(key_data)
@@ -331,7 +309,7 @@ class IAMService(GCPService[ServiceAccount]):
             .keys()
             .create(name=full_name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info("Created key for service account %s", email)
         return ServiceAccountKey.from_api_response(response)
@@ -359,7 +337,7 @@ class IAMService(GCPService[ServiceAccount]):
             .keys()
             .delete(name=key_name)
         )
-        request.execute()
+        self._execute(request)
 
         logger.info(
             "Deleted key %s for service account %s", key_id, email
@@ -395,7 +373,7 @@ class IAMService(GCPService[ServiceAccount]):
 
         roles = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for role_data in response.get("roles", []):
                 roles.append(Role.from_api_response(role_data))
 
@@ -422,24 +400,12 @@ class IAMService(GCPService[ServiceAccount]):
         Raises:
             ResourceNotFoundError: If the role is not found
         """
-        try:
-            request = (
-                self.service.projects()
-                .roles()
-                .get(name=role_name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Role", role_name) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .roles()
+            .get(name=role_name)
+        )
+        response = self._execute(request, "Role", role_name)
         logger.info("Retrieved role %s", role_name)
         return Role.from_api_response(response)
 
@@ -478,7 +444,7 @@ class IAMService(GCPService[ServiceAccount]):
             .roles()
             .create(parent=f"projects/{self.project_id}", body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info(
             "Created role %s in project %s", role_id, self.project_id
@@ -520,7 +486,7 @@ class IAMService(GCPService[ServiceAccount]):
             .roles()
             .patch(name=role_name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info("Updated role %s", role_name)
         return Role.from_api_response(response)
@@ -542,7 +508,7 @@ class IAMService(GCPService[ServiceAccount]):
             .roles()
             .delete(name=role_name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         logger.info("Deleted role %s", role_name)
         return Role.from_api_response(response)

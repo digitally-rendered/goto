@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dialogflow import Agent, Flow, Intent
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class DialogflowService(GCPService[Agent]):
     """Service for interacting with Google Cloud Dialogflow CX."""
@@ -149,7 +139,7 @@ class DialogflowService(GCPService[Agent]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("agents", []):
                 agents.append(Agent.from_api_response(item))
             request = (
@@ -180,26 +170,14 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_agent_name(location, agent_id)
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Agent.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("agent", agent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .get(name=name)
+        )
+        response = self._execute(request, "agent", agent_id)
+        return Agent.from_api_response(response)
     def create_agent(
         self,
         location: str,
@@ -237,24 +215,14 @@ class DialogflowService(GCPService[Agent]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return Agent.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return Agent.from_api_response(response)
     def update_agent(
         self,
         location: str,
@@ -284,26 +252,14 @@ class DialogflowService(GCPService[Agent]):
         body: Dict[str, Any] = {"name": name}
         body.update(update_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .patch(name=name, updateMask=update_mask, body=body)
-            )
-            response = request.execute()
-            return Agent.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("agent", agent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .patch(name=name, updateMask=update_mask, body=body)
+        )
+        response = self._execute(request, "agent", agent_id)
+        return Agent.from_api_response(response)
     def delete_agent(self, location: str, agent_id: str) -> bool:
         """Delete a Dialogflow CX agent.
 
@@ -322,24 +278,10 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_agent_name(location, agent_id)
-        try:
-            self.service.projects().locations().agents().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("agent", agent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Flow methods ----
-
+        self.service.projects().locations().agents().delete(
+            name=name
+        ).execute()
+        return True
     def list_flows(
         self, location: str, agent_id: str, **kwargs
     ) -> List[Flow]:
@@ -371,7 +313,7 @@ class DialogflowService(GCPService[Agent]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("flows", []):
                 flows.append(Flow.from_api_response(item))
             request = (
@@ -407,27 +349,15 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_flow_name(location, agent_id, flow_id)
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .flows()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Flow.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("flow", flow_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .flows()
+            .get(name=name)
+        )
+        response = self._execute(request, "flow", flow_id)
+        return Flow.from_api_response(response)
     def create_flow(
         self,
         location: str,
@@ -462,25 +392,15 @@ class DialogflowService(GCPService[Agent]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .flows()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return Flow.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .flows()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return Flow.from_api_response(response)
     def delete_flow(
         self, location: str, agent_id: str, flow_id: str
     ) -> bool:
@@ -503,29 +423,15 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_flow_name(location, agent_id, flow_id)
-        try:
-            (
-                self.service.projects()
-                .locations()
-                .agents()
-                .flows()
-                .delete(name=name)
-                .execute()
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("flow", flow_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Intent methods ----
-
+        (
+            self.service.projects()
+            .locations()
+            .agents()
+            .flows()
+            .delete(name=name)
+            .execute()
+        )
+        return True
     def list_intents(
         self, location: str, agent_id: str, **kwargs
     ) -> List[Intent]:
@@ -557,7 +463,7 @@ class DialogflowService(GCPService[Agent]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("intents", []):
                 intents.append(Intent.from_api_response(item))
             request = (
@@ -593,27 +499,15 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_intent_name(location, agent_id, intent_id)
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .intents()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Intent.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("intent", intent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .intents()
+            .get(name=name)
+        )
+        response = self._execute(request, "intent", intent_id)
+        return Intent.from_api_response(response)
     def create_intent(
         self,
         location: str,
@@ -648,25 +542,15 @@ class DialogflowService(GCPService[Agent]):
         if training_phrases is not None:
             body["trainingPhrases"] = training_phrases
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .intents()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return Intent.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .intents()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return Intent.from_api_response(response)
     def delete_intent(
         self, location: str, agent_id: str, intent_id: str
     ) -> bool:
@@ -689,29 +573,15 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_intent_name(location, agent_id, intent_id)
-        try:
-            (
-                self.service.projects()
-                .locations()
-                .agents()
-                .intents()
-                .delete(name=name)
-                .execute()
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("intent", intent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Session methods ----
-
+        (
+            self.service.projects()
+            .locations()
+            .agents()
+            .intents()
+            .delete(name=name)
+            .execute()
+        )
+        return True
     def detect_intent(
         self,
         location: str,
@@ -749,23 +619,12 @@ class DialogflowService(GCPService[Agent]):
             },
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .agents()
-                .sessions()
-                .detectIntent(session=session, body=body)
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("agent", agent_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .agents()
+            .sessions()
+            .detectIntent(session=session, body=body)
+        )
+        response = self._execute(request, "agent", agent_id)
+        return response

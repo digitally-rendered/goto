@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_functions import CloudFunction
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudFunctionsService(GCPService[CloudFunction]):
     """Service for interacting with Google Cloud Functions."""
@@ -95,7 +85,7 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for function_data in response.get("functions", []):
                 functions.append(self._parse_response(function_data))
 
@@ -122,27 +112,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         """
         name = self._format_function_path(location, function_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .get(name=name)
+        )
+        response = self._execute(request, "CloudFunction", function_name)
         return self._parse_response(response)
 
     def create_function(
@@ -208,28 +184,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
 
         body = self._process_tags(body, labels)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .create(location=parent, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise APIError(
-                    409,
-                    f"Function '{function_name}' already exists in {location}",
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .create(location=parent, body=body)
+        )
+        response = self._execute(request)
         logger.info(
             "Created Cloud Function %s in %s", function_name, location
         )
@@ -259,27 +220,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         # Build the update mask from the provided fields
         update_mask = ",".join(update_fields.keys())
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .patch(name=name, body=body, updateMask=update_mask)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .patch(name=name, body=body, updateMask=update_mask)
+        )
+        response = self._execute(request, "CloudFunction", function_name)
         logger.info(
             "Updated Cloud Function %s in %s", function_name, location
         )
@@ -299,27 +246,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         """
         name = self._format_function_path(location, function_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .delete(name=name)
+        )
+        self._execute(request, "CloudFunction", function_name)
         logger.info(
             "Deleted Cloud Function %s in %s", function_name, location
         )
@@ -347,27 +280,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         if data is not None:
             body["data"] = data
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .call(name=name, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .call(name=name, body=body)
+        )
+        response = self._execute(request, "CloudFunction", function_name)
         logger.info(
             "Called Cloud Function %s in %s", function_name, location
         )
@@ -387,27 +306,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
         """
         resource = self._format_function_path(location, function_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .getIamPolicy(resource=resource)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .getIamPolicy(resource=resource)
+        )
+        response = self._execute(request, "CloudFunction", function_name)
         return response
 
     def set_iam_policy(
@@ -430,27 +335,13 @@ class CloudFunctionsService(GCPService[CloudFunction]):
 
         body = {"policy": policy}
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .functions()
-                .setIamPolicy(resource=resource, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "CloudFunction", function_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .functions()
+            .setIamPolicy(resource=resource, body=body)
+        )
+        response = self._execute(request, "CloudFunction", function_name)
         logger.info(
             "Set IAM policy for Cloud Function %s in %s",
             function_name,

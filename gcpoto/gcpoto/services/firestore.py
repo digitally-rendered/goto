@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.firestore import (
@@ -13,11 +11,8 @@ from gcpoto.models.firestore import (
     FirestoreIndex,
 )
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -95,30 +90,16 @@ class FirestoreService(GCPService[FirestoreDocument]):
         name = self._document_path(collection, document_id)
         logger.debug("Getting document %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .get(name=name)
-            )
-            response = request.execute()
-            return FirestoreDocument.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "firestore.document", f"{collection}/{document_id}"
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .get(name=name)
+        )
+        response = self._execute(request, "firestore.document", f)
+        return FirestoreDocument.from_api_response(
+            response, self.project_id
+        )
     def create_document(
         self,
         collection: str,
@@ -147,31 +128,21 @@ class FirestoreService(GCPService[FirestoreDocument]):
             self.project_id,
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .createDocument(
-                    parent=parent,
-                    collectionId=collection,
-                    documentId=document_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .createDocument(
+                parent=parent,
+                collectionId=collection,
+                documentId=document_id,
+                body=body,
             )
-            response = request.execute()
-            return FirestoreDocument.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        )
+        response = self._execute(request)
+        return FirestoreDocument.from_api_response(
+            response, self.project_id
+        )
     def update_document(
         self,
         collection: str,
@@ -199,34 +170,20 @@ class FirestoreService(GCPService[FirestoreDocument]):
         body = {"fields": fields}
         logger.debug("Updating document %s", name)
 
-        try:
-            kwargs: Dict[str, Any] = {"name": name, "body": body}
-            if update_mask is not None:
-                kwargs["updateMask_fieldPaths"] = update_mask
+        kwargs: Dict[str, Any] = {"name": name, "body": body}
+        if update_mask is not None:
+            kwargs["updateMask_fieldPaths"] = update_mask
 
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .patch(**kwargs)
-            )
-            response = request.execute()
-            return FirestoreDocument.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "firestore.document", f"{collection}/{document_id}"
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .patch(**kwargs)
+        )
+        response = self._execute(request, "firestore.document", f)
+        return FirestoreDocument.from_api_response(
+            response, self.project_id
+        )
     def delete_document(
         self, collection: str, document_id: str
     ) -> bool:
@@ -246,24 +203,10 @@ class FirestoreService(GCPService[FirestoreDocument]):
         name = self._document_path(collection, document_id)
         logger.debug("Deleting document %s", name)
 
-        try:
-            self.service.projects().databases().documents().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "firestore.document", f"{collection}/{document_id}"
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        self.service.projects().databases().documents().delete(
+            name=name
+        ).execute()
+        return True
     def list_documents(
         self,
         collection: str,
@@ -290,48 +233,38 @@ class FirestoreService(GCPService[FirestoreDocument]):
             self.project_id,
         )
 
-        try:
-            kwargs: Dict[str, Any] = {
-                "parent": parent,
-                "collectionId": collection,
-                "pageSize": page_size,
-            }
-            if order_by:
-                kwargs["orderBy"] = order_by
+        kwargs: Dict[str, Any] = {
+            "parent": parent,
+            "collectionId": collection,
+            "pageSize": page_size,
+        }
+        if order_by:
+            kwargs["orderBy"] = order_by
 
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .list(**kwargs)
+        )
+
+        documents = []
+        while request is not None:
+            response = self._execute(request)
+            for doc_data in response.get("documents", []):
+                documents.append(
+                    FirestoreDocument.from_api_response(
+                        doc_data, self.project_id
+                    )
+                )
             request = (
                 self.service.projects()
                 .databases()
                 .documents()
-                .list(**kwargs)
+                .list_next(request, response)
             )
 
-            documents = []
-            while request is not None:
-                response = request.execute()
-                for doc_data in response.get("documents", []):
-                    documents.append(
-                        FirestoreDocument.from_api_response(
-                            doc_data, self.project_id
-                        )
-                    )
-                request = (
-                    self.service.projects()
-                    .databases()
-                    .documents()
-                    .list_next(request, response)
-                )
-
-            return documents
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return documents
     def query_documents(
         self,
         collection: str,
@@ -409,36 +342,26 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
         body = {"structuredQuery": structured_query}
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .runQuery(parent=parent, body=body)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .runQuery(parent=parent, body=body)
+        )
+        response = self._execute(request)
 
-            documents = []
-            if isinstance(response, list):
-                for result in response:
-                    doc = result.get("document")
-                    if doc:
-                        documents.append(
-                            FirestoreDocument.from_api_response(
-                                doc, self.project_id
-                            )
+        documents = []
+        if isinstance(response, list):
+            for result in response:
+                doc = result.get("document")
+                if doc:
+                    documents.append(
+                        FirestoreDocument.from_api_response(
+                            doc, self.project_id
                         )
+                    )
 
-            return documents
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return documents
     def list_collection_ids(
         self, parent: Optional[str] = None
     ) -> List[FirestoreCollection]:
@@ -457,33 +380,23 @@ class FirestoreService(GCPService[FirestoreDocument]):
             parent = self._documents_path()
         logger.debug("Listing collection IDs under %s", parent)
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .listCollectionIds(parent=parent, body={})
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .listCollectionIds(parent=parent, body={})
+        )
+        response = self._execute(request)
 
-            collections = []
-            for cid in response.get("collectionIds", []):
-                collections.append(
-                    FirestoreCollection.from_api_response(
-                        cid, self.project_id
-                    )
+        collections = []
+        for cid in response.get("collectionIds", []):
+            collections.append(
+                FirestoreCollection.from_api_response(
+                    cid, self.project_id
                 )
+            )
 
-            return collections
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return collections
     def list_indexes(
         self, collection_group: Optional[str] = None
     ) -> List[FirestoreIndex]:
@@ -505,34 +418,24 @@ class FirestoreService(GCPService[FirestoreDocument]):
         )
         logger.debug("Listing indexes under %s", parent)
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .collectionGroups()
-                .indexes()
-                .list(parent=parent)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .databases()
+            .collectionGroups()
+            .indexes()
+            .list(parent=parent)
+        )
+        response = self._execute(request)
 
-            indexes = []
-            for idx_data in response.get("indexes", []):
-                indexes.append(
-                    FirestoreIndex.from_api_response(
-                        idx_data, self.project_id
-                    )
+        indexes = []
+        for idx_data in response.get("indexes", []):
+            indexes.append(
+                FirestoreIndex.from_api_response(
+                    idx_data, self.project_id
                 )
+            )
 
-            return indexes
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        return indexes
     def create_index(
         self,
         collection_group: str,
@@ -566,27 +469,17 @@ class FirestoreService(GCPService[FirestoreDocument]):
             self.project_id,
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .collectionGroups()
-                .indexes()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            return FirestoreIndex.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .databases()
+            .collectionGroups()
+            .indexes()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        return FirestoreIndex.from_api_response(
+            response, self.project_id
+        )
     def delete_index(self, index_name: str) -> bool:
         """Delete an index by its full resource name.
 
@@ -602,24 +495,10 @@ class FirestoreService(GCPService[FirestoreDocument]):
         """
         logger.debug("Deleting index %s", index_name)
 
-        try:
-            self.service.projects().databases().collectionGroups().indexes().delete(
-                name=index_name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "firestore.index", index_name
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        self.service.projects().databases().collectionGroups().indexes().delete(
+            name=index_name
+        ).execute()
+        return True
     def batch_get_documents(
         self, collection: str, document_ids: List[str]
     ) -> List[FirestoreDocument]:
@@ -648,32 +527,23 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
         body = {"documents": document_names}
 
-        try:
-            request = (
-                self.service.projects()
-                .databases()
-                .documents()
-                .batchGet(database=database, body=body)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .databases()
+            .documents()
+            .batchGet(database=database, body=body)
+        )
+        response = self._execute(request)
 
-            documents = []
-            if isinstance(response, list):
-                for result in response:
-                    doc = result.get("found", {}).get("document")
-                    if doc:
-                        documents.append(
-                            FirestoreDocument.from_api_response(
-                                doc, self.project_id
-                            )
+        documents = []
+        if isinstance(response, list):
+            for result in response:
+                doc = result.get("found", {}).get("document")
+                if doc:
+                    documents.append(
+                        FirestoreDocument.from_api_response(
+                            doc, self.project_id
                         )
+                    )
 
-            return documents
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
+        return documents

@@ -3,22 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_deploy import DeliveryPipeline, Release, Rollout
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudDeployService(GCPService[DeliveryPipeline]):
     """Service for interacting with Google Cloud Deploy."""
@@ -139,7 +128,7 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
 
         pipelines = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("deliveryPipelines", []):
                 pipelines.append(
                     DeliveryPipeline.from_api_response(item, self.project_id)
@@ -169,25 +158,13 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         """
         name = self._format_pipeline_path(location, pipeline_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("deliveryPipeline", pipeline_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .get(name=name)
+        )
+        response = self._execute(request, "deliveryPipeline", pipeline_name)
         logger.debug("Retrieved pipeline %s", pipeline_name)
         return DeliveryPipeline.from_api_response(response, self.project_id)
 
@@ -224,31 +201,17 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .create(
-                    parent=parent,
-                    body=body,
-                    deliveryPipelineId=pipeline_name,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .create(
+                parent=parent,
+                body=body,
+                deliveryPipelineId=pipeline_name,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Delivery pipeline '{pipeline_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        )
+        response = self._execute(request)
         logger.debug("Created pipeline %s in %s", pipeline_name, location)
         return DeliveryPipeline.from_api_response(response, self.project_id)
 
@@ -264,25 +227,13 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         """
         name = self._format_pipeline_path(location, pipeline_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("deliveryPipeline", pipeline_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .delete(name=name)
+        )
+        self._execute(request, "deliveryPipeline", pipeline_name)
         logger.debug("Deleted pipeline %s in %s", pipeline_name, location)
         return True
 
@@ -313,7 +264,7 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
 
         releases = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("releases", []):
                 releases.append(
                     Release.from_api_response(item, self.project_id)
@@ -351,26 +302,14 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
             location, pipeline_name, release_name
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .releases()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("release", release_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .releases()
+            .get(name=name)
+        )
+        response = self._execute(request, "release", release_name)
         logger.debug(
             "Retrieved release %s from pipeline %s",
             release_name,
@@ -407,32 +346,18 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         if skaffold_config_path is not None:
             body["skaffoldConfigPath"] = skaffold_config_path
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .releases()
-                .create(
-                    parent=parent,
-                    body=body,
-                    releaseId=release_name,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .releases()
+            .create(
+                parent=parent,
+                body=body,
+                releaseId=release_name,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Release '{release_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created release %s in pipeline %s",
             release_name,
@@ -475,7 +400,7 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
 
         rollouts = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("rollouts", []):
                 rollouts.append(
                     Rollout.from_api_response(item, self.project_id)
@@ -519,27 +444,15 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
             location, pipeline_name, release_name, rollout_name
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .releases()
-                .rollouts()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("rollout", rollout_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .releases()
+            .rollouts()
+            .get(name=name)
+        )
+        response = self._execute(request, "rollout", rollout_name)
         logger.debug(
             "Retrieved rollout %s from release %s",
             rollout_name,
@@ -575,33 +488,19 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
             "targetId": target_id,
         }
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .deliveryPipelines()
-                .releases()
-                .rollouts()
-                .create(
-                    parent=parent,
-                    body=body,
-                    rolloutId=rollout_name,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .deliveryPipelines()
+            .releases()
+            .rollouts()
+            .create(
+                parent=parent,
+                body=body,
+                rolloutId=rollout_name,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Rollout '{rollout_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created rollout %s for release %s",
             rollout_name,

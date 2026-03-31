@@ -3,18 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.api_keys import APIKey
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,7 +66,7 @@ class APIKeysService(GCPService[APIKey]):
 
         keys = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("keys", []):
                 keys.append(APIKey.from_api_response(item))
             request = (
@@ -106,23 +100,11 @@ class APIKeysService(GCPService[APIKey]):
             f"/keys/{key_id}"
         )
 
-        try:
-            request = (
-                self.service.projects().locations().keys().get(name=name)
-            )
-            response = request.execute()
-            return APIKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects().locations().keys().get(name=name)
+        )
+        response = self._execute(request, "APIKey", key_id)
+        return APIKey.from_api_response(response)
     def create_key(
         self,
         location: str,
@@ -152,29 +134,15 @@ class APIKeysService(GCPService[APIKey]):
         if restrictions:
             body["restrictions"] = restrictions
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .keys()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            logger.info("Created API key in %s", location)
-            return APIKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    "APIKey already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .keys()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        logger.info("Created API key in %s", location)
+        return APIKey.from_api_response(response)
     def update_key(
         self,
         location: str,
@@ -216,27 +184,15 @@ class APIKeysService(GCPService[APIKey]):
 
         update_mask = ",".join(update_mask_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .keys()
-                .patch(name=name, updateMask=update_mask, body=body)
-            )
-            response = request.execute()
-            logger.info("Updated API key %s", key_id)
-            return APIKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .keys()
+            .patch(name=name, updateMask=update_mask, body=body)
+        )
+        response = self._execute(request, "APIKey", key_id)
+        logger.info("Updated API key %s", key_id)
+        return APIKey.from_api_response(response)
     def delete_key(self, location: str, key_id: str) -> bool:
         """Delete an API key.
 
@@ -258,23 +214,11 @@ class APIKeysService(GCPService[APIKey]):
             f"/keys/{key_id}"
         )
 
-        try:
-            self.service.projects().locations().keys().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted API key %s", key_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.projects().locations().keys().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted API key %s", key_id)
+        return True
     def undelete_key(self, location: str, key_id: str) -> APIKey:
         """Undelete a previously deleted API key.
 
@@ -296,27 +240,15 @@ class APIKeysService(GCPService[APIKey]):
             f"/keys/{key_id}"
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .keys()
-                .undelete(name=name)
-            )
-            response = request.execute()
-            logger.info("Undeleted API key %s", key_id)
-            return APIKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .keys()
+            .undelete(name=name)
+        )
+        response = self._execute(request, "APIKey", key_id)
+        logger.info("Undeleted API key %s", key_id)
+        return APIKey.from_api_response(response)
     def get_key_string(self, location: str, key_id: str) -> str:
         """Get the key string for an API key.
 
@@ -338,22 +270,11 @@ class APIKeysService(GCPService[APIKey]):
             f"/keys/{key_id}"
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .keys()
-                .getKeyString(name=name)
-            )
-            response = request.execute()
-            return response.get("keyString", "")
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .keys()
+            .getKeyString(name=name)
+        )
+        response = self._execute(request, "APIKey", key_id)
+        return response.get("keyString", "")

@@ -3,17 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.bigtable import BigtableInstance, BigtableCluster, BigtableTable
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
+from gcpoto.exceptions import ResourceNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +96,7 @@ class BigtableService(GCPService[BigtableInstance]):
             .instances()
             .list(parent=self._parent_path())
         )
-        response = request.execute()
+        response = self._execute(request)
         instances = [
             BigtableInstance.from_api_response(item)
             for item in response.get("instances", [])
@@ -124,25 +117,13 @@ class BigtableService(GCPService[BigtableInstance]):
             ResourceNotFoundError: If the instance does not exist
         """
         logger.debug("Getting Bigtable instance %s", instance_id)
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .get(name=self._instance_path(instance_id))
-            )
-            response = request.execute()
-            return BigtableInstance.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableInstance", instance_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .instances()
+            .get(name=self._instance_path(instance_id))
+        )
+        response = self._execute(request, "BigtableInstance", instance_id)
+        return BigtableInstance.from_api_response(response)
     def create_instance(
         self,
         instance_id: str,
@@ -200,7 +181,7 @@ class BigtableService(GCPService[BigtableInstance]):
             .instances()
             .create(parent=self._parent_path(), body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Created Bigtable instance %s", instance_id)
         return BigtableInstance.from_api_response(response)
 
@@ -237,7 +218,7 @@ class BigtableService(GCPService[BigtableInstance]):
                 updateMask="displayName,labels",
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Updated Bigtable instance %s", instance_id)
         return BigtableInstance.from_api_response(response)
 
@@ -254,28 +235,14 @@ class BigtableService(GCPService[BigtableInstance]):
             ResourceNotFoundError: If the instance does not exist
         """
         logger.debug("Deleting Bigtable instance %s", instance_id)
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .delete(name=self._instance_path(instance_id))
-            )
-            request.execute()
-            logger.info("Deleted Bigtable instance %s", instance_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableInstance", instance_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # --- Cluster methods ---
-
+        request = (
+            self.service.projects()
+            .instances()
+            .delete(name=self._instance_path(instance_id))
+        )
+        self._execute(request, "BigtableInstance", instance_id)
+        logger.info("Deleted Bigtable instance %s", instance_id)
+        return True
     def list_clusters(self, instance_id: str) -> List[BigtableCluster]:
         """List clusters in a Bigtable instance.
 
@@ -294,7 +261,7 @@ class BigtableService(GCPService[BigtableInstance]):
             .clusters()
             .list(parent=self._instance_path(instance_id))
         )
-        response = request.execute()
+        response = self._execute(request)
         clusters = [
             BigtableCluster.from_api_response(item)
             for item in response.get("clusters", [])
@@ -322,26 +289,14 @@ class BigtableService(GCPService[BigtableInstance]):
         logger.debug(
             "Getting cluster %s for instance %s", cluster_id, instance_id
         )
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .clusters()
-                .get(name=self._cluster_path(instance_id, cluster_id))
-            )
-            response = request.execute()
-            return BigtableCluster.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableCluster", cluster_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .instances()
+            .clusters()
+            .get(name=self._cluster_path(instance_id, cluster_id))
+        )
+        response = self._execute(request, "BigtableCluster", cluster_id)
+        return BigtableCluster.from_api_response(response)
     def create_cluster(
         self,
         instance_id: str,
@@ -382,7 +337,7 @@ class BigtableService(GCPService[BigtableInstance]):
                 body=body,
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Created cluster %s for instance %s", cluster_id, instance_id
         )
@@ -421,7 +376,7 @@ class BigtableService(GCPService[BigtableInstance]):
                 body=body,
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Updated cluster %s for instance %s", cluster_id, instance_id
         )
@@ -443,33 +398,19 @@ class BigtableService(GCPService[BigtableInstance]):
         logger.debug(
             "Deleting cluster %s from instance %s", cluster_id, instance_id
         )
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .clusters()
-                .delete(name=self._cluster_path(instance_id, cluster_id))
-            )
-            request.execute()
-            logger.info(
-                "Deleted cluster %s from instance %s",
-                cluster_id,
-                instance_id,
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableCluster", cluster_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # --- Table methods ---
-
+        request = (
+            self.service.projects()
+            .instances()
+            .clusters()
+            .delete(name=self._cluster_path(instance_id, cluster_id))
+        )
+        self._execute(request, "BigtableCluster", cluster_id)
+        logger.info(
+            "Deleted cluster %s from instance %s",
+            cluster_id,
+            instance_id,
+        )
+        return True
     def list_tables(self, instance_id: str) -> List[BigtableTable]:
         """List tables in a Bigtable instance.
 
@@ -491,7 +432,7 @@ class BigtableService(GCPService[BigtableInstance]):
 
         tables = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("tables", []):
                 tables.append(BigtableTable.from_api_response(item))
             request = (
@@ -522,26 +463,14 @@ class BigtableService(GCPService[BigtableInstance]):
         logger.debug(
             "Getting table %s for instance %s", table_id, instance_id
         )
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .tables()
-                .get(name=self._table_path(instance_id, table_id))
-            )
-            response = request.execute()
-            return BigtableTable.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableTable", table_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .instances()
+            .tables()
+            .get(name=self._table_path(instance_id, table_id))
+        )
+        response = self._execute(request, "BigtableTable", table_id)
+        return BigtableTable.from_api_response(response)
     def create_table(
         self,
         instance_id: str,
@@ -581,7 +510,7 @@ class BigtableService(GCPService[BigtableInstance]):
                 body=body,
             )
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Created table %s for instance %s", table_id, instance_id
         )
@@ -603,25 +532,14 @@ class BigtableService(GCPService[BigtableInstance]):
         logger.debug(
             "Deleting table %s from instance %s", table_id, instance_id
         )
-        try:
-            request = (
-                self.service.projects()
-                .instances()
-                .tables()
-                .delete(name=self._table_path(instance_id, table_id))
-            )
-            request.execute()
-            logger.info(
-                "Deleted table %s from instance %s", table_id, instance_id
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BigtableTable", table_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .instances()
+            .tables()
+            .delete(name=self._table_path(instance_id, table_id))
+        )
+        self._execute(request, "BigtableTable", table_id)
+        logger.info(
+            "Deleted table %s from instance %s", table_id, instance_id
+        )
+        return True

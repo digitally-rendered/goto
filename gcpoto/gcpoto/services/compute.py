@@ -3,18 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.errors import HttpError
-
 from gcpoto.services.base import GCPService
 from gcpoto.models.base import GCPResource
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
-    APIError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class ComputeInstance(GCPResource):
     """Model for a Google Compute Engine instance."""
@@ -45,7 +37,6 @@ class ComputeInstance(GCPResource):
             created=response.get("creationTimestamp"),
             updated=response.get("lastStartTimestamp"),
         )
-
 
 class ComputeService(GCPService[ComputeInstance]):
     """Service for interacting with Google Compute Engine."""
@@ -79,14 +70,10 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             A list of ComputeInstance instances
         """
-        try:
-            request = self.service.instances().list(
-                project=self.project_id, zone=zone, **kwargs
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().list(
+            project=self.project_id, zone=zone, **kwargs
+        )
+        response = self._execute(request)
         instances = []
         for item in response.get("items", []):
             instances.append(self._parse_response(item))
@@ -104,17 +91,11 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             A ComputeInstance instance
         """
-        try:
-            request = self.service.instances().get(
-                project=self.project_id, zone=zone, instance=resource_id, **kwargs
-            )
-            response = request.execute()
-            return self._parse_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ComputeInstance", resource_id)
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().get(
+            project=self.project_id, zone=zone, instance=resource_id, **kwargs
+        )
+        response = self._execute(request, "ComputeInstance", resource_id)
+        return self._parse_response(response)
     def create_resource(
         self, resource: ComputeInstance, zone: str, **kwargs
     ) -> ComputeInstance:
@@ -136,19 +117,11 @@ class ComputeService(GCPService[ComputeInstance]):
             "labels": resource.labels or {},
         }
 
-        try:
-            request = self.service.instances().insert(
-                project=self.project_id, zone=zone, body=body, **kwargs
-            )
-            response = request.execute()
-            return self._parse_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ComputeInstance '{resource.name}' already exists"
-                )
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.instances().insert(
+            project=self.project_id, zone=zone, body=body, **kwargs
+        )
+        response = self._execute(request)
+        return self._parse_response(response)
     def delete_resource(self, resource_id: str, zone: str, **kwargs) -> bool:
         """Delete an instance by name.
 
@@ -160,13 +133,8 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             True if the deletion was successful
         """
-        try:
-            request = self.service.instances().delete(
-                project=self.project_id, zone=zone, instance=resource_id, **kwargs
-            )
-            request.execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ComputeInstance", resource_id)
-            raise APIError(e.resp.status, str(e))
+        request = self.service.instances().delete(
+            project=self.project_id, zone=zone, instance=resource_id, **kwargs
+        )
+        self._execute(request, "ComputeInstance", resource_id)
+        return True

@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.service_directory import Namespace, ServiceEntry, Endpoint
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class ServiceDirectoryService(GCPService[Namespace]):
     """Service for interacting with Google Cloud Service Directory."""
@@ -110,7 +108,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             namespaces = response.get("namespaces", [])
             all_namespaces.extend(
                 Namespace.from_api_response(item) for item in namespaces
@@ -143,7 +141,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .namespaces()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Namespace.from_api_response(response)
 
     def create_namespace(
@@ -180,7 +178,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .namespaces()
             .create(parent=parent, namespaceId=namespace_id, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Namespace.from_api_response(response)
 
     def delete_namespace(
@@ -203,7 +201,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .namespaces()
             .delete(name=name)
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # --- Service methods ---
@@ -233,7 +231,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             services = response.get("services", [])
             all_services.extend(
                 ServiceEntry.from_api_response(item) for item in services
@@ -269,7 +267,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .services()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return ServiceEntry.from_api_response(response)
 
     def create_service(
@@ -309,7 +307,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .services()
             .create(parent=parent, serviceId=service_id, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         return ServiceEntry.from_api_response(response)
 
     def delete_service(
@@ -334,7 +332,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .services()
             .delete(name=name)
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # --- Endpoint methods ---
@@ -366,7 +364,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             endpoints = response.get("endpoints", [])
             all_endpoints.extend(
                 Endpoint.from_api_response(item) for item in endpoints
@@ -411,7 +409,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .endpoints()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Endpoint.from_api_response(response)
 
     def create_endpoint(
@@ -464,7 +462,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .endpoints()
             .create(parent=parent, endpointId=endpoint_id, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Endpoint.from_api_response(response)
 
     def delete_endpoint(
@@ -497,7 +495,7 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .endpoints()
             .delete(name=name)
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # --- Resolve method ---
@@ -524,5 +522,5 @@ class ServiceDirectoryService(GCPService[Namespace]):
             .services()
             .resolve(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return ServiceEntry.from_api_response(response.get("service", {}))

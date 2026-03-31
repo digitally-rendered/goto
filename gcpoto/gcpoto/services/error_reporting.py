@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.error_reporting import ErrorGroup, ErrorEvent
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class ErrorReportingService(GCPService[ErrorGroup]):
     """Service for interacting with Google Cloud Error Reporting."""
@@ -78,7 +68,7 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         stats = []
         request = self.service.projects().groupStats().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("errorGroupStats", []):
                 stats.append(item)
             request = (
@@ -125,7 +115,7 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         events = []
         request = self.service.projects().events().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("errorEvents", []):
                 events.append(ErrorEvent.from_api_response(item))
             request = (
@@ -174,7 +164,7 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         request = self.service.projects().events().report(
             projectName=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return response
 
@@ -196,20 +186,8 @@ class ErrorReportingService(GCPService[ErrorGroup]):
 
         logger.debug("Getting error group %s", name)
 
-        try:
-            request = self.service.projects().groups().get(groupName=name)
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("errorGroup", group_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().groups().get(groupName=name)
+        response = self._execute(request, "errorGroup", group_id)
         return ErrorGroup.from_api_response(response)
 
     def update_group(
@@ -244,7 +222,7 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         request = self.service.projects().groups().update(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return ErrorGroup.from_api_response(response)
 
@@ -264,6 +242,6 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         request = self.service.projects().deleteEvents(
             projectName=parent
         )
-        request.execute()
+        self._execute(request)
 
         return True

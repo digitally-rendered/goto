@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.monitoring import (
@@ -13,16 +11,8 @@ from gcpoto.models.monitoring import (
     NotificationChannel,
     UptimeCheckConfig,
 )
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class MonitoringService(GCPService[MetricDescriptor]):
     """Service for interacting with Google Cloud Monitoring."""
@@ -76,7 +66,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         descriptors = []
         request = self.service.projects().metricDescriptors().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("metricDescriptors", []):
                 descriptors.append(MetricDescriptor.from_api_response(item))
             request = (
@@ -104,20 +94,8 @@ class MonitoringService(GCPService[MetricDescriptor]):
 
         logger.debug("Getting metric descriptor %s", name)
 
-        try:
-            request = self.service.projects().metricDescriptors().get(name=name)
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("metricDescriptor", metric_type)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().metricDescriptors().get(name=name)
+        response = self._execute(request, "metricDescriptor", metric_type)
         return MetricDescriptor.from_api_response(response)
 
     def create_metric_descriptor(
@@ -170,7 +148,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         request = self.service.projects().metricDescriptors().create(
             name=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return MetricDescriptor.from_api_response(response)
 
@@ -191,7 +169,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         logger.debug("Deleting metric descriptor %s", name)
 
         request = self.service.projects().metricDescriptors().delete(name=name)
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -255,7 +233,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         time_series = []
         request = self.service.projects().timeSeries().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for ts in response.get("timeSeries", []):
                 time_series.append(ts)
             request = (
@@ -287,7 +265,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             name=parent, **kwargs
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("alertPolicies", []):
                 policies.append(AlertPolicy.from_api_response(item))
             request = (
@@ -314,20 +292,8 @@ class MonitoringService(GCPService[MetricDescriptor]):
 
         logger.debug("Getting alert policy %s", name)
 
-        try:
-            request = self.service.projects().alertPolicies().get(name=name)
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("alertPolicy", policy_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().alertPolicies().get(name=name)
+        response = self._execute(request, "alertPolicy", policy_id)
         return AlertPolicy.from_api_response(response)
 
     def create_alert_policy(
@@ -374,7 +340,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         request = self.service.projects().alertPolicies().create(
             name=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return AlertPolicy.from_api_response(response)
 
@@ -405,7 +371,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         request = self.service.projects().alertPolicies().patch(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return AlertPolicy.from_api_response(response)
 
@@ -426,7 +392,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
         logger.debug("Deleting alert policy %s", name)
 
         request = self.service.projects().alertPolicies().delete(name=name)
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -453,7 +419,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             name=parent, **kwargs
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("notificationChannels", []):
                 channels.append(
                     NotificationChannel.from_api_response(item)
@@ -487,26 +453,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
 
         logger.debug("Getting notification channel %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .notificationChannels()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "notificationChannel", channel_id
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .notificationChannels()
+            .get(name=name)
+        )
+        response = self._execute(request, "notificationChannel", channel_id)
         return NotificationChannel.from_api_response(response)
 
     def create_notification_channel(
@@ -548,7 +500,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             .notificationChannels()
             .create(name=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return NotificationChannel.from_api_response(response)
 
@@ -579,7 +531,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             .notificationChannels()
             .delete(name=name, force=force)
         )
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -606,7 +558,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             parent=parent, **kwargs
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("uptimeCheckConfigs", []):
                 configs.append(UptimeCheckConfig.from_api_response(item))
             request = (
@@ -638,26 +590,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
 
         logger.debug("Getting uptime check config %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .uptimeCheckConfigs()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "uptimeCheckConfig", check_id
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .uptimeCheckConfigs()
+            .get(name=name)
+        )
+        response = self._execute(request, "uptimeCheckConfig", check_id)
         return UptimeCheckConfig.from_api_response(response)
 
     def create_uptime_check_config(
@@ -704,7 +642,7 @@ class MonitoringService(GCPService[MetricDescriptor]):
             .uptimeCheckConfigs()
             .create(parent=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return UptimeCheckConfig.from_api_response(response)
 
@@ -732,6 +670,6 @@ class MonitoringService(GCPService[MetricDescriptor]):
             .uptimeCheckConfigs()
             .delete(name=name)
         )
-        request.execute()
+        self._execute(request)
 
         return True

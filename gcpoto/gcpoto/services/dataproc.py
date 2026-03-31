@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dataproc import DataprocCluster, DataprocJob
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class DataprocService(GCPService[DataprocCluster]):
     """Service for interacting with Google Cloud Dataproc."""
@@ -53,7 +51,7 @@ class DataprocService(GCPService[DataprocCluster]):
             projectId=self.project_id, region=region
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("clusters", []):
                 clusters.append(DataprocCluster.from_api_response(item))
             request = self.service.projects().regions().clusters().list_next(
@@ -82,7 +80,7 @@ class DataprocService(GCPService[DataprocCluster]):
             region=region,
             clusterName=cluster_name,
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocCluster.from_api_response(response)
 
     def create_cluster(
@@ -119,7 +117,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().clusters().create(
             projectId=self.project_id, region=region, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocCluster.from_api_response(response)
 
     def update_cluster(
@@ -155,7 +153,7 @@ class DataprocService(GCPService[DataprocCluster]):
             updateMask=update_mask,
             body=body,
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocCluster.from_api_response(response)
 
     def delete_cluster(self, region: str, cluster_name: str) -> bool:
@@ -178,7 +176,7 @@ class DataprocService(GCPService[DataprocCluster]):
             region=region,
             clusterName=cluster_name,
         )
-        request.execute()
+        self._execute(request)
         return True
 
     def start_cluster(self, region: str, cluster_name: str) -> Dict:
@@ -245,7 +243,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().jobs().submit(
             projectId=self.project_id, region=region, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocJob.from_api_response(response)
 
     def get_job(self, region: str, job_id: str) -> DataprocJob:
@@ -262,7 +260,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().jobs().get(
             projectId=self.project_id, region=region, jobId=job_id
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocJob.from_api_response(response)
 
     def list_jobs(self, region: str) -> List[DataprocJob]:
@@ -284,7 +282,7 @@ class DataprocService(GCPService[DataprocCluster]):
             projectId=self.project_id, region=region
         )
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("jobs", []):
                 jobs.append(DataprocJob.from_api_response(item))
             request = self.service.projects().regions().jobs().list_next(
@@ -312,5 +310,5 @@ class DataprocService(GCPService[DataprocCluster]):
             jobId=job_id,
             body={},
         )
-        response = request.execute()
+        response = self._execute(request)
         return DataprocJob.from_api_response(response)

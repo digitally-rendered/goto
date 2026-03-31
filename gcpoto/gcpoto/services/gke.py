@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.gke import GKECluster, NodePool
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class GKEService(GCPService[GKECluster]):
     """Service for interacting with Google Kubernetes Engine."""
@@ -50,7 +48,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().list(
             parent=parent
         )
-        response = request.execute()
+        response = self._execute(request)
         clusters = [
             GKECluster.from_api_response(item)
             for item in response.get("clusters", [])
@@ -77,7 +75,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().get(
             name=name
         )
-        response = request.execute()
+        response = self._execute(request)
         return GKECluster.from_api_response(response)
 
     def create_cluster(
@@ -132,7 +130,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().create(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Cluster creation initiated for %s", cluster_name)
         return response
 
@@ -155,7 +153,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().delete(
             name=name
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Cluster deletion initiated for %s", cluster_name)
         return response
 
@@ -184,7 +182,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().update(
             name=name, body=update_body
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Cluster update initiated for %s", cluster_name)
         return response
 
@@ -211,7 +209,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().nodePools().list(
             parent=parent
         )
-        response = request.execute()
+        response = self._execute(request)
         pools = [
             NodePool.from_api_response(item)
             for item in response.get("nodePools", [])
@@ -243,7 +241,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().nodePools().get(
             name=name
         )
-        response = request.execute()
+        response = self._execute(request)
         return NodePool.from_api_response(response)
 
     def create_node_pool(
@@ -299,7 +297,7 @@ class GKEService(GCPService[GKECluster]):
             .nodePools()
             .create(parent=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Node pool creation initiated for %s", pool_name)
         return response
 
@@ -329,7 +327,7 @@ class GKEService(GCPService[GKECluster]):
             .nodePools()
             .delete(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Node pool deletion initiated for %s", pool_name)
         return response
 
@@ -368,7 +366,7 @@ class GKEService(GCPService[GKECluster]):
             .nodePools()
             .setSize(name=name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Node pool resize initiated for %s to %s nodes",
             pool_name,

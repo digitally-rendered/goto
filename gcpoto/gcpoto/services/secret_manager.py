@@ -4,22 +4,13 @@ import base64
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.secret_manager import Secret, SecretVersion
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
+
 from gcpoto.utils import format_secret_path, format_secret_version_path
 
 logger = logging.getLogger(__name__)
-
 
 class SecretManagerService(GCPService[Secret]):
     """Service for interacting with Google Cloud Secret Manager."""
@@ -62,7 +53,7 @@ class SecretManagerService(GCPService[Secret]):
 
         secrets = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for secret_data in response.get("secrets", []):
                 secrets.append(
                     Secret.from_api_response(secret_data, self.project_id)
@@ -84,7 +75,7 @@ class SecretManagerService(GCPService[Secret]):
         """
         name = format_secret_path(self.project_id, secret_id)
         request = self.service.projects().secrets().get(name=name)
-        response = request.execute()
+        response = self._execute(request)
         return Secret.from_api_response(response, self.project_id)
 
     def create_secret(
@@ -112,27 +103,13 @@ class SecretManagerService(GCPService[Secret]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .secrets()
-                .create(parent=parent, secretId=secret_id, body=body)
-            )
-            response = request.execute()
-            return Secret.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ValueError(
-                    f"Secret '{secret_id}' already exists"
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .secrets()
+            .create(parent=parent, secretId=secret_id, body=body)
+        )
+        response = self._execute(request)
+        return Secret.from_api_response(response, self.project_id)
     def delete_secret(self, secret_id: str) -> bool:
         """Delete a secret.
 
@@ -176,7 +153,7 @@ class SecretManagerService(GCPService[Secret]):
             .secrets()
             .patch(name=name, body=body, updateMask=update_mask)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Secret.from_api_response(response, self.project_id)
 
     def add_secret_version(
@@ -201,7 +178,7 @@ class SecretManagerService(GCPService[Secret]):
             .secrets()
             .addVersion(parent=parent, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
         return SecretVersion.from_api_response(response, self.project_id)
 
     def access_secret_version(
@@ -223,7 +200,7 @@ class SecretManagerService(GCPService[Secret]):
         request = (
             self.service.projects().secrets().versions().access(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         encoded_data = response.get("payload", {}).get("data", "")
         return base64.b64decode(encoded_data)
@@ -251,7 +228,7 @@ class SecretManagerService(GCPService[Secret]):
 
         versions = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for version_data in response.get("versions", []):
                 versions.append(
                     SecretVersion.from_api_response(
@@ -286,7 +263,7 @@ class SecretManagerService(GCPService[Secret]):
         request = (
             self.service.projects().secrets().versions().get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return SecretVersion.from_api_response(response, self.project_id)
 
     def disable_secret_version(
@@ -311,7 +288,7 @@ class SecretManagerService(GCPService[Secret]):
             .versions()
             .disable(name=name, body={})
         )
-        response = request.execute()
+        response = self._execute(request)
         return SecretVersion.from_api_response(response, self.project_id)
 
     def enable_secret_version(
@@ -336,7 +313,7 @@ class SecretManagerService(GCPService[Secret]):
             .versions()
             .enable(name=name, body={})
         )
-        response = request.execute()
+        response = self._execute(request)
         return SecretVersion.from_api_response(response, self.project_id)
 
     def destroy_secret_version(
@@ -361,5 +338,5 @@ class SecretManagerService(GCPService[Secret]):
             .versions()
             .destroy(name=name, body={})
         )
-        response = request.execute()
+        response = self._execute(request)
         return SecretVersion.from_api_response(response, self.project_id)

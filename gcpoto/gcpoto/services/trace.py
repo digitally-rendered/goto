@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.trace import Trace, TraceSpan
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class TraceService(GCPService[Trace]):
     """Service for interacting with Google Cloud Trace."""
@@ -77,7 +67,7 @@ class TraceService(GCPService[Trace]):
         spans = []
         request = self.service.projects().traces().list(**params)
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("spans", []):
                 spans.append(TraceSpan.from_api_response(item))
             request = (
@@ -105,20 +95,8 @@ class TraceService(GCPService[Trace]):
             "filter": f'+traceId:"{trace_id}"',
         }
 
-        try:
-            request = self.service.projects().traces().list(**params)
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trace", trace_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().traces().list(**params)
+        response = self._execute(request, "trace", trace_id)
         spans = []
         for item in response.get("spans", []):
             spans.append(TraceSpan.from_api_response(item))
@@ -146,6 +124,6 @@ class TraceService(GCPService[Trace]):
         request = self.service.projects().traces().batchWrite(
             name=parent, body=body
         )
-        request.execute()
+        self._execute(request)
 
         return True

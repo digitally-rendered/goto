@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.composer import ComposerEnvironment
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class ComposerService(GCPService[ComposerEnvironment]):
     """Service for interacting with Google Cloud Composer."""
@@ -65,7 +55,7 @@ class ComposerService(GCPService[ComposerEnvironment]):
 
         environments = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("environments", []):
                 environments.append(
                     ComposerEnvironment.from_api_response(
@@ -100,21 +90,13 @@ class ComposerService(GCPService[ComposerEnvironment]):
             f"projects/{self.project_id}/locations/{location}"
             f"/environments/{environment_name}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .environments()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "environment", environment_name
-                )
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .environments()
+            .get(name=name)
+        )
+        response = self._execute(request, "environment", environment_name)
         logger.debug("Retrieved environment %s", environment_name)
         return ComposerEnvironment.from_api_response(
             response, self.project_id
@@ -150,23 +132,13 @@ class ComposerService(GCPService[ComposerEnvironment]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .environments()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .environments()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
         logger.debug(
             "Created environment %s in %s", environment_name, location
         )
@@ -196,25 +168,17 @@ class ComposerService(GCPService[ComposerEnvironment]):
             f"projects/{self.project_id}/locations/{location}"
             f"/environments/{environment_name}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .environments()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=environment_config,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .environments()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=environment_config,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "environment", environment_name
-                )
-            raise
-
+        )
+        response = self._execute(request, "environment", environment_name)
         logger.debug("Updated environment %s", environment_name)
         return ComposerEnvironment.from_api_response(
             response, self.project_id
@@ -236,16 +200,8 @@ class ComposerService(GCPService[ComposerEnvironment]):
             f"projects/{self.project_id}/locations/{location}"
             f"/environments/{environment_name}"
         )
-        try:
-            self.service.projects().locations().environments().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "environment", environment_name
-                )
-            raise
-
+        self.service.projects().locations().environments().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted environment %s", environment_name)
         return True

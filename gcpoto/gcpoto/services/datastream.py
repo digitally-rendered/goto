@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.datastream import ConnectionProfile, Stream
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class DatastreamService(GCPService[ConnectionProfile]):
     """Service for interacting with Google Cloud Datastream."""
@@ -65,7 +55,7 @@ class DatastreamService(GCPService[ConnectionProfile]):
 
         profiles = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("connectionProfiles", []):
                 profiles.append(
                     ConnectionProfile.from_api_response(
@@ -100,21 +90,13 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/connectionProfiles/{profile_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .connectionProfiles()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "connection_profile", profile_id
-                )
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .connectionProfiles()
+            .get(name=name)
+        )
+        response = self._execute(request, "connection_profile", profile_id)
         logger.debug("Retrieved connection profile %s", profile_id)
         return ConnectionProfile.from_api_response(
             response, self.project_id
@@ -148,27 +130,17 @@ class DatastreamService(GCPService[ConnectionProfile]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .connectionProfiles()
-                .create(
-                    parent=parent,
-                    connectionProfileId=profile_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .connectionProfiles()
+            .create(
+                parent=parent,
+                connectionProfileId=profile_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created connection profile %s in %s", profile_id, location
         )
@@ -192,17 +164,9 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/connectionProfiles/{profile_id}"
         )
-        try:
-            self.service.projects().locations().connectionProfiles().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "connection_profile", profile_id
-                )
-            raise
-
+        self.service.projects().locations().connectionProfiles().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted connection profile %s", profile_id)
         return True
 
@@ -225,7 +189,7 @@ class DatastreamService(GCPService[ConnectionProfile]):
 
         streams = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("streams", []):
                 streams.append(
                     Stream.from_api_response(item, self.project_id)
@@ -254,19 +218,13 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/streams/{stream_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .streams()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("stream", stream_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .streams()
+            .get(name=name)
+        )
+        response = self._execute(request, "stream", stream_id)
         logger.debug("Retrieved stream %s", stream_id)
         return Stream.from_api_response(response, self.project_id)
 
@@ -307,27 +265,17 @@ class DatastreamService(GCPService[ConnectionProfile]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .streams()
-                .create(
-                    parent=parent,
-                    streamId=stream_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .streams()
+            .create(
+                parent=parent,
+                streamId=stream_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug("Created stream %s in %s", stream_id, location)
         return Stream.from_api_response(response, self.project_id)
 
@@ -353,23 +301,17 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/streams/{stream_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .streams()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=update_fields,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .streams()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=update_fields,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("stream", stream_id)
-            raise
-
+        )
+        response = self._execute(request, "stream", stream_id)
         logger.debug("Updated stream %s", stream_id)
         return Stream.from_api_response(response, self.project_id)
 
@@ -387,15 +329,9 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/streams/{stream_id}"
         )
-        try:
-            self.service.projects().locations().streams().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("stream", stream_id)
-            raise
-
+        self.service.projects().locations().streams().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted stream %s", stream_id)
         return True
 

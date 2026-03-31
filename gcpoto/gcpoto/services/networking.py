@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.networking import VPCNetwork, Subnet, FirewallRule, StaticAddress
-from gcpoto.exceptions import ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
-
 
 class NetworkingService(GCPService[VPCNetwork]):
     """Service for interacting with Google Cloud VPC / Networking resources.
@@ -51,7 +49,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.networks().list(
             project=self.project_id, **kwargs
         )
-        response = request.execute()
+        response = self._execute(request)
         return [
             VPCNetwork.from_api_response(item)
             for item in response.get("items", [])
@@ -74,7 +72,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.networks().get(
             project=self.project_id, network=network_name
         )
-        response = request.execute()
+        response = self._execute(request)
         return VPCNetwork.from_api_response(response)
 
     def create_network(
@@ -111,7 +109,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.networks().insert(
             project=self.project_id, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return VPCNetwork.from_api_response(response)
 
     def delete_network(self, network_name: str) -> bool:
@@ -131,7 +129,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.networks().delete(
             project=self.project_id, network=network_name
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # ---- Subnets ----
@@ -158,7 +156,7 @@ class NetworkingService(GCPService[VPCNetwork]):
             request = self.service.subnetworks().list(
                 project=self.project_id, region=region, **kwargs
             )
-            response = request.execute()
+            response = self._execute(request)
             return [
                 Subnet.from_api_response(item)
                 for item in response.get("items", [])
@@ -167,7 +165,7 @@ class NetworkingService(GCPService[VPCNetwork]):
             request = self.service.subnetworks().aggregatedList(
                 project=self.project_id, **kwargs
             )
-            response = request.execute()
+            response = self._execute(request)
             subnets = []
             for region_data in response.get("items", {}).values():
                 for item in region_data.get("subnetworks", []):
@@ -193,7 +191,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.subnetworks().get(
             project=self.project_id, region=region, subnetwork=subnet_name
         )
-        response = request.execute()
+        response = self._execute(request)
         return Subnet.from_api_response(response)
 
     def create_subnet(
@@ -233,7 +231,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.subnetworks().insert(
             project=self.project_id, region=region, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return Subnet.from_api_response(response)
 
     def delete_subnet(self, region: str, subnet_name: str) -> bool:
@@ -255,7 +253,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.subnetworks().delete(
             project=self.project_id, region=region, subnetwork=subnet_name
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # ---- Firewall Rules ----
@@ -275,7 +273,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.firewalls().list(
             project=self.project_id, **kwargs
         )
-        response = request.execute()
+        response = self._execute(request)
         return [
             FirewallRule.from_api_response(item)
             for item in response.get("items", [])
@@ -298,7 +296,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.firewalls().get(
             project=self.project_id, firewall=firewall_name
         )
-        response = request.execute()
+        response = self._execute(request)
         return FirewallRule.from_api_response(response)
 
     def create_firewall_rule(
@@ -350,7 +348,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.firewalls().insert(
             project=self.project_id, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return FirewallRule.from_api_response(response)
 
     def update_firewall_rule(
@@ -391,7 +389,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.firewalls().patch(
             project=self.project_id, firewall=firewall_name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return FirewallRule.from_api_response(response)
 
     def delete_firewall_rule(self, firewall_name: str) -> bool:
@@ -411,7 +409,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.firewalls().delete(
             project=self.project_id, firewall=firewall_name
         )
-        request.execute()
+        self._execute(request)
         return True
 
     # ---- Static Addresses ----
@@ -434,7 +432,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.addresses().list(
             project=self.project_id, region=region, **kwargs
         )
-        response = request.execute()
+        response = self._execute(request)
         return [
             StaticAddress.from_api_response(item)
             for item in response.get("items", [])
@@ -471,7 +469,7 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.addresses().insert(
             project=self.project_id, region=region, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         return StaticAddress.from_api_response(response)
 
     def release_address(self, region: str, address_name: str) -> bool:
@@ -493,5 +491,5 @@ class NetworkingService(GCPService[VPCNetwork]):
         request = self.service.addresses().delete(
             project=self.project_id, region=region, address=address_name
         )
-        request.execute()
+        self._execute(request)
         return True

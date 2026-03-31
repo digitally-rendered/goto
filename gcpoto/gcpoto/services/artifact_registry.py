@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.artifact_registry import (
@@ -13,16 +11,8 @@ from gcpoto.models.artifact_registry import (
     Package,
     PackageVersion,
 )
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class ArtifactRegistryService(GCPService[Repository]):
     """Service for interacting with Google Cloud Artifact Registry."""
@@ -100,7 +90,7 @@ class ArtifactRegistryService(GCPService[Repository]):
 
         repositories = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for repo_data in response.get("repositories", []):
                 repositories.append(
                     Repository.from_api_response(repo_data, self.project_id)
@@ -130,28 +120,14 @@ class ArtifactRegistryService(GCPService[Repository]):
         name = self._format_repository_path(location, repository_id)
         logger.debug("Getting repository %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Repository.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Repository", repository_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .get(name=name)
+        )
+        response = self._execute(request, "Repository", repository_id)
+        return Repository.from_api_response(response, self.project_id)
     def create_repository(
         self,
         location: str,
@@ -188,32 +164,18 @@ class ArtifactRegistryService(GCPService[Repository]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .create(
-                    parent=parent,
-                    repositoryId=repository_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .create(
+                parent=parent,
+                repositoryId=repository_id,
+                body=body,
             )
-            response = request.execute()
-            return Repository.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ValueError(
-                    f"Repository '{repository_id}' already exists"
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        )
+        response = self._execute(request)
+        return Repository.from_api_response(response, self.project_id)
     def update_repository(
         self,
         location: str,
@@ -254,7 +216,7 @@ class ArtifactRegistryService(GCPService[Repository]):
             .repositories()
             .patch(name=name, body=body, updateMask=update_mask)
         )
-        response = request.execute()
+        response = self._execute(request)
         return Repository.from_api_response(response, self.project_id)
 
     def delete_repository(
@@ -272,26 +234,10 @@ class ArtifactRegistryService(GCPService[Repository]):
         name = self._format_repository_path(location, repository_id)
         logger.debug("Deleting repository %s", name)
 
-        try:
-            self.service.projects().locations().repositories().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Repository", repository_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
-    # --- Docker Image methods ---
-
+        self.service.projects().locations().repositories().delete(
+            name=name
+        ).execute()
+        return True
     def list_docker_images(
         self, location: str, repository_id: str
     ) -> List[DockerImage]:
@@ -317,7 +263,7 @@ class ArtifactRegistryService(GCPService[Repository]):
 
         images = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for image_data in response.get("dockerImages", []):
                 images.append(
                     DockerImage.from_api_response(
@@ -354,31 +300,15 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Getting docker image %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .dockerImages()
-                .get(name=name)
-            )
-            response = request.execute()
-            return DockerImage.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "DockerImage", image_name
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
-    # --- Package methods ---
-
+        request = (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .dockerImages()
+            .get(name=name)
+        )
+        response = self._execute(request, "DockerImage", image_name)
+        return DockerImage.from_api_response(response, self.project_id)
     def list_packages(
         self, location: str, repository_id: str
     ) -> List[Package]:
@@ -404,7 +334,7 @@ class ArtifactRegistryService(GCPService[Repository]):
 
         packages = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for pkg_data in response.get("packages", []):
                 packages.append(
                     Package.from_api_response(pkg_data, self.project_id)
@@ -439,29 +369,15 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Getting package %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .packages()
-                .get(name=name)
-            )
-            response = request.execute()
-            return Package.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Package", package_name
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .packages()
+            .get(name=name)
+        )
+        response = self._execute(request, "Package", package_name)
+        return Package.from_api_response(response, self.project_id)
     def delete_package(
         self, location: str, repository_id: str, package_name: str
     ) -> bool:
@@ -481,26 +397,10 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Deleting package %s", name)
 
-        try:
-            self.service.projects().locations().repositories().packages().delete(
-                name=name
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Package", package_name
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
-    # --- Version methods ---
-
+        self.service.projects().locations().repositories().packages().delete(
+            name=name
+        ).execute()
+        return True
     def list_versions(
         self, location: str, repository_id: str, package_name: str
     ) -> List[PackageVersion]:
@@ -531,7 +431,7 @@ class ArtifactRegistryService(GCPService[Repository]):
 
         versions = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for ver_data in response.get("versions", []):
                 versions.append(
                     PackageVersion.from_api_response(
@@ -574,32 +474,18 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Getting version %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .packages()
-                .versions()
-                .get(name=name)
-            )
-            response = request.execute()
-            return PackageVersion.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "PackageVersion", version_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .packages()
+            .versions()
+            .get(name=name)
+        )
+        response = self._execute(request, "PackageVersion", version_id)
+        return PackageVersion.from_api_response(
+            response, self.project_id
+        )
     def delete_version(
         self,
         location: str,
@@ -624,26 +510,13 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Deleting version %s", name)
 
-        try:
-            (
-                self.service.projects()
-                .locations()
-                .repositories()
-                .packages()
-                .versions()
-                .delete(name=name)
-                .execute()
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "PackageVersion", version_id
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
+        (
+            self.service.projects()
+            .locations()
+            .repositories()
+            .packages()
+            .versions()
+            .delete(name=name)
+            .execute()
+        )
+        return True

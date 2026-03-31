@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.armor import SecurityPolicy, SecurityPolicyRule
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,7 +59,7 @@ class CloudArmorService(GCPService[SecurityPolicy]):
 
         policies = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for policy_data in response.get("items", []):
                 policies.append(SecurityPolicy.from_api_response(policy_data))
             request = self.service.securityPolicies().list_next(
@@ -89,23 +84,11 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         """
         logger.info("Getting security policy %s", policy_name)
 
-        try:
-            request = self.service.securityPolicies().get(
-                project=self.project_id, securityPolicy=policy_name
-            )
-            response = request.execute()
-            return SecurityPolicy.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SecurityPolicy", policy_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.securityPolicies().get(
+            project=self.project_id, securityPolicy=policy_name
+        )
+        response = self._execute(request, "SecurityPolicy", policy_name)
+        return SecurityPolicy.from_api_response(response)
     def create_security_policy(
         self,
         policy_name: str,
@@ -130,26 +113,12 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = self.service.securityPolicies().insert(
-                project=self.project_id, body=body
-            )
-            request.execute()
-            logger.info("Created security policy %s", policy_name)
-            return self.get_security_policy(policy_name)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"SecurityPolicy '{policy_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.securityPolicies().insert(
+            project=self.project_id, body=body
+        )
+        self._execute(request)
+        logger.info("Created security policy %s", policy_name)
+        return self.get_security_policy(policy_name)
     def delete_security_policy(self, policy_name: str) -> bool:
         """Delete a security policy.
 
@@ -165,23 +134,11 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         """
         logger.info("Deleting security policy %s", policy_name)
 
-        try:
-            self.service.securityPolicies().delete(
-                project=self.project_id, securityPolicy=policy_name
-            ).execute()
-            logger.info("Deleted security policy %s", policy_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SecurityPolicy", policy_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.securityPolicies().delete(
+            project=self.project_id, securityPolicy=policy_name
+        ).execute()
+        logger.info("Deleted security policy %s", policy_name)
+        return True
     def add_rule(
         self,
         policy_name: str,
@@ -223,30 +180,18 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         if description is not None:
             body["description"] = description
 
-        try:
-            request = self.service.securityPolicies().addRule(
-                project=self.project_id,
-                securityPolicy=policy_name,
-                body=body,
-            )
-            request.execute()
-            logger.info(
-                "Added rule with priority %s to security policy %s",
-                priority,
-                policy_name,
-            )
-            return self.get_rule(policy_name, priority)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("SecurityPolicy", policy_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.securityPolicies().addRule(
+            project=self.project_id,
+            securityPolicy=policy_name,
+            body=body,
+        )
+        self._execute(request, "SecurityPolicy", policy_name)
+        logger.info(
+            "Added rule with priority %s to security policy %s",
+            priority,
+            policy_name,
+        )
+        return self.get_rule(policy_name, priority)
     def remove_rule(self, policy_name: str, priority: int) -> bool:
         """Remove a rule from a security policy.
 
@@ -267,31 +212,17 @@ class CloudArmorService(GCPService[SecurityPolicy]):
             policy_name,
         )
 
-        try:
-            self.service.securityPolicies().removeRule(
-                project=self.project_id,
-                securityPolicy=policy_name,
-                priority=priority,
-            ).execute()
-            logger.info(
-                "Removed rule with priority %s from security policy %s",
-                priority,
-                policy_name,
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "SecurityPolicyRule", f"{policy_name}/{priority}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.securityPolicies().removeRule(
+            project=self.project_id,
+            securityPolicy=policy_name,
+            priority=priority,
+        ).execute()
+        logger.info(
+            "Removed rule with priority %s from security policy %s",
+            priority,
+            policy_name,
+        )
+        return True
     def get_rule(
         self, policy_name: str, priority: int
     ) -> SecurityPolicyRule:
@@ -314,27 +245,13 @@ class CloudArmorService(GCPService[SecurityPolicy]):
             policy_name,
         )
 
-        try:
-            request = self.service.securityPolicies().getRule(
-                project=self.project_id,
-                securityPolicy=policy_name,
-                priority=priority,
-            )
-            response = request.execute()
-            return SecurityPolicyRule.from_api_response(response, policy_name)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "SecurityPolicyRule", f"{policy_name}/{priority}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.securityPolicies().getRule(
+            project=self.project_id,
+            securityPolicy=policy_name,
+            priority=priority,
+        )
+        response = self._execute(request, "SecurityPolicyRule", f)
+        return SecurityPolicyRule.from_api_response(response, policy_name)
     def patch_rule(
         self,
         policy_name: str,
@@ -377,33 +294,19 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         if preview is not None:
             body["preview"] = preview
 
-        try:
-            request = self.service.securityPolicies().patchRule(
-                project=self.project_id,
-                securityPolicy=policy_name,
-                priority=priority,
-                body=body,
-            )
-            request.execute()
-            logger.info(
-                "Patched rule with priority %s in security policy %s",
-                priority,
-                policy_name,
-            )
-            return self.get_rule(policy_name, priority)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "SecurityPolicyRule", f"{policy_name}/{priority}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.securityPolicies().patchRule(
+            project=self.project_id,
+            securityPolicy=policy_name,
+            priority=priority,
+            body=body,
+        )
+        self._execute(request, "SecurityPolicyRule", f)
+        logger.info(
+            "Patched rule with priority %s in security policy %s",
+            priority,
+            policy_name,
+        )
+        return self.get_rule(policy_name, priority)
     def list_rules(self, policy_name: str) -> List[SecurityPolicyRule]:
         """List all rules in a security policy.
 

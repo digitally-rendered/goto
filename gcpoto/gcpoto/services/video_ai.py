@@ -3,17 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.video_ai import VideoAnnotationResult
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -79,18 +74,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if features is not None:
             body["features"] = features
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def detect_labels(
         self,
         input_uri: Optional[str] = None,
@@ -130,18 +115,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def detect_shots(
         self,
         input_uri: Optional[str] = None,
@@ -167,18 +142,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def detect_explicit_content(
         self,
         input_uri: Optional[str] = None,
@@ -206,18 +171,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def detect_text(
         self,
         input_uri: Optional[str] = None,
@@ -243,18 +198,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def detect_objects(
         self,
         input_uri: Optional[str] = None,
@@ -280,18 +225,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def transcribe_speech(
         self,
         input_uri: Optional[str] = None,
@@ -330,18 +265,8 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         if input_content is not None:
             body["inputContent"] = input_content
 
-        try:
-            request = self.service.videos().annotate(body=body)
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
-
+        request = self.service.videos().annotate(body=body)
+        return self._execute(request)
     def get_operation(self, operation_name: str) -> Dict[str, Any]:
         """Get the status of a long-running operation.
 
@@ -357,20 +282,7 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
         """
         logger.debug("Getting operation %s", operation_name)
 
-        try:
-            request = self.service.operations().projects().locations().operations().get(
-                name=operation_name
-            )
-            return request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "videointelligence.operation", operation_name
-                ) from e
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e)) from e
+        request = self.service.operations().projects().locations().operations().get(
+            name=operation_name
+        )
+        return self._execute(request, "videointelligence.operation", operation_name)

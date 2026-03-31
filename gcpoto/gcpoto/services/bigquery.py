@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.bigquery import BigQueryDataset, BigQueryTable, BigQueryJob
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class BigQueryService(GCPService[BigQueryDataset]):
     """Service for interacting with Google Cloud BigQuery."""
@@ -61,7 +51,7 @@ class BigQueryService(GCPService[BigQueryDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for dataset_data in response.get("datasets", []):
                 datasets.append(
                     BigQueryDataset.from_api_response(
@@ -86,23 +76,11 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Getting dataset %s in project %s", dataset_id, self.project_id
         )
 
-        try:
-            request = self.service.datasets().get(
-                projectId=self.project_id, datasetId=dataset_id
-            )
-            response = request.execute()
-            return BigQueryDataset.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("dataset", dataset_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.datasets().get(
+            projectId=self.project_id, datasetId=dataset_id
+        )
+        response = self._execute(request, "dataset", dataset_id)
+        return BigQueryDataset.from_api_response(response, self.project_id)
     def create_dataset(
         self,
         dataset_id: str,
@@ -139,23 +117,11 @@ class BigQueryService(GCPService[BigQueryDataset]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = self.service.datasets().insert(
-                projectId=self.project_id, body=body
-            )
-            response = request.execute()
-            return BigQueryDataset.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise APIError(409, f"Dataset '{dataset_id}' already exists")
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.datasets().insert(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
+        return BigQueryDataset.from_api_response(response, self.project_id)
     def delete_dataset(
         self, dataset_id: str, delete_contents: bool = False
     ) -> bool:
@@ -172,24 +138,12 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Deleting dataset %s in project %s", dataset_id, self.project_id
         )
 
-        try:
-            self.service.datasets().delete(
-                projectId=self.project_id,
-                datasetId=dataset_id,
-                deleteContents=delete_contents,
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("dataset", dataset_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.datasets().delete(
+            projectId=self.project_id,
+            datasetId=dataset_id,
+            deleteContents=delete_contents,
+        ).execute()
+        return True
     def list_tables(self, dataset_id: str, **kwargs) -> List[BigQueryTable]:
         """List tables in a BigQuery dataset.
 
@@ -212,7 +166,7 @@ class BigQueryService(GCPService[BigQueryDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for table_data in response.get("tables", []):
                 tables.append(
                     BigQueryTable.from_api_response(
@@ -241,27 +195,13 @@ class BigQueryService(GCPService[BigQueryDataset]):
             self.project_id,
         )
 
-        try:
-            request = self.service.tables().get(
-                projectId=self.project_id,
-                datasetId=dataset_id,
-                tableId=table_id,
-            )
-            response = request.execute()
-            return BigQueryTable.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "table", f"{dataset_id}.{table_id}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.tables().get(
+            projectId=self.project_id,
+            datasetId=dataset_id,
+            tableId=table_id,
+        )
+        response = self._execute(request, "table", f)
+        return BigQueryTable.from_api_response(response, self.project_id)
     def create_table(
         self,
         dataset_id: str,
@@ -311,28 +251,13 @@ class BigQueryService(GCPService[BigQueryDataset]):
         if clustering_fields is not None:
             body["clustering"] = {"fields": clustering_fields}
 
-        try:
-            request = self.service.tables().insert(
-                projectId=self.project_id,
-                datasetId=dataset_id,
-                body=body,
-            )
-            response = request.execute()
-            return BigQueryTable.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise APIError(
-                    409,
-                    f"Table '{dataset_id}.{table_id}' already exists",
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.tables().insert(
+            projectId=self.project_id,
+            datasetId=dataset_id,
+            body=body,
+        )
+        response = self._execute(request)
+        return BigQueryTable.from_api_response(response, self.project_id)
     def delete_table(self, dataset_id: str, table_id: str) -> bool:
         """Delete a BigQuery table.
 
@@ -350,26 +275,12 @@ class BigQueryService(GCPService[BigQueryDataset]):
             self.project_id,
         )
 
-        try:
-            self.service.tables().delete(
-                projectId=self.project_id,
-                datasetId=dataset_id,
-                tableId=table_id,
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "table", f"{dataset_id}.{table_id}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.tables().delete(
+            projectId=self.project_id,
+            datasetId=dataset_id,
+            tableId=table_id,
+        ).execute()
+        return True
     def query(
         self,
         sql: str,
@@ -400,21 +311,11 @@ class BigQueryService(GCPService[BigQueryDataset]):
         for key, value in kwargs.items():
             body[key] = value
 
-        try:
-            request = self.service.jobs().query(
-                projectId=self.project_id, body=body
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.jobs().query(
+            projectId=self.project_id, body=body
+        )
+        response = self._execute(request)
+        return response
     def get_job(self, job_id: str) -> BigQueryJob:
         """Get a specific BigQuery job.
 
@@ -428,23 +329,11 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Getting job %s in project %s", job_id, self.project_id
         )
 
-        try:
-            request = self.service.jobs().get(
-                projectId=self.project_id, jobId=job_id
-            )
-            response = request.execute()
-            return BigQueryJob.from_api_response(response, self.project_id)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.jobs().get(
+            projectId=self.project_id, jobId=job_id
+        )
+        response = self._execute(request, "job", job_id)
+        return BigQueryJob.from_api_response(response, self.project_id)
     def list_jobs(self, **kwargs) -> List[BigQueryJob]:
         """List BigQuery jobs in the project.
 
@@ -462,7 +351,7 @@ class BigQueryService(GCPService[BigQueryDataset]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for job_data in response.get("jobs", []):
                 jobs.append(
                     BigQueryJob.from_api_response(job_data, self.project_id)
@@ -485,18 +374,7 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Cancelling job %s in project %s", job_id, self.project_id
         )
 
-        try:
-            self.service.jobs().cancel(
-                projectId=self.project_id, jobId=job_id
-            ).execute()
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("job", job_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        self.service.jobs().cancel(
+            projectId=self.project_id, jobId=job_id
+        ).execute()
+        return True

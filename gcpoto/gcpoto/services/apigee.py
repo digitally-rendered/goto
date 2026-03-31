@@ -3,8 +3,6 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.apigee import (
@@ -13,12 +11,9 @@ from gcpoto.models.apigee import (
     ApigeeAPIProxy,
 )
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,27 +66,9 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}"
 
-        try:
-            request = self.service.organizations().get(name=name)
-            response = request.execute()
-            return ApigeeOrganization.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeOrganization", org_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Environment operations
-    # ------------------------------------------------------------------ #
-
+        request = self.service.organizations().get(name=name)
+        response = self._execute(request, "ApigeeOrganization", org_name)
+        return ApigeeOrganization.from_api_response(response)
     def list_environments(self, org_name: str) -> List[ApigeeEnvironment]:
         """List environments in an Apigee organization.
 
@@ -109,7 +86,7 @@ class ApigeeService(GCPService[ApigeeOrganization]):
         request = self.service.organizations().environments().list(
             parent=parent
         )
-        response = request.execute()
+        response = self._execute(request)
 
         environments = []
         for env_name in response:
@@ -143,25 +120,11 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/environments/{env_name}"
 
-        try:
-            request = self.service.organizations().environments().get(
-                name=name
-            )
-            response = request.execute()
-            return ApigeeEnvironment.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeEnvironment", env_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.organizations().environments().get(
+            name=name
+        )
+        response = self._execute(request, "ApigeeEnvironment", env_name)
+        return ApigeeEnvironment.from_api_response(response)
     def create_environment(
         self,
         org_name: str,
@@ -194,28 +157,14 @@ class ApigeeService(GCPService[ApigeeOrganization]):
         if description:
             body["description"] = description
 
-        try:
-            request = (
-                self.service.organizations()
-                .environments()
-                .create(parent=parent, body=body)
-            )
-            response = request.execute()
-            logger.info("Created Apigee environment %s", env_name)
-            return ApigeeEnvironment.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ApigeeEnvironment '{env_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.organizations()
+            .environments()
+            .create(parent=parent, body=body)
+        )
+        response = self._execute(request)
+        logger.info("Created Apigee environment %s", env_name)
+        return ApigeeEnvironment.from_api_response(response)
     def delete_environment(self, org_name: str, env_name: str) -> bool:
         """Delete an Apigee environment.
 
@@ -238,29 +187,11 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/environments/{env_name}"
 
-        try:
-            self.service.organizations().environments().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted Apigee environment %s", env_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeEnvironment", env_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  API Proxy operations
-    # ------------------------------------------------------------------ #
-
+        self.service.organizations().environments().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted Apigee environment %s", env_name)
+        return True
     def list_api_proxies(self, org_name: str) -> List[ApigeeAPIProxy]:
         """List API proxies in an Apigee organization.
 
@@ -276,7 +207,7 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         parent = f"organizations/{org_name}"
         request = self.service.organizations().apis().list(parent=parent)
-        response = request.execute()
+        response = self._execute(request)
 
         proxies = []
         for item in response.get("proxies", []):
@@ -309,23 +240,9 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/apis/{proxy_name}"
 
-        try:
-            request = self.service.organizations().apis().get(name=name)
-            response = request.execute()
-            return ApigeeAPIProxy.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeAPIProxy", proxy_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.organizations().apis().get(name=name)
+        response = self._execute(request, "ApigeeAPIProxy", proxy_name)
+        return ApigeeAPIProxy.from_api_response(response)
     def create_api_proxy(
         self,
         org_name: str,
@@ -358,28 +275,14 @@ class ApigeeService(GCPService[ApigeeOrganization]):
             "content": proxy_bundle,
         }
 
-        try:
-            request = (
-                self.service.organizations()
-                .apis()
-                .create(parent=parent, name=proxy_name, body=body)
-            )
-            response = request.execute()
-            logger.info("Created Apigee API proxy %s", proxy_name)
-            return ApigeeAPIProxy.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ApigeeAPIProxy '{proxy_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.organizations()
+            .apis()
+            .create(parent=parent, name=proxy_name, body=body)
+        )
+        response = self._execute(request)
+        logger.info("Created Apigee API proxy %s", proxy_name)
+        return ApigeeAPIProxy.from_api_response(response)
     def delete_api_proxy(self, org_name: str, proxy_name: str) -> bool:
         """Delete an Apigee API proxy.
 
@@ -402,29 +305,11 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/apis/{proxy_name}"
 
-        try:
-            self.service.organizations().apis().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted Apigee API proxy %s", proxy_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeAPIProxy", proxy_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Deployment operations
-    # ------------------------------------------------------------------ #
-
+        self.service.organizations().apis().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted Apigee API proxy %s", proxy_name)
+        return True
     def deploy_api_proxy(
         self,
         org_name: str,
@@ -459,35 +344,21 @@ class ApigeeService(GCPService[ApigeeOrganization]):
             f"/apis/{proxy_name}/revisions/{revision}"
         )
 
-        try:
-            request = (
-                self.service.organizations()
-                .environments()
-                .apis()
-                .revisions()
-                .deploy(name=name)
-            )
-            response = request.execute()
-            logger.info(
-                "Deployed API proxy %s revision %s to %s",
-                proxy_name,
-                revision,
-                env_name,
-            )
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeAPIProxy", proxy_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.organizations()
+            .environments()
+            .apis()
+            .revisions()
+            .deploy(name=name)
+        )
+        response = self._execute(request, "ApigeeAPIProxy", proxy_name)
+        logger.info(
+            "Deployed API proxy %s revision %s to %s",
+            proxy_name,
+            revision,
+            env_name,
+        )
+        return response
     def undeploy_api_proxy(
         self,
         org_name: str,
@@ -522,31 +393,18 @@ class ApigeeService(GCPService[ApigeeOrganization]):
             f"/apis/{proxy_name}/revisions/{revision}"
         )
 
-        try:
-            request = (
-                self.service.organizations()
-                .environments()
-                .apis()
-                .revisions()
-                .undeploy(name=name)
-            )
-            response = request.execute()
-            logger.info(
-                "Undeployed API proxy %s revision %s from %s",
-                proxy_name,
-                revision,
-                env_name,
-            )
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "ApigeeAPIProxy", proxy_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.organizations()
+            .environments()
+            .apis()
+            .revisions()
+            .undeploy(name=name)
+        )
+        response = self._execute(request, "ApigeeAPIProxy", proxy_name)
+        logger.info(
+            "Undeployed API proxy %s revision %s from %s",
+            proxy_name,
+            revision,
+            env_name,
+        )
+        return response

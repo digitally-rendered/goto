@@ -3,18 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.recaptcha import RecaptchaKey, Assessment
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,7 +59,7 @@ class RecaptchaService(GCPService[RecaptchaKey]):
 
         keys = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("keys", []):
                 keys.append(RecaptchaKey.from_api_response(item))
             request = (
@@ -94,21 +88,9 @@ class RecaptchaService(GCPService[RecaptchaKey]):
 
         name = f"projects/{self.project_id}/keys/{key_id}"
 
-        try:
-            request = self.service.projects().keys().get(name=name)
-            response = request.execute()
-            return RecaptchaKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("RecaptchaKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().keys().get(name=name)
+        response = self._execute(request, "RecaptchaKey", key_id)
+        return RecaptchaKey.from_api_response(response)
     def create_key(
         self,
         display_name: str,
@@ -148,26 +130,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = self.service.projects().keys().create(
-                parent=parent, body=body
-            )
-            response = request.execute()
-            logger.info("Created reCAPTCHA key %s", display_name)
-            return RecaptchaKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"RecaptchaKey '{display_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().keys().create(
+            parent=parent, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created reCAPTCHA key %s", display_name)
+        return RecaptchaKey.from_api_response(response)
     def update_key(
         self,
         key_id: str,
@@ -193,24 +161,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
 
         name = f"projects/{self.project_id}/keys/{key_id}"
 
-        try:
-            request = self.service.projects().keys().patch(
-                name=name, updateMask=update_mask, body=update_fields
-            )
-            response = request.execute()
-            logger.info("Updated reCAPTCHA key %s", key_id)
-            return RecaptchaKey.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("RecaptchaKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().keys().patch(
+            name=name, updateMask=update_mask, body=update_fields
+        )
+        response = self._execute(request, "RecaptchaKey", key_id)
+        logger.info("Updated reCAPTCHA key %s", key_id)
+        return RecaptchaKey.from_api_response(response)
     def delete_key(self, key_id: str) -> bool:
         """Delete a reCAPTCHA key.
 
@@ -228,25 +184,9 @@ class RecaptchaService(GCPService[RecaptchaKey]):
 
         name = f"projects/{self.project_id}/keys/{key_id}"
 
-        try:
-            self.service.projects().keys().delete(name=name).execute()
-            logger.info("Deleted reCAPTCHA key %s", key_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("RecaptchaKey", key_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Assessment operations
-    # ------------------------------------------------------------------ #
-
+        self.service.projects().keys().delete(name=name).execute()
+        logger.info("Deleted reCAPTCHA key %s", key_id)
+        return True
     def create_assessment(self, event: Dict[str, Any]) -> Assessment:
         """Create a new assessment for a reCAPTCHA token.
 
@@ -266,18 +206,9 @@ class RecaptchaService(GCPService[RecaptchaKey]):
             "event": event,
         }
 
-        try:
-            request = self.service.projects().assessments().create(
-                parent=parent, body=body
-            )
-            response = request.execute()
-            logger.info("Created reCAPTCHA assessment")
-            return Assessment.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.projects().assessments().create(
+            parent=parent, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created reCAPTCHA assessment")
+        return Assessment.from_api_response(response)

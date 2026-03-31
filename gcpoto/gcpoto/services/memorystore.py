@@ -75,7 +75,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().list(
             parent=parent
         )
-        response = request.execute()
+        response = self._execute(request)
         instances = [
             RedisInstance.from_api_response(item)
             for item in response.get("instances", [])
@@ -104,7 +104,7 @@ class MemorystoreService(GCPService[RedisInstance]):
             request = self.service.projects().locations().instances().get(
                 name=name
             )
-            response = request.execute()
+            response = self._execute(request)
         except Exception as e:
             if "404" in str(e) or "not found" in str(e).lower():
                 raise ResourceNotFoundError(
@@ -168,7 +168,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().create(
             parent=parent, instanceId=instance_id, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Create operation started for instance %s", instance_id)
         return response
 
@@ -200,7 +200,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().patch(
             name=name, updateMask=update_mask, body=update_fields
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Update operation started for instance %s", instance_id)
         return response
 
@@ -221,7 +221,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().delete(
             name=name
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info("Delete operation started for instance %s", instance_id)
         return response
 
@@ -248,7 +248,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().upgrade(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Upgrade operation started for instance %s", instance_id
         )
@@ -283,7 +283,7 @@ class MemorystoreService(GCPService[RedisInstance]):
         request = self.service.projects().locations().instances().failover(
             name=name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
         logger.info(
             "Failover operation started for instance %s", instance_id
         )
@@ -309,5 +309,5 @@ class MemorystoreService(GCPService[RedisInstance]):
             .instances()
             .getAuthString(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
         return response.get("authString", "")

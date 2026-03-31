@@ -3,22 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_run import CloudRunService, CloudRunRevision
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudRunServiceManager(GCPService[CloudRunService]):
     """Service for interacting with Google Cloud Run.
@@ -112,7 +101,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
 
         services = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for svc_data in response.get("services", []):
                 services.append(
                     CloudRunService.from_api_response(svc_data, self.project_id)
@@ -148,7 +137,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .services()
             .get(name=full_name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CloudRunService.from_api_response(response, self.project_id)
 
@@ -230,31 +219,17 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
         # Process tags via base class
         body = self._process_tags(body, None)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .services()
-                .create(parent=parent, serviceId=service_name, body=body)
-            )
-            response = request.execute()
+        request = (
+            self.service.projects()
+            .locations()
+            .services()
+            .create(parent=parent, serviceId=service_name, body=body)
+        )
+        response = self._execute(request)
 
-            return CloudRunService.from_api_response(
-                response, self.project_id
-            )
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Cloud Run service '{service_name}' already exists in {location}"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        return CloudRunService.from_api_response(
+            response, self.project_id
+        )
     def update_service(
         self,
         location: str,
@@ -280,7 +255,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .services()
             .patch(name=full_name, body=update_fields)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CloudRunService.from_api_response(response, self.project_id)
 
@@ -303,7 +278,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .services()
             .delete(name=full_name)
         )
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -333,7 +308,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
 
         revisions = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for rev_data in response.get("revisions", []):
                 revisions.append(
                     CloudRunRevision.from_api_response(
@@ -373,7 +348,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .revisions()
             .get(name=full_name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CloudRunRevision.from_api_response(response, self.project_id)
 
@@ -397,7 +372,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .revisions()
             .delete(name=full_name)
         )
-        request.execute()
+        self._execute(request)
 
         return True
 

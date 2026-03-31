@@ -4,22 +4,13 @@ import base64
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.kms import KeyRing, CryptoKey, CryptoKeyVersion
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
+
 from gcpoto.utils import format_key_ring_path, format_crypto_key_path
 
 logger = logging.getLogger(__name__)
-
 
 class KMSService(GCPService[KeyRing]):
     """Service for interacting with Google Cloud KMS."""
@@ -67,7 +58,7 @@ class KMSService(GCPService[KeyRing]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for kr_data in response.get("keyRings", []):
                 key_rings.append(
                     KeyRing.from_api_response(kr_data, self.project_id)
@@ -100,7 +91,7 @@ class KMSService(GCPService[KeyRing]):
             .keyRings()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return KeyRing.from_api_response(response, self.project_id)
 
@@ -123,7 +114,7 @@ class KMSService(GCPService[KeyRing]):
             .keyRings()
             .create(parent=parent, keyRingId=key_ring_id, body={})
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return KeyRing.from_api_response(response, self.project_id)
 
@@ -152,7 +143,7 @@ class KMSService(GCPService[KeyRing]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for ck_data in response.get("cryptoKeys", []):
                 crypto_keys.append(
                     CryptoKey.from_api_response(ck_data, self.project_id)
@@ -192,7 +183,7 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeys()
             .get(name=name)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CryptoKey.from_api_response(response, self.project_id)
 
@@ -242,7 +233,7 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeys()
             .create(parent=parent, cryptoKeyId=key_id, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CryptoKey.from_api_response(response, self.project_id)
 
@@ -297,7 +288,7 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeys()
             .patch(name=name, updateMask=update_mask, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CryptoKey.from_api_response(response, self.project_id)
 
@@ -333,7 +324,7 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeys()
             .encrypt(name=name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return base64.b64decode(response["ciphertext"])
 
@@ -369,7 +360,7 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeys()
             .decrypt(name=name, body=body)
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return base64.b64decode(response["plaintext"])
 
@@ -402,7 +393,7 @@ class KMSService(GCPService[KeyRing]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for v_data in response.get("cryptoKeyVersions", []):
                 versions.append(
                     CryptoKeyVersion.from_api_response(v_data, self.project_id)
@@ -450,6 +441,6 @@ class KMSService(GCPService[KeyRing]):
             .cryptoKeyVersions()
             .destroy(name=name, body={})
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return CryptoKeyVersion.from_api_response(response, self.project_id)

@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.transfer import TransferJob, TransferOperation
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class TransferService(GCPService[TransferJob]):
     """Service for interacting with Google Cloud Storage Transfer Service."""
@@ -69,7 +59,7 @@ class TransferService(GCPService[TransferJob]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for job_data in response.get("transferJobs", []):
                 jobs.append(
                     TransferJob.from_api_response(job_data, self.project_id)
@@ -95,7 +85,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().get(
             jobName=job_name, projectId=self.project_id
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return TransferJob.from_api_response(response, self.project_id)
 
@@ -135,7 +125,7 @@ class TransferService(GCPService[TransferJob]):
             body["notificationConfig"] = notification_config
 
         request = self.service.transferJobs().create(body=body)
-        response = request.execute()
+        response = self._execute(request)
 
         return TransferJob.from_api_response(response, self.project_id)
 
@@ -166,7 +156,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().patch(
             jobName=job_name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return TransferJob.from_api_response(response, self.project_id)
 
@@ -187,7 +177,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().patch(
             jobName=job_name, body=body
         )
-        request.execute()
+        self._execute(request)
 
     def resume_transfer_job(self, job_name: str) -> None:
         """Resume a paused transfer job.
@@ -206,7 +196,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().patch(
             jobName=job_name, body=body
         )
-        request.execute()
+        self._execute(request)
 
     def delete_transfer_job(self, job_name: str) -> None:
         """Delete a transfer job (soft delete - sets status to DELETED).
@@ -225,7 +215,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().patch(
             jobName=job_name, body=body
         )
-        request.execute()
+        self._execute(request)
 
     def run_transfer_job(self, job_name: str) -> Dict[str, Any]:
         """Run a transfer job immediately.
@@ -245,7 +235,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferJobs().run(
             jobName=job_name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return response
 
@@ -275,7 +265,7 @@ class TransferService(GCPService[TransferJob]):
         )
 
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for op_data in response.get("operations", []):
                 operations.append(
                     TransferOperation.from_api_response(
@@ -305,7 +295,7 @@ class TransferService(GCPService[TransferJob]):
         request = self.service.transferOperations().get(
             name=operation_name
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return TransferOperation.from_api_response(
             response, self.project_id

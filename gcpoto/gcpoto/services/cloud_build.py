@@ -4,20 +4,11 @@ import logging
 from typing import List, Optional, Dict, Any
 
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_build import Build, BuildTrigger
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class CloudBuildService(GCPService[Build]):
     """Service for interacting with Google Cloud Build."""
@@ -69,7 +60,7 @@ class CloudBuildService(GCPService[Build]):
 
         builds = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for build_data in response.get("builds", []):
                 builds.append(
                     Build.from_api_response(build_data, self.project_id)
@@ -93,18 +84,12 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             A Build instance
         """
-        try:
-            request = (
-                self.service.projects()
-                .builds()
-                .get(projectId=self.project_id, id=build_id)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("build", build_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .builds()
+            .get(projectId=self.project_id, id=build_id)
+        )
+        response = self._execute(request, "build", build_id)
         logger.debug("Retrieved build %s", build_id)
         return Build.from_api_response(response, self.project_id)
 
@@ -117,22 +102,12 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             A Build instance for the newly created build
         """
-        try:
-            request = (
-                self.service.projects()
-                .builds()
-                .create(projectId=self.project_id, body=build_body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .builds()
+            .create(projectId=self.project_id, body=build_body)
+        )
+        response = self._execute(request)
         logger.debug("Created build in project %s", self.project_id)
         return Build.from_api_response(response, self.project_id)
 
@@ -145,22 +120,16 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             The cancelled Build instance
         """
-        try:
-            request = (
-                self.service.projects()
-                .builds()
-                .cancel(
-                    projectId=self.project_id,
-                    id=build_id,
-                    body={},
-                )
+        request = (
+            self.service.projects()
+            .builds()
+            .cancel(
+                projectId=self.project_id,
+                id=build_id,
+                body={},
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("build", build_id)
-            raise
-
+        )
+        response = self._execute(request, "build", build_id)
         logger.debug("Cancelled build %s", build_id)
         return Build.from_api_response(response, self.project_id)
 
@@ -173,28 +142,16 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             A Build instance for the retried build
         """
-        try:
-            request = (
-                self.service.projects()
-                .builds()
-                .retry(
-                    projectId=self.project_id,
-                    id=build_id,
-                    body={},
-                )
+        request = (
+            self.service.projects()
+            .builds()
+            .retry(
+                projectId=self.project_id,
+                id=build_id,
+                body={},
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("build", build_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request, "build", build_id)
         logger.debug("Retried build %s", build_id)
         return Build.from_api_response(response, self.project_id)
 
@@ -215,7 +172,7 @@ class CloudBuildService(GCPService[Build]):
 
         triggers = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for trigger_data in response.get("triggers", []):
                 triggers.append(
                     BuildTrigger.from_api_response(
@@ -241,18 +198,12 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             A BuildTrigger instance
         """
-        try:
-            request = (
-                self.service.projects()
-                .triggers()
-                .get(projectId=self.project_id, triggerId=trigger_id)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .triggers()
+            .get(projectId=self.project_id, triggerId=trigger_id)
+        )
+        response = self._execute(request, "trigger", trigger_id)
         logger.debug("Retrieved trigger %s", trigger_id)
         return BuildTrigger.from_api_response(response, self.project_id)
 
@@ -267,22 +218,12 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             A BuildTrigger instance for the newly created trigger
         """
-        try:
-            request = (
-                self.service.projects()
-                .triggers()
-                .create(projectId=self.project_id, body=trigger_body)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .triggers()
+            .create(projectId=self.project_id, body=trigger_body)
+        )
+        response = self._execute(request)
         logger.debug("Created trigger in project %s", self.project_id)
         return BuildTrigger.from_api_response(response, self.project_id)
 
@@ -298,28 +239,16 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             The updated BuildTrigger instance
         """
-        try:
-            request = (
-                self.service.projects()
-                .triggers()
-                .patch(
-                    projectId=self.project_id,
-                    triggerId=trigger_id,
-                    body=trigger_body,
-                )
+        request = (
+            self.service.projects()
+            .triggers()
+            .patch(
+                projectId=self.project_id,
+                triggerId=trigger_id,
+                body=trigger_body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request, "trigger", trigger_id)
         logger.debug("Updated trigger %s", trigger_id)
         return BuildTrigger.from_api_response(response, self.project_id)
 
@@ -332,15 +261,9 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             True if the deletion was successful
         """
-        try:
-            self.service.projects().triggers().delete(
-                projectId=self.project_id, triggerId=trigger_id
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_id)
-            raise
-
+        self.service.projects().triggers().delete(
+            projectId=self.project_id, triggerId=trigger_id
+        ).execute()
         logger.debug("Deleted trigger %s", trigger_id)
         return True
 
@@ -362,27 +285,15 @@ class CloudBuildService(GCPService[Build]):
         if source is not None:
             body["source"] = source
 
-        try:
-            request = (
-                self.service.projects()
-                .triggers()
-                .run(
-                    projectId=self.project_id,
-                    triggerId=trigger_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .triggers()
+            .run(
+                projectId=self.project_id,
+                triggerId=trigger_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request, "trigger", trigger_id)
         logger.debug("Ran trigger %s", trigger_id)
         return Build.from_api_response(response, self.project_id)

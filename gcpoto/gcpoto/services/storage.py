@@ -95,7 +95,7 @@ class StorageService(GCPService[StorageBucket]):
 
         # Handle pagination automatically
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
 
             for item in response.get("items", []):
                 # Add bucket name to each object since it's not always included
@@ -151,7 +151,7 @@ class StorageService(GCPService[StorageBucket]):
             body.update(kwargs)
 
         request = self.service.buckets().insert(project=self.project_id, body=body)
-        response = request.execute()
+        response = self._execute(request)
 
         return StorageBucket.from_api_response(response)
 
@@ -236,7 +236,7 @@ class StorageService(GCPService[StorageBucket]):
         request = self.service.objects().insert(
             bucket=bucket_name, body=body, media_body=media
         )
-        response = request.execute()
+        response = self._execute(request)
 
         # Add bucket name if not included
         if "bucket" not in response:
@@ -289,7 +289,7 @@ class StorageService(GCPService[StorageBucket]):
                 self.delete_object(bucket_name=bucket_name, object_name=obj.name)
 
         request = self.service.buckets().delete(bucket=bucket_name, **kwargs)
-        request.execute()
+        self._execute(request)
 
     def get_object(self, bucket_name: str, object_name: str, **kwargs) -> StorageObject:
         """Get a specific object by name.
@@ -308,7 +308,7 @@ class StorageService(GCPService[StorageBucket]):
             params.update(kwargs)
 
         request = self.service.objects().get(**params)
-        response = request.execute()
+        response = self._execute(request)
 
         # Add bucket name if not included
         if "bucket" not in response:
@@ -430,7 +430,7 @@ class StorageService(GCPService[StorageBucket]):
         request = self.service.objects().insert(
             bucket=bucket_name, body=body, media_body=media
         )
-        response = request.execute()
+        response = self._execute(request)
 
         # Add bucket name to response if not present
         if "bucket" not in response:
@@ -455,7 +455,7 @@ class StorageService(GCPService[StorageBucket]):
             params.update(kwargs)
 
         request = self.service.objects().delete(**params)
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -488,7 +488,7 @@ class StorageService(GCPService[StorageBucket]):
             A list of StorageBucket instances
         """
         request = self.service.buckets().list(project=self.project_id, **kwargs)
-        response = request.execute()
+        response = self._execute(request)
 
         buckets = []
         for item in response.get("items", []):
@@ -507,7 +507,7 @@ class StorageService(GCPService[StorageBucket]):
             A StorageBucket instance
         """
         request = self.service.buckets().get(bucket=resource_id, **kwargs)
-        response = request.execute()
+        response = self._execute(request)
 
         return self._parse_response(response)
 
@@ -533,7 +533,7 @@ class StorageService(GCPService[StorageBucket]):
         request = self.service.buckets().insert(
             project=self.project_id, body=body, **kwargs
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return self._parse_response(response)
 
@@ -548,6 +548,6 @@ class StorageService(GCPService[StorageBucket]):
             True if the deletion was successful
         """
         request = self.service.buckets().delete(bucket=resource_id, **kwargs)
-        request.execute()
+        self._execute(request)
 
         return True

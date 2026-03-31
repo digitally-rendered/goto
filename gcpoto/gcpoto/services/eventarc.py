@@ -3,22 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.eventarc import EventarcTrigger
-from gcpoto.exceptions import (
-    ResourceAlreadyExistsError,
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class EventarcService(GCPService[EventarcTrigger]):
     """Service for interacting with Google Cloud Eventarc."""
@@ -94,7 +83,7 @@ class EventarcService(GCPService[EventarcTrigger]):
 
         triggers = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for trigger_data in response.get("triggers", []):
                 triggers.append(
                     EventarcTrigger.from_api_response(
@@ -126,25 +115,13 @@ class EventarcService(GCPService[EventarcTrigger]):
         """
         name = self._format_trigger_path(location, trigger_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .triggers()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .triggers()
+            .get(name=name)
+        )
+        response = self._execute(request, "trigger", trigger_name)
         logger.debug("Retrieved trigger %s", trigger_name)
         return EventarcTrigger.from_api_response(response, self.project_id)
 
@@ -185,27 +162,13 @@ class EventarcService(GCPService[EventarcTrigger]):
         if labels is not None:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .triggers()
-                .create(parent=parent, body=body, triggerId=trigger_name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Trigger '{trigger_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .triggers()
+            .create(parent=parent, body=body, triggerId=trigger_name)
+        )
+        response = self._execute(request)
         logger.debug("Created trigger %s in %s", trigger_name, location)
         return EventarcTrigger.from_api_response(response, self.project_id)
 
@@ -232,25 +195,13 @@ class EventarcService(GCPService[EventarcTrigger]):
         body: Dict[str, Any] = {"name": name}
         body.update(update_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .triggers()
-                .patch(name=name, body=body, updateMask=update_mask)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .triggers()
+            .patch(name=name, body=body, updateMask=update_mask)
+        )
+        response = self._execute(request, "trigger", trigger_name)
         logger.debug("Updated trigger %s in %s", trigger_name, location)
         return EventarcTrigger.from_api_response(response, self.project_id)
 
@@ -266,24 +217,12 @@ class EventarcService(GCPService[EventarcTrigger]):
         """
         name = self._format_trigger_path(location, trigger_name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .triggers()
-                .delete(name=name)
-            )
-            request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("trigger", trigger_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .triggers()
+            .delete(name=name)
+        )
+        self._execute(request, "trigger", trigger_name)
         logger.debug("Deleted trigger %s in %s", trigger_name, location)
         return True

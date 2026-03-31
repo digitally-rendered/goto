@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.api_gateway import APIGateway, APIConfig
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -72,7 +67,7 @@ class APIGatewayService(GCPService[APIGateway]):
 
         gateways = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("gateways", []):
                 gateways.append(APIGateway.from_api_response(item))
             request = (
@@ -106,23 +101,11 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/gateways/{gateway_id}"
         )
 
-        try:
-            request = (
-                self.service.projects().locations().gateways().get(name=name)
-            )
-            response = request.execute()
-            return APIGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIGateway", gateway_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects().locations().gateways().get(name=name)
+        )
+        response = self._execute(request, "APIGateway", gateway_id)
+        return APIGateway.from_api_response(response)
     def create_gateway(
         self,
         location: str,
@@ -161,29 +144,15 @@ class APIGatewayService(GCPService[APIGateway]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .gateways()
-                .create(parent=parent, gatewayId=gateway_id, body=body)
-            )
-            response = request.execute()
-            logger.info("Created API Gateway %s", gateway_id)
-            return APIGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"APIGateway '{gateway_id}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .gateways()
+            .create(parent=parent, gatewayId=gateway_id, body=body)
+        )
+        response = self._execute(request)
+        logger.info("Created API Gateway %s", gateway_id)
+        return APIGateway.from_api_response(response)
     def update_gateway(
         self,
         location: str,
@@ -214,27 +183,15 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/gateways/{gateway_id}"
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .gateways()
-                .patch(name=name, updateMask=update_mask, body=update_fields)
-            )
-            response = request.execute()
-            logger.info("Updated API Gateway %s", gateway_id)
-            return APIGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIGateway", gateway_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .gateways()
+            .patch(name=name, updateMask=update_mask, body=update_fields)
+        )
+        response = self._execute(request, "APIGateway", gateway_id)
+        logger.info("Updated API Gateway %s", gateway_id)
+        return APIGateway.from_api_response(response)
     def delete_gateway(self, location: str, gateway_id: str) -> bool:
         """Delete an API Gateway.
 
@@ -256,27 +213,11 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/gateways/{gateway_id}"
         )
 
-        try:
-            self.service.projects().locations().gateways().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted API Gateway %s", gateway_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIGateway", gateway_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  API operations
-    # ------------------------------------------------------------------ #
-
+        self.service.projects().locations().gateways().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted API Gateway %s", gateway_id)
+        return True
     def list_apis(self, location: Optional[str] = None) -> List[APIGateway]:
         """List APIs in the project.
 
@@ -299,7 +240,7 @@ class APIGatewayService(GCPService[APIGateway]):
 
         apis = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("apis", []):
                 apis.append(APIGateway.from_api_response(item))
             request = (
@@ -329,23 +270,11 @@ class APIGatewayService(GCPService[APIGateway]):
 
         name = f"projects/{self.project_id}/locations/global/apis/{api_id}"
 
-        try:
-            request = (
-                self.service.projects().locations().apis().get(name=name)
-            )
-            response = request.execute()
-            return APIGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("API", api_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects().locations().apis().get(name=name)
+        )
+        response = self._execute(request, "API", api_id)
+        return APIGateway.from_api_response(response)
     def create_api(
         self,
         api_id: str,
@@ -376,29 +305,15 @@ class APIGatewayService(GCPService[APIGateway]):
         if labels:
             body["labels"] = labels
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .apis()
-                .create(parent=parent, apiId=api_id, body=body)
-            )
-            response = request.execute()
-            logger.info("Created API %s", api_id)
-            return APIGateway.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"API '{api_id}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .apis()
+            .create(parent=parent, apiId=api_id, body=body)
+        )
+        response = self._execute(request)
+        logger.info("Created API %s", api_id)
+        return APIGateway.from_api_response(response)
     def delete_api(self, api_id: str) -> bool:
         """Delete an API.
 
@@ -416,27 +331,11 @@ class APIGatewayService(GCPService[APIGateway]):
 
         name = f"projects/{self.project_id}/locations/global/apis/{api_id}"
 
-        try:
-            self.service.projects().locations().apis().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted API %s", api_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("API", api_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  API Config operations
-    # ------------------------------------------------------------------ #
-
+        self.service.projects().locations().apis().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted API %s", api_id)
+        return True
     def list_api_configs(self, api_id: str) -> List[APIConfig]:
         """List API configs for an API.
 
@@ -461,7 +360,7 @@ class APIGatewayService(GCPService[APIGateway]):
 
         configs = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("apiConfigs", []):
                 configs.append(APIConfig.from_api_response(item))
             request = (
@@ -496,27 +395,15 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/apis/{api_id}/configs/{config_id}"
         )
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .apis()
-                .configs()
-                .get(name=name)
-            )
-            response = request.execute()
-            return APIConfig.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIConfig", config_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .apis()
+            .configs()
+            .get(name=name)
+        )
+        response = self._execute(request, "APIConfig", config_id)
+        return APIConfig.from_api_response(response)
     def create_api_config(
         self,
         api_id: str,
@@ -558,32 +445,18 @@ class APIGatewayService(GCPService[APIGateway]):
         if display_name:
             body["displayName"] = display_name
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .apis()
-                .configs()
-                .create(
-                    parent=parent, apiConfigId=config_id, body=body
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .apis()
+            .configs()
+            .create(
+                parent=parent, apiConfigId=config_id, body=body
             )
-            response = request.execute()
-            logger.info("Created API config %s for API %s", config_id, api_id)
-            return APIConfig.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"APIConfig '{config_id}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
+        logger.info("Created API config %s for API %s", config_id, api_id)
+        return APIConfig.from_api_response(response)
     def delete_api_config(self, api_id: str, config_id: str) -> bool:
         """Delete an API config.
 
@@ -607,19 +480,8 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/apis/{api_id}/configs/{config_id}"
         )
 
-        try:
-            self.service.projects().locations().apis().configs().delete(
-                name=name
-            ).execute()
-            logger.info("Deleted API config %s for API %s", config_id, api_id)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("APIConfig", config_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        self.service.projects().locations().apis().configs().delete(
+            name=name
+        ).execute()
+        logger.info("Deleted API config %s for API %s", config_id, api_id)
+        return True

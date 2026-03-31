@@ -3,20 +3,10 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.errors import HttpError
-
 from gcpoto.services.base import GCPService
 from gcpoto.models.bare_metal import BareMetalInstance, BareMetalVolume
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class BareMetalService(GCPService[BareMetalInstance]):
     """Service for interacting with Google Cloud Bare Metal Solution."""
@@ -54,16 +44,13 @@ class BareMetalService(GCPService[BareMetalInstance]):
         parent = f"projects/{self.project_id}/locations/{location}"
         logger.debug("Listing Bare Metal instances in %s", parent)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .list(parent=parent)
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .list(parent=parent)
+        )
+        response = self._execute(request)
         instances = [
             BareMetalInstance.from_api_response(item)
             for item in response.get("instances", [])
@@ -91,20 +78,14 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.debug("Getting Bare Metal instance %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .get(name=name)
-            )
-            response = request.execute()
-            return BareMetalInstance.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .get(name=name)
+        )
+        response = self._execute(request, "BareMetalInstance", instance_name)
+        return BareMetalInstance.from_api_response(response)
     def update_instance(
         self,
         location: str,
@@ -129,21 +110,15 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.info("Updating Bare Metal instance %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .patch(name=name, updateMask=update_mask, body=update_fields)
-            )
-            response = request.execute()
-            logger.info("Instance update initiated for %s", instance_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .patch(name=name, updateMask=update_mask, body=update_fields)
+        )
+        response = self._execute(request, "BareMetalInstance", instance_name)
+        logger.info("Instance update initiated for %s", instance_name)
+        return response
     def reset_instance(
         self, location: str, instance_name: str
     ) -> Dict[str, Any]:
@@ -162,21 +137,15 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.info("Resetting Bare Metal instance %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .reset(name=name)
-            )
-            response = request.execute()
-            logger.info("Instance reset initiated for %s", instance_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .reset(name=name)
+        )
+        response = self._execute(request, "BareMetalInstance", instance_name)
+        logger.info("Instance reset initiated for %s", instance_name)
+        return response
     def start_instance(
         self, location: str, instance_name: str
     ) -> Dict[str, Any]:
@@ -195,21 +164,15 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.info("Starting Bare Metal instance %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .start(name=name)
-            )
-            response = request.execute()
-            logger.info("Instance start initiated for %s", instance_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .start(name=name)
+        )
+        response = self._execute(request, "BareMetalInstance", instance_name)
+        logger.info("Instance start initiated for %s", instance_name)
+        return response
     def stop_instance(
         self, location: str, instance_name: str
     ) -> Dict[str, Any]:
@@ -228,23 +191,15 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.info("Stopping Bare Metal instance %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .instances()
-                .stop(name=name)
-            )
-            response = request.execute()
-            logger.info("Instance stop initiated for %s", instance_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalInstance", instance_name)
-            raise APIError(e.resp.status, str(e))
-
-    # --- Volume methods ---
-
+        request = (
+            self.service.projects()
+            .locations()
+            .instances()
+            .stop(name=name)
+        )
+        response = self._execute(request, "BareMetalInstance", instance_name)
+        logger.info("Instance stop initiated for %s", instance_name)
+        return response
     def list_volumes(self, location: str) -> List[BareMetalVolume]:
         """List Bare Metal volumes in the project.
 
@@ -257,16 +212,13 @@ class BareMetalService(GCPService[BareMetalInstance]):
         parent = f"projects/{self.project_id}/locations/{location}"
         logger.debug("Listing Bare Metal volumes in %s", parent)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .volumes()
-                .list(parent=parent)
-            )
-            response = request.execute()
-        except HttpError as e:
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .volumes()
+            .list(parent=parent)
+        )
+        response = self._execute(request)
         volumes = [
             BareMetalVolume.from_api_response(item)
             for item in response.get("volumes", [])
@@ -294,20 +246,14 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.debug("Getting Bare Metal volume %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .volumes()
-                .get(name=name)
-            )
-            response = request.execute()
-            return BareMetalVolume.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalVolume", volume_name)
-            raise APIError(e.resp.status, str(e))
-
+        request = (
+            self.service.projects()
+            .locations()
+            .volumes()
+            .get(name=name)
+        )
+        response = self._execute(request, "BareMetalVolume", volume_name)
+        return BareMetalVolume.from_api_response(response)
     def update_volume(
         self,
         location: str,
@@ -332,17 +278,12 @@ class BareMetalService(GCPService[BareMetalInstance]):
         )
         logger.info("Updating Bare Metal volume %s", name)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .volumes()
-                .patch(name=name, updateMask=update_mask, body=update_fields)
-            )
-            response = request.execute()
-            logger.info("Volume update initiated for %s", volume_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BareMetalVolume", volume_name)
-            raise APIError(e.resp.status, str(e))
+        request = (
+            self.service.projects()
+            .locations()
+            .volumes()
+            .patch(name=name, updateMask=update_mask, body=update_fields)
+        )
+        response = self._execute(request, "BareMetalVolume", volume_name)
+        logger.info("Volume update initiated for %s", volume_name)
+        return response

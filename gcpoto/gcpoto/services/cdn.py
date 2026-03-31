@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cdn import BackendService, UrlMap, HealthCheck
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +61,7 @@ class CDNService(GCPService[BackendService]):
 
         services = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("items", []):
                 services.append(BackendService.from_api_response(item))
             request = self.service.backendServices().list_next(
@@ -91,23 +86,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Getting backend service %s", name)
 
-        try:
-            request = self.service.backendServices().get(
-                project=self.project_id, backendService=name
-            )
-            response = request.execute()
-            return BackendService.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BackendService", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.backendServices().get(
+            project=self.project_id, backendService=name
+        )
+        response = self._execute(request, "BackendService", name)
+        return BackendService.from_api_response(response)
     def create_backend_service(
         self,
         name: str,
@@ -146,26 +129,12 @@ class CDNService(GCPService[BackendService]):
         if cdn_policy is not None:
             body["cdnPolicy"] = cdn_policy
 
-        try:
-            request = self.service.backendServices().insert(
-                project=self.project_id, body=body
-            )
-            request.execute()
-            logger.info("Created backend service %s", name)
-            return self.get_backend_service(name)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"BackendService '{name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.backendServices().insert(
+            project=self.project_id, body=body
+        )
+        self._execute(request)
+        logger.info("Created backend service %s", name)
+        return self.get_backend_service(name)
     def update_backend_service(
         self, name: str, update_fields: Dict[str, Any]
     ) -> BackendService:
@@ -184,24 +153,12 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Updating backend service %s", name)
 
-        try:
-            request = self.service.backendServices().patch(
-                project=self.project_id, backendService=name, body=update_fields
-            )
-            request.execute()
-            logger.info("Updated backend service %s", name)
-            return self.get_backend_service(name)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BackendService", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.backendServices().patch(
+            project=self.project_id, backendService=name, body=update_fields
+        )
+        self._execute(request, "BackendService", name)
+        logger.info("Updated backend service %s", name)
+        return self.get_backend_service(name)
     def delete_backend_service(self, name: str) -> bool:
         """Delete a backend service.
 
@@ -217,25 +174,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting backend service %s", name)
 
-        try:
-            self.service.backendServices().delete(
-                project=self.project_id, backendService=name
-            ).execute()
-            logger.info("Deleted backend service %s", name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("BackendService", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- URL Maps ----
-
+        self.service.backendServices().delete(
+            project=self.project_id, backendService=name
+        ).execute()
+        logger.info("Deleted backend service %s", name)
+        return True
     def list_url_maps(self, **kwargs) -> List[UrlMap]:
         """List URL maps in the project.
 
@@ -253,7 +196,7 @@ class CDNService(GCPService[BackendService]):
 
         url_maps = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("items", []):
                 url_maps.append(UrlMap.from_api_response(item))
             request = self.service.urlMaps().list_next(request, response)
@@ -276,23 +219,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Getting URL map %s", name)
 
-        try:
-            request = self.service.urlMaps().get(
-                project=self.project_id, urlMap=name
-            )
-            response = request.execute()
-            return UrlMap.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("UrlMap", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.urlMaps().get(
+            project=self.project_id, urlMap=name
+        )
+        response = self._execute(request, "UrlMap", name)
+        return UrlMap.from_api_response(response)
     def create_url_map(
         self,
         name: str,
@@ -326,26 +257,12 @@ class CDNService(GCPService[BackendService]):
         if path_matchers is not None:
             body["pathMatchers"] = path_matchers
 
-        try:
-            request = self.service.urlMaps().insert(
-                project=self.project_id, body=body
-            )
-            request.execute()
-            logger.info("Created URL map %s", name)
-            return self.get_url_map(name)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"UrlMap '{name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.urlMaps().insert(
+            project=self.project_id, body=body
+        )
+        self._execute(request)
+        logger.info("Created URL map %s", name)
+        return self.get_url_map(name)
     def delete_url_map(self, name: str) -> bool:
         """Delete a URL map.
 
@@ -361,25 +278,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting URL map %s", name)
 
-        try:
-            self.service.urlMaps().delete(
-                project=self.project_id, urlMap=name
-            ).execute()
-            logger.info("Deleted URL map %s", name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("UrlMap", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Health Checks ----
-
+        self.service.urlMaps().delete(
+            project=self.project_id, urlMap=name
+        ).execute()
+        logger.info("Deleted URL map %s", name)
+        return True
     def list_health_checks(self, **kwargs) -> List[HealthCheck]:
         """List health checks in the project.
 
@@ -397,7 +300,7 @@ class CDNService(GCPService[BackendService]):
 
         health_checks = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("items", []):
                 health_checks.append(HealthCheck.from_api_response(item))
             request = self.service.healthChecks().list_next(request, response)
@@ -420,23 +323,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Getting health check %s", name)
 
-        try:
-            request = self.service.healthChecks().get(
-                project=self.project_id, healthCheck=name
-            )
-            response = request.execute()
-            return HealthCheck.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("HealthCheck", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.healthChecks().get(
+            project=self.project_id, healthCheck=name
+        )
+        response = self._execute(request, "HealthCheck", name)
+        return HealthCheck.from_api_response(response)
     def create_health_check(
         self,
         name: str,
@@ -493,26 +384,12 @@ class CDNService(GCPService[BackendService]):
         if config_key and type_config:
             body[config_key] = type_config
 
-        try:
-            request = self.service.healthChecks().insert(
-                project=self.project_id, body=body
-            )
-            request.execute()
-            logger.info("Created health check %s", name)
-            return self.get_health_check(name)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"HealthCheck '{name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.healthChecks().insert(
+            project=self.project_id, body=body
+        )
+        self._execute(request)
+        logger.info("Created health check %s", name)
+        return self.get_health_check(name)
     def delete_health_check(self, name: str) -> bool:
         """Delete a health check.
 
@@ -528,25 +405,11 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting health check %s", name)
 
-        try:
-            self.service.healthChecks().delete(
-                project=self.project_id, healthCheck=name
-            ).execute()
-            logger.info("Deleted health check %s", name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("HealthCheck", name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ---- Cache Invalidation ----
-
+        self.service.healthChecks().delete(
+            project=self.project_id, healthCheck=name
+        ).execute()
+        logger.info("Deleted health check %s", name)
+        return True
     def invalidate_cache(
         self,
         url_map_name: str,
@@ -577,26 +440,15 @@ class CDNService(GCPService[BackendService]):
         if host is not None:
             body["host"] = host
 
-        try:
-            request = self.service.urlMaps().invalidateCache(
-                project=self.project_id,
-                urlMap=url_map_name,
-                body=body,
-            )
-            request.execute()
-            logger.info(
-                "Cache invalidation initiated for URL map %s, path %s",
-                url_map_name,
-                path,
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("UrlMap", url_map_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.urlMaps().invalidateCache(
+            project=self.project_id,
+            urlMap=url_map_name,
+            body=body,
+        )
+        self._execute(request, "UrlMap", url_map_name)
+        logger.info(
+            "Cache invalidation initiated for URL map %s, path %s",
+            url_map_name,
+            path,
+        )
+        return True

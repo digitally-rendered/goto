@@ -3,17 +3,12 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.source_repos import Repo
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -59,7 +54,7 @@ class SourceReposService(GCPService[Repo]):
 
         repos = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for repo_data in response.get("repos", []):
                 repos.append(Repo.from_api_response(repo_data))
             request = self.service.projects().repos().list_next(
@@ -85,21 +80,9 @@ class SourceReposService(GCPService[Repo]):
 
         name = f"projects/{self.project_id}/repos/{repo_name}"
 
-        try:
-            request = self.service.projects().repos().get(name=name)
-            response = request.execute()
-            return Repo.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Repo", repo_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().repos().get(name=name)
+        response = self._execute(request, "Repo", repo_name)
+        return Repo.from_api_response(response)
     def create_repo(self, repo_name: str) -> Repo:
         """Create a Cloud Source Repository.
 
@@ -119,22 +102,12 @@ class SourceReposService(GCPService[Repo]):
             "name": f"projects/{self.project_id}/repos/{repo_name}",
         }
 
-        try:
-            request = self.service.projects().repos().create(
-                parent=parent, body=body
-            )
-            response = request.execute()
-            logger.info("Created repository %s", repo_name)
-            return Repo.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().repos().create(
+            parent=parent, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created repository %s", repo_name)
+        return Repo.from_api_response(response)
     def delete_repo(self, repo_name: str) -> bool:
         """Delete a Cloud Source Repository.
 
@@ -152,21 +125,9 @@ class SourceReposService(GCPService[Repo]):
 
         name = f"projects/{self.project_id}/repos/{repo_name}"
 
-        try:
-            self.service.projects().repos().delete(name=name).execute()
-            logger.info("Deleted repository %s", repo_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Repo", repo_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        self.service.projects().repos().delete(name=name).execute()
+        logger.info("Deleted repository %s", repo_name)
+        return True
     def get_iam_policy(self, repo_name: str) -> Dict[str, Any]:
         """Get the IAM policy for a repository.
 
@@ -184,23 +145,11 @@ class SourceReposService(GCPService[Repo]):
 
         resource = f"projects/{self.project_id}/repos/{repo_name}"
 
-        try:
-            request = self.service.projects().repos().getIamPolicy(
-                resource=resource
-            )
-            response = request.execute()
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Repo", repo_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.projects().repos().getIamPolicy(
+            resource=resource
+        )
+        response = self._execute(request, "Repo", repo_name)
+        return response
     def set_iam_policy(
         self, repo_name: str, policy: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -222,20 +171,9 @@ class SourceReposService(GCPService[Repo]):
         resource = f"projects/{self.project_id}/repos/{repo_name}"
         body = {"policy": policy}
 
-        try:
-            request = self.service.projects().repos().setIamPolicy(
-                resource=resource, body=body
-            )
-            response = request.execute()
-            logger.info("Updated IAM policy for repository %s", repo_name)
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("Repo", repo_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.projects().repos().setIamPolicy(
+            resource=resource, body=body
+        )
+        response = self._execute(request, "Repo", repo_name)
+        logger.info("Updated IAM policy for repository %s", repo_name)
+        return response

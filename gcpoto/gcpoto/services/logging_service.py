@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.logging_service import LogEntry, LogSink, LogMetric
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class LoggingService(GCPService[LogEntry]):
     """Service for interacting with Google Cloud Logging."""
@@ -115,7 +105,7 @@ class LoggingService(GCPService[LogEntry]):
         logger.debug("Listing log entries for project %s", self.project_id)
 
         request = self.service.entries().list(body=body)
-        response = request.execute()
+        response = self._execute(request)
 
         entries = []
         for entry_data in response.get("entries", []):
@@ -177,7 +167,7 @@ class LoggingService(GCPService[LogEntry]):
         logger.debug("Writing log entry to %s", full_log_name)
 
         request = self.service.entries().write(body=body)
-        response = request.execute()
+        response = self._execute(request)
 
         return response
 
@@ -195,7 +185,7 @@ class LoggingService(GCPService[LogEntry]):
         logger.debug("Deleting log %s", full_log_name)
 
         request = self.service.projects().logs().delete(logName=full_log_name)
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -212,7 +202,7 @@ class LoggingService(GCPService[LogEntry]):
 
         parent = f"projects/{self.project_id}"
         request = self.service.projects().logs().list(parent=parent, **kwargs)
-        response = request.execute()
+        response = self._execute(request)
 
         return response.get("logNames", [])
 
@@ -231,7 +221,7 @@ class LoggingService(GCPService[LogEntry]):
 
         parent = f"projects/{self.project_id}"
         request = self.service.projects().sinks().list(parent=parent, **kwargs)
-        response = request.execute()
+        response = self._execute(request)
 
         sinks = []
         for sink_data in response.get("sinks", []):
@@ -252,22 +242,10 @@ class LoggingService(GCPService[LogEntry]):
 
         logger.debug("Getting sink %s", full_sink_name)
 
-        try:
-            request = self.service.projects().sinks().get(
-                sinkName=full_sink_name
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("sink", sink_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().sinks().get(
+            sinkName=full_sink_name
+        )
+        response = self._execute(request, "sink", sink_name)
         return LogSink.from_api_response(response)
 
     def create_sink(
@@ -304,7 +282,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().sinks().create(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return LogSink.from_api_response(response)
 
@@ -341,7 +319,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().sinks().update(
             sinkName=full_sink_name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return LogSink.from_api_response(response)
 
@@ -361,7 +339,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().sinks().delete(
             sinkName=full_sink_name
         )
-        request.execute()
+        self._execute(request)
 
         return True
 
@@ -382,7 +360,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().metrics().list(
             parent=parent, **kwargs
         )
-        response = request.execute()
+        response = self._execute(request)
 
         metrics = []
         for metric_data in response.get("metrics", []):
@@ -403,22 +381,10 @@ class LoggingService(GCPService[LogEntry]):
 
         logger.debug("Getting metric %s", full_metric_name)
 
-        try:
-            request = self.service.projects().metrics().get(
-                metricName=full_metric_name
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("metric", metric_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise
-
+        request = self.service.projects().metrics().get(
+            metricName=full_metric_name
+        )
+        response = self._execute(request, "metric", metric_name)
         return LogMetric.from_api_response(response)
 
     def create_metric(
@@ -453,7 +419,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().metrics().create(
             parent=parent, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return LogMetric.from_api_response(response)
 
@@ -486,7 +452,7 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().metrics().update(
             metricName=full_metric_name, body=body
         )
-        response = request.execute()
+        response = self._execute(request)
 
         return LogMetric.from_api_response(response)
 
@@ -506,6 +472,6 @@ class LoggingService(GCPService[LogEntry]):
         request = self.service.projects().metrics().delete(
             metricName=full_metric_name
         )
-        request.execute()
+        self._execute(request)
 
         return True

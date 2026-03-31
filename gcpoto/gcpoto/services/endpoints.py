@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.endpoints import ManagedService, ServiceConfig
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +61,7 @@ class EndpointsService(GCPService[ManagedService]):
 
         services = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("services", []):
                 services.append(ManagedService.from_api_response(item))
             request = self.service.services().list_next(request, response)
@@ -89,23 +84,11 @@ class EndpointsService(GCPService[ManagedService]):
         """
         logger.info("Getting managed service %s", service_name)
 
-        try:
-            request = self.service.services().get(
-                serviceName=service_name
-            )
-            response = request.execute()
-            return ManagedService.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedService", service_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.services().get(
+            serviceName=service_name
+        )
+        response = self._execute(request, "ManagedService", service_name)
+        return ManagedService.from_api_response(response)
     def create_service(
         self,
         service_name: str,
@@ -132,24 +115,10 @@ class EndpointsService(GCPService[ManagedService]):
             "producerProjectId": producer_project_id or self.project_id,
         }
 
-        try:
-            request = self.service.services().create(body=body)
-            response = request.execute()
-            logger.info("Created managed service %s", service_name)
-            return ManagedService.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"ManagedService '{service_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.services().create(body=body)
+        response = self._execute(request)
+        logger.info("Created managed service %s", service_name)
+        return ManagedService.from_api_response(response)
     def delete_service(self, service_name: str) -> bool:
         """Delete a managed service.
 
@@ -165,27 +134,11 @@ class EndpointsService(GCPService[ManagedService]):
         """
         logger.info("Deleting managed service %s", service_name)
 
-        try:
-            self.service.services().delete(
-                serviceName=service_name
-            ).execute()
-            logger.info("Deleted managed service %s", service_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedService", service_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Service Config operations
-    # ------------------------------------------------------------------ #
-
+        self.service.services().delete(
+            serviceName=service_name
+        ).execute()
+        logger.info("Deleted managed service %s", service_name)
+        return True
     def list_service_configs(
         self, service_name: str
     ) -> List[ServiceConfig]:
@@ -207,7 +160,7 @@ class EndpointsService(GCPService[ManagedService]):
 
         configs = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("serviceConfigs", []):
                 configs.append(ServiceConfig.from_api_response(item))
             request = (
@@ -243,23 +196,11 @@ class EndpointsService(GCPService[ManagedService]):
             service_name,
         )
 
-        try:
-            request = self.service.services().configs().get(
-                serviceName=service_name, configId=config_id
-            )
-            response = request.execute()
-            return ServiceConfig.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ServiceConfig", config_id)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.services().configs().get(
+            serviceName=service_name, configId=config_id
+        )
+        response = self._execute(request, "ServiceConfig", config_id)
+        return ServiceConfig.from_api_response(response)
     def submit_config_source(
         self, service_name: str, config_source: Dict[str, Any]
     ) -> Dict[str, Any]:
@@ -284,30 +225,14 @@ class EndpointsService(GCPService[ManagedService]):
             "configSource": config_source,
         }
 
-        try:
-            request = self.service.services().configs().submit(
-                serviceName=service_name, body=body
-            )
-            response = request.execute()
-            logger.info(
-                "Submitted config source for service %s", service_name
-            )
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedService", service_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Service Rollout operations
-    # ------------------------------------------------------------------ #
-
+        request = self.service.services().configs().submit(
+            serviceName=service_name, body=body
+        )
+        response = self._execute(request, "ManagedService", service_name)
+        logger.info(
+            "Submitted config source for service %s", service_name
+        )
+        return response
     def list_service_rollouts(
         self, service_name: str
     ) -> List[Dict[str, Any]]:
@@ -329,7 +254,7 @@ class EndpointsService(GCPService[ManagedService]):
 
         rollouts = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("rollouts", []):
                 rollouts.append(item)
             request = (
@@ -363,22 +288,11 @@ class EndpointsService(GCPService[ManagedService]):
             "Creating service rollout for service %s", service_name
         )
 
-        try:
-            request = self.service.services().rollouts().create(
-                serviceName=service_name, body=rollout_body
-            )
-            response = request.execute()
-            logger.info(
-                "Created service rollout for service %s", service_name
-            )
-            return response
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("ManagedService", service_name)
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.services().rollouts().create(
+            serviceName=service_name, body=rollout_body
+        )
+        response = self._execute(request, "ManagedService", service_name)
+        logger.info(
+            "Created service rollout for service %s", service_name
+        )
+        return response

@@ -3,20 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.vision import AnnotationResult
-from gcpoto.exceptions import (
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class VisionService(GCPService[AnnotationResult]):
     """Service for interacting with Google Cloud Vision AI."""
@@ -94,20 +85,10 @@ class VisionService(GCPService[AnnotationResult]):
             ]
         }
 
-        try:
-            request = self.service.images().annotate(body=body)
-            response = request.execute()
-            results = response.get("responses", [{}])
-            return AnnotationResult.from_api_response(results[0])
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.images().annotate(body=body)
+        response = self._execute(request)
+        results = response.get("responses", [{}])
+        return AnnotationResult.from_api_response(results[0])
     def detect_labels(
         self,
         image_uri: Optional[str] = None,

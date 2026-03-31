@@ -3,18 +3,13 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.interconnect import Interconnect, InterconnectAttachment
 from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    ResourceAlreadyExistsError,
     APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +61,7 @@ class InterconnectService(GCPService[Interconnect]):
 
         interconnects = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("items", []):
                 interconnects.append(
                     Interconnect.from_api_response(item)
@@ -95,26 +90,12 @@ class InterconnectService(GCPService[Interconnect]):
         """
         logger.info("Getting interconnect %s", interconnect_name)
 
-        try:
-            request = self.service.interconnects().get(
-                project=self.project_id,
-                interconnect=interconnect_name,
-            )
-            response = request.execute()
-            return Interconnect.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Interconnect", interconnect_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.interconnects().get(
+            project=self.project_id,
+            interconnect=interconnect_name,
+        )
+        response = self._execute(request, "Interconnect", interconnect_name)
+        return Interconnect.from_api_response(response)
     def create_interconnect(
         self,
         interconnect_name: str,
@@ -150,26 +131,12 @@ class InterconnectService(GCPService[Interconnect]):
             "location": location,
         }
 
-        try:
-            request = self.service.interconnects().insert(
-                project=self.project_id, body=body
-            )
-            response = request.execute()
-            logger.info("Created interconnect %s", interconnect_name)
-            return Interconnect.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"Interconnect '{interconnect_name}' already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.interconnects().insert(
+            project=self.project_id, body=body
+        )
+        response = self._execute(request)
+        logger.info("Created interconnect %s", interconnect_name)
+        return Interconnect.from_api_response(response)
     def delete_interconnect(self, interconnect_name: str) -> bool:
         """Delete an interconnect.
 
@@ -185,30 +152,12 @@ class InterconnectService(GCPService[Interconnect]):
         """
         logger.info("Deleting interconnect %s", interconnect_name)
 
-        try:
-            self.service.interconnects().delete(
-                project=self.project_id,
-                interconnect=interconnect_name,
-            ).execute()
-            logger.info("Deleted interconnect %s", interconnect_name)
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "Interconnect", interconnect_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Interconnect Attachment operations
-    # ------------------------------------------------------------------ #
-
+        self.service.interconnects().delete(
+            project=self.project_id,
+            interconnect=interconnect_name,
+        ).execute()
+        logger.info("Deleted interconnect %s", interconnect_name)
+        return True
     def list_attachments(
         self, region: str
     ) -> List[InterconnectAttachment]:
@@ -232,7 +181,7 @@ class InterconnectService(GCPService[Interconnect]):
 
         attachments = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("items", []):
                 attachments.append(
                     InterconnectAttachment.from_api_response(item)
@@ -268,27 +217,13 @@ class InterconnectService(GCPService[Interconnect]):
             region,
         )
 
-        try:
-            request = self.service.interconnectAttachments().get(
-                project=self.project_id,
-                region=region,
-                interconnectAttachment=attachment_name,
-            )
-            response = request.execute()
-            return InterconnectAttachment.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "InterconnectAttachment", attachment_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.interconnectAttachments().get(
+            project=self.project_id,
+            region=region,
+            interconnectAttachment=attachment_name,
+        )
+        response = self._execute(request, "InterconnectAttachment", attachment_name)
+        return InterconnectAttachment.from_api_response(response)
     def create_attachment(
         self,
         region: str,
@@ -335,29 +270,14 @@ class InterconnectService(GCPService[Interconnect]):
         if bandwidth:
             body["bandwidth"] = bandwidth
 
-        try:
-            request = self.service.interconnectAttachments().insert(
-                project=self.project_id, region=region, body=body
-            )
-            response = request.execute()
-            logger.info(
-                "Created interconnect attachment %s", attachment_name
-            )
-            return InterconnectAttachment.from_api_response(response)
-        except HttpError as e:
-            if e.resp.status == 409:
-                raise ResourceAlreadyExistsError(
-                    f"InterconnectAttachment '{attachment_name}' "
-                    f"already exists"
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        request = self.service.interconnectAttachments().insert(
+            project=self.project_id, region=region, body=body
+        )
+        response = self._execute(request)
+        logger.info(
+            "Created interconnect attachment %s", attachment_name
+        )
+        return InterconnectAttachment.from_api_response(response)
     def delete_attachment(
         self, region: str, attachment_name: str
     ) -> bool:
@@ -380,33 +300,15 @@ class InterconnectService(GCPService[Interconnect]):
             region,
         )
 
-        try:
-            self.service.interconnectAttachments().delete(
-                project=self.project_id,
-                region=region,
-                interconnectAttachment=attachment_name,
-            ).execute()
-            logger.info(
-                "Deleted interconnect attachment %s", attachment_name
-            )
-            return True
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "InterconnectAttachment", attachment_name
-                )
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
-    # ------------------------------------------------------------------ #
-    #  Interconnect Location operations
-    # ------------------------------------------------------------------ #
-
+        self.service.interconnectAttachments().delete(
+            project=self.project_id,
+            region=region,
+            interconnectAttachment=attachment_name,
+        ).execute()
+        logger.info(
+            "Deleted interconnect attachment %s", attachment_name
+        )
+        return True
     def list_locations(self) -> List[Dict[str, Any]]:
         """List available interconnect locations.
 
@@ -424,7 +326,7 @@ class InterconnectService(GCPService[Interconnect]):
 
         locations = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             locations.extend(response.get("items", []))
             request = self.service.interconnectLocations().list_next(
                 request, response

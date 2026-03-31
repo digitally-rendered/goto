@@ -3,21 +3,11 @@
 import logging
 from typing import List, Optional, Dict, Any
 
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.pubsub_lite import LiteTopic, LiteSubscription
-from gcpoto.exceptions import (
-    ResourceNotFoundError,
-    APIError,
-    PermissionDeniedError,
-    QuotaExceededError,
-    ServiceUnavailableError,
-)
 
 logger = logging.getLogger(__name__)
-
 
 class PubSubLiteService(GCPService[LiteTopic]):
     """Service for interacting with Google Cloud Pub/Sub Lite."""
@@ -63,7 +53,7 @@ class PubSubLiteService(GCPService[LiteTopic]):
 
         topics = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("topics", []):
                 topics.append(
                     LiteTopic.from_api_response(item, self.project_id)
@@ -92,19 +82,13 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/topics/{topic_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .topics()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("topic", topic_id)
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .topics()
+            .get(name=name)
+        )
+        response = self._execute(request, "topic", topic_id)
         logger.debug("Retrieved topic %s", topic_id)
         return LiteTopic.from_api_response(response, self.project_id)
 
@@ -137,27 +121,17 @@ class PubSubLiteService(GCPService[LiteTopic]):
         if reservation_config is not None:
             body["reservationConfig"] = reservation_config
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .topics()
-                .create(
-                    parent=parent,
-                    topicId=topic_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .topics()
+            .create(
+                parent=parent,
+                topicId=topic_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug("Created topic %s in %s", topic_id, location)
         return LiteTopic.from_api_response(response, self.project_id)
 
@@ -186,23 +160,17 @@ class PubSubLiteService(GCPService[LiteTopic]):
         body = {"name": name}
         body.update(update_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .topics()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .topics()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("topic", topic_id)
-            raise
-
+        )
+        response = self._execute(request, "topic", topic_id)
         logger.debug("Updated topic %s", topic_id)
         return LiteTopic.from_api_response(response, self.project_id)
 
@@ -220,15 +188,9 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/topics/{topic_id}"
         )
-        try:
-            self.service.projects().locations().topics().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError("topic", topic_id)
-            raise
-
+        self.service.projects().locations().topics().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted topic %s", topic_id)
         return True
 
@@ -253,7 +215,7 @@ class PubSubLiteService(GCPService[LiteTopic]):
 
         subscriptions = []
         while request is not None:
-            response = request.execute()
+            response = self._execute(request)
             for item in response.get("subscriptions", []):
                 subscriptions.append(
                     LiteSubscription.from_api_response(
@@ -288,21 +250,13 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/subscriptions/{subscription_id}"
         )
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .subscriptions()
-                .get(name=name)
-            )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "subscription", subscription_id
-                )
-            raise
-
+        request = (
+            self.service.projects()
+            .locations()
+            .subscriptions()
+            .get(name=name)
+        )
+        response = self._execute(request, "subscription", subscription_id)
         logger.debug("Retrieved subscription %s", subscription_id)
         return LiteSubscription.from_api_response(
             response, self.project_id
@@ -332,27 +286,17 @@ class PubSubLiteService(GCPService[LiteTopic]):
         if delivery_config is not None:
             body["deliveryConfig"] = delivery_config
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .subscriptions()
-                .create(
-                    parent=parent,
-                    subscriptionId=subscription_id,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .subscriptions()
+            .create(
+                parent=parent,
+                subscriptionId=subscription_id,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
-
+        )
+        response = self._execute(request)
         logger.debug(
             "Created subscription %s in %s", subscription_id, location
         )
@@ -385,25 +329,17 @@ class PubSubLiteService(GCPService[LiteTopic]):
         body = {"name": name}
         body.update(update_fields)
 
-        try:
-            request = (
-                self.service.projects()
-                .locations()
-                .subscriptions()
-                .patch(
-                    name=name,
-                    updateMask=update_mask,
-                    body=body,
-                )
+        request = (
+            self.service.projects()
+            .locations()
+            .subscriptions()
+            .patch(
+                name=name,
+                updateMask=update_mask,
+                body=body,
             )
-            response = request.execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "subscription", subscription_id
-                )
-            raise
-
+        )
+        response = self._execute(request, "subscription", subscription_id)
         logger.debug("Updated subscription %s", subscription_id)
         return LiteSubscription.from_api_response(
             response, self.project_id
@@ -425,16 +361,8 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/subscriptions/{subscription_id}"
         )
-        try:
-            self.service.projects().locations().subscriptions().delete(
-                name=name
-            ).execute()
-        except HttpError as e:
-            if e.resp.status == 404:
-                raise ResourceNotFoundError(
-                    "subscription", subscription_id
-                )
-            raise
-
+        self.service.projects().locations().subscriptions().delete(
+            name=name
+        ).execute()
         logger.debug("Deleted subscription %s", subscription_id)
         return True
