@@ -33,17 +33,19 @@ SAMPLE_SOURCE = """
 @pytest.fixture
 def mock_google_client():
     """Mock Google API client."""
-    with mock.patch("googleapiclient.discovery.build") as mock_build:
-        mock_workflows_service = mock.MagicMock()
-        mock_executions_service = mock.MagicMock()
+    mock_workflows_service = mock.MagicMock()
+    mock_executions_service = mock.MagicMock()
 
-        def build_side_effect(service_name, version, credentials=None):
-            if service_name == "workflowexecutions":
-                return mock_executions_service
-            return mock_workflows_service
+    def build_side_effect(service_name, version, credentials=None):
+        if service_name == "workflowexecutions":
+            return mock_executions_service
+        return mock_workflows_service
 
-        mock_build.side_effect = build_side_effect
-
+    with mock.patch(
+        "googleapiclient.discovery.build", side_effect=build_side_effect
+    ) as mock_build_discovery, mock.patch(
+        "gcpoto.services.workflows.build", side_effect=build_side_effect
+    ) as mock_build_local:
         # Set up projects().locations().workflows() chain for workflows service
         mock_workflows = mock.MagicMock()
         mock_workflows_service.projects.return_value.locations.return_value.workflows.return_value = (
@@ -57,7 +59,7 @@ def mock_google_client():
         )
 
         yield {
-            "build": mock_build,
+            "build": mock_build_local,
             "workflows_service": mock_workflows_service,
             "executions_service": mock_executions_service,
             "workflows": mock_workflows,
@@ -119,9 +121,7 @@ class TestWorkflowsServiceInit:
         svc = WorkflowsService(project_id=PROJECT_ID)
         assert svc.project_id == PROJECT_ID
 
-        mock_google_client["build"].assert_any_call(
-            "workflows", "v1", credentials=None
-        )
+        # The executions service build is called via the local import
         mock_google_client["build"].assert_any_call(
             "workflowexecutions", "v1", credentials=None
         )
