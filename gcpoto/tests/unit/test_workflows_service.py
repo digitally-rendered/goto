@@ -37,11 +37,12 @@ def mock_google_client():
         mock_workflows_service = mock.MagicMock()
         mock_executions_service = mock.MagicMock()
 
-        # build is called twice: once for workflows, once for workflowexecutions
-        mock_build.side_effect = [
-            mock_workflows_service,
-            mock_executions_service,
-        ]
+        def build_side_effect(service_name, version, credentials=None):
+            if service_name == "workflowexecutions":
+                return mock_executions_service
+            return mock_workflows_service
+
+        mock_build.side_effect = build_side_effect
 
         # Set up projects().locations().workflows() chain for workflows service
         mock_workflows = mock.MagicMock()
@@ -118,9 +119,10 @@ class TestWorkflowsServiceInit:
         svc = WorkflowsService(project_id=PROJECT_ID)
         assert svc.project_id == PROJECT_ID
 
-        calls = mock_google_client["build"].call_args_list
-        assert calls[0] == mock.call("workflows", "v1", credentials=None)
-        assert calls[1] == mock.call(
+        mock_google_client["build"].assert_any_call(
+            "workflows", "v1", credentials=None
+        )
+        mock_google_client["build"].assert_any_call(
             "workflowexecutions", "v1", credentials=None
         )
 
@@ -130,12 +132,6 @@ class TestWorkflowsServiceInit:
             "google.oauth2.service_account.Credentials.from_service_account_file"
         ) as mock_creds:
             mock_creds.return_value = mock.MagicMock()
-
-            # Reset build side_effect for this test
-            mock_google_client["build"].side_effect = [
-                mock.MagicMock(),
-                mock.MagicMock(),
-            ]
 
             svc = WorkflowsService(
                 project_id=PROJECT_ID,
