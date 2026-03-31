@@ -46,6 +46,38 @@ def format_snapshot_path(project_id: str, snapshot_name: str) -> str:
     return snapshot_name
 
 
+def format_secret_path(project_id: str, secret_id: str) -> str:
+    """Return full projects/{project}/secrets/{secret} path if not already formatted.
+
+    Args:
+        project_id: The GCP project ID.
+        secret_id: Either a short secret ID or a full resource path.
+
+    Returns:
+        The fully-qualified secret resource path.
+    """
+    if "/" not in secret_id:
+        return f"projects/{project_id}/secrets/{secret_id}"
+    return secret_id
+
+
+def format_secret_version_path(
+    project_id: str, secret_id: str, version_id: str
+) -> str:
+    """Return full projects/{project}/secrets/{secret}/versions/{version} path.
+
+    Args:
+        project_id: The GCP project ID.
+        secret_id: Either a short secret ID or a full secret resource path.
+        version_id: The version identifier (e.g. '1', 'latest').
+
+    Returns:
+        The fully-qualified secret version resource path.
+    """
+    secret_path = format_secret_path(project_id, secret_id)
+    return f"{secret_path}/versions/{version_id}"
+
+
 def extract_name_from_path(full_path: str) -> str:
     """Extract the last segment from a full resource path.
 
