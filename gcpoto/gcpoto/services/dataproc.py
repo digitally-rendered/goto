@@ -310,5 +310,5 @@ class DataprocService(GCPService[DataprocCluster]):
             jobId=job_id,
             body={},
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocJob", job_id)
         return DataprocJob.from_api_response(response)

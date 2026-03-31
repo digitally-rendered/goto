@@ -121,41 +121,30 @@ class CloudNATService(GCPService[NATConfig]):
             region,
         )
 
-        try:
-            router = self.get_router(region, router_name)
+        router = self.get_router(region, router_name)
 
-            nats = router.get("nats", [])
-            nat_config = {
-                "name": nat_name,
-                "natIpAllocateOption": nat_ip_allocate_option,
-                "sourceSubnetworkIpRangesToNat": source_subnetwork_ip_ranges_to_nat,
-            }
-            nats.append(nat_config)
-            router["nats"] = nats
+        nats = router.get("nats", [])
+        nat_config = {
+            "name": nat_name,
+            "natIpAllocateOption": nat_ip_allocate_option,
+            "sourceSubnetworkIpRangesToNat": source_subnetwork_ip_ranges_to_nat,
+        }
+        nats.append(nat_config)
+        router["nats"] = nats
 
-            request = self.service.routers().patch(
-                project=self.project_id,
-                region=region,
-                router=router_name,
-                body=router,
-            )
-            self._execute(request)
+        request = self.service.routers().patch(
+            project=self.project_id,
+            region=region,
+            router=router_name,
+            body=router,
+        )
+        self._execute(request)
 
-            nat_config["project"] = self.project_id
-            nat_config["region"] = region
-            nat_config["routerName"] = router_name
-            logger.info("Created NAT %s on router %s", nat_name, router_name)
-            return NATConfig.from_api_response(nat_config)
-        except ResourceNotFoundError:
-            raise
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        nat_config["project"] = self.project_id
+        nat_config["region"] = region
+        nat_config["routerName"] = router_name
+        logger.info("Created NAT %s on router %s", nat_name, router_name)
+        return NATConfig.from_api_response(nat_config)
 
     def update_nat(
         self,
@@ -186,49 +175,38 @@ class CloudNATService(GCPService[NATConfig]):
             region,
         )
 
-        try:
-            router = self.get_router(region, router_name)
+        router = self.get_router(region, router_name)
 
-            nats = router.get("nats", [])
-            nat_found = False
-            for nat in nats:
-                if nat.get("name") == nat_name:
-                    nat.update(update_fields)
-                    nat_found = True
-                    break
+        nats = router.get("nats", [])
+        nat_found = False
+        for nat in nats:
+            if nat.get("name") == nat_name:
+                nat.update(update_fields)
+                nat_found = True
+                break
 
-            if not nat_found:
-                raise ResourceNotFoundError("NATConfig", nat_name)
+        if not nat_found:
+            raise ResourceNotFoundError("NATConfig", nat_name)
 
-            router["nats"] = nats
+        router["nats"] = nats
 
-            request = self.service.routers().patch(
-                project=self.project_id,
-                region=region,
-                router=router_name,
-                body=router,
-            )
-            self._execute(request)
+        request = self.service.routers().patch(
+            project=self.project_id,
+            region=region,
+            router=router_name,
+            body=router,
+        )
+        self._execute(request)
 
-            for nat in nats:
-                if nat.get("name") == nat_name:
-                    nat["project"] = self.project_id
-                    nat["region"] = region
-                    nat["routerName"] = router_name
-                    logger.info(
-                        "Updated NAT %s on router %s", nat_name, router_name
-                    )
-                    return NATConfig.from_api_response(nat)
-        except ResourceNotFoundError:
-            raise
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        for nat in nats:
+            if nat.get("name") == nat_name:
+                nat["project"] = self.project_id
+                nat["region"] = region
+                nat["routerName"] = router_name
+                logger.info(
+                    "Updated NAT %s on router %s", nat_name, router_name
+                )
+                return NATConfig.from_api_response(nat)
 
     def delete_nat(
         self, region: str, router_name: str, nat_name: str
