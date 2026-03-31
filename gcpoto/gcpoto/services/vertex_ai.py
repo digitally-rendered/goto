@@ -215,9 +215,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_dataset_name(location, dataset_id)
-        self.service.projects().locations().datasets().delete(
+        request = self.service.projects().locations().datasets().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_models(self, location: str, **kwargs) -> List[VertexModel]:
         """List Vertex AI models in a location.
@@ -349,9 +350,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_model_name(location, model_id)
-        self.service.projects().locations().models().delete(
+        request = self.service.projects().locations().models().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_endpoints(self, location: str, **kwargs) -> List[VertexEndpoint]:
         """List Vertex AI endpoints in a location.
@@ -480,9 +482,10 @@ class VertexAIService(GCPService[VertexDataset]):
         )
 
         name = self._format_endpoint_name(location, endpoint_id)
-        self.service.projects().locations().endpoints().delete(
+        request = self.service.projects().locations().endpoints().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def deploy_model(
         self,

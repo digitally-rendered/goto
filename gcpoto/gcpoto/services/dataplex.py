@@ -185,9 +185,10 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}"
         )
-        self.service.projects().locations().lakes().delete(
+        request = self.service.projects().locations().lakes().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted lake %s", lake_id)
         return True
 
@@ -331,9 +332,10 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}"
         )
-        self.service.projects().locations().lakes().zones().delete(
+        request = self.service.projects().locations().lakes().zones().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted zone %s", zone_id)
         return True
 
@@ -491,14 +493,14 @@ class DataplexService(GCPService[Lake]):
             f"projects/{self.project_id}/locations/{location}"
             f"/lakes/{lake_id}/zones/{zone_id}/assets/{asset_id}"
         )
-        (
+        request = (
             self.service.projects()
             .locations()
             .lakes()
             .zones()
             .assets()
             .delete(name=name)
-            .execute()
         )
+        self._execute(request)
         logger.debug("Deleted asset %s", asset_id)
         return True

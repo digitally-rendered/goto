@@ -190,8 +190,9 @@ class BinaryAuthService(GCPService[Policy]):
         """
         logger.info("Deleting attestor %s", attestor_id)
 
-        self.service.projects().attestors().delete(
+        request = self.service.projects().attestors().delete(
             name=f"projects/{self.project_id}/attestors/{attestor_id}"
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted attestor %s", attestor_id)
         return True

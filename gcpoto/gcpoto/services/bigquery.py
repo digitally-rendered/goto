@@ -138,11 +138,12 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Deleting dataset %s in project %s", dataset_id, self.project_id
         )
 
-        self.service.datasets().delete(
+        request = self.service.datasets().delete(
             projectId=self.project_id,
             datasetId=dataset_id,
             deleteContents=delete_contents,
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_tables(self, dataset_id: str, **kwargs) -> List[BigQueryTable]:
         """List tables in a BigQuery dataset.
@@ -275,11 +276,12 @@ class BigQueryService(GCPService[BigQueryDataset]):
             self.project_id,
         )
 
-        self.service.tables().delete(
+        request = self.service.tables().delete(
             projectId=self.project_id,
             datasetId=dataset_id,
             tableId=table_id,
-        ).execute()
+        )
+        self._execute(request)
         return True
     def query(
         self,
@@ -374,7 +376,8 @@ class BigQueryService(GCPService[BigQueryDataset]):
             "Cancelling job %s in project %s", job_id, self.project_id
         )
 
-        self.service.jobs().cancel(
+        request = self.service.jobs().cancel(
             projectId=self.project_id, jobId=job_id
-        ).execute()
+        )
+        self._execute(request)
         return True

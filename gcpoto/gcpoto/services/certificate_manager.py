@@ -177,9 +177,10 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificates/{cert_name}"
 
-        self.service.projects().locations().certificates().delete(
+        request = self.service.projects().locations().certificates().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted certificate %s", cert_name)
         return True
     def list_certificate_maps(self, location: str) -> List[CertificateMap]:
@@ -318,8 +319,9 @@ class CertificateManagerService(GCPService[Certificate]):
 
         name = f"projects/{self.project_id}/locations/{location}/certificateMaps/{map_name}"
 
-        self.service.projects().locations().certificateMaps().delete(
+        request = self.service.projects().locations().certificateMaps().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted certificate map %s", map_name)
         return True

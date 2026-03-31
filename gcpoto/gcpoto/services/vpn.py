@@ -143,9 +143,10 @@ class VPNService(GCPService[VPNGateway]):
             "Deleting VPN gateway %s in region %s", gateway_name, region
         )
 
-        self.service.vpnGateways().delete(
+        request = self.service.vpnGateways().delete(
             project=self.project_id, region=region, vpnGateway=gateway_name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted VPN gateway %s", gateway_name)
         return True
     def list_vpn_tunnels(self, region: str) -> List[VPNTunnel]:
@@ -261,8 +262,9 @@ class VPNService(GCPService[VPNGateway]):
             "Deleting VPN tunnel %s in region %s", tunnel_name, region
         )
 
-        self.service.vpnTunnels().delete(
+        request = self.service.vpnTunnels().delete(
             project=self.project_id, region=region, vpnTunnel=tunnel_name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted VPN tunnel %s", tunnel_name)
         return True

@@ -125,7 +125,8 @@ class SourceReposService(GCPService[Repo]):
 
         name = f"projects/{self.project_id}/repos/{repo_name}"
 
-        self.service.projects().repos().delete(name=name).execute()
+        request = self.service.projects().repos().delete(name=name)
+        self._execute(request)
         logger.info("Deleted repository %s", repo_name)
         return True
     def get_iam_policy(self, repo_name: str) -> Dict[str, Any]:

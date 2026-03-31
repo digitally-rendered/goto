@@ -234,9 +234,10 @@ class ArtifactRegistryService(GCPService[Repository]):
         name = self._format_repository_path(location, repository_id)
         logger.debug("Deleting repository %s", name)
 
-        self.service.projects().locations().repositories().delete(
+        request = self.service.projects().locations().repositories().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_docker_images(
         self, location: str, repository_id: str
@@ -397,9 +398,10 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Deleting package %s", name)
 
-        self.service.projects().locations().repositories().packages().delete(
+        request = self.service.projects().locations().repositories().packages().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_versions(
         self, location: str, repository_id: str, package_name: str
@@ -510,13 +512,13 @@ class ArtifactRegistryService(GCPService[Repository]):
         )
         logger.debug("Deleting version %s", name)
 
-        (
+        request = (
             self.service.projects()
             .locations()
             .repositories()
             .packages()
             .versions()
             .delete(name=name)
-            .execute()
         )
+        self._execute(request)
         return True

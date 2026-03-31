@@ -351,3 +351,194 @@ class TestWaitForOperation:
         service.service.globalOperations().get.assert_called_with(
             project="other-project", operation="op-1"
         )
+
+
+# ---------- Additional retry / error scenarios ----------
+
+
+class TestAdditionalRetryScenarios:
+    """Extended tests for retry logic edge cases and specific error paths."""
+
+    def test_execute_retry_on_503_individually(self, service):
+        """503 Service Unavailable triggers retry, then succeeds (non-parametrized)."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            _make_http_error(503, "Service Unavailable"),
+            {"id": "1", "name": "ok"},
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            result = service._execute_with_retry(request)
+        assert result == {"id": "1", "name": "ok"}
+        assert request.execute.call_count == 2
+
+    def test_execute_retry_on_429_individually(self, service):
+        """429 Too Many Requests triggers retry, then succeeds."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            _make_http_error(429, "Rate limit exceeded"),
+            {"id": "1", "name": "ok"},
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            result = service._execute_with_retry(request)
+        assert result == {"id": "1", "name": "ok"}
+        assert request.execute.call_count == 2
+
+    def test_execute_retry_on_500_individually(self, service):
+        """500 Internal Server Error triggers retry, then succeeds."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            _make_http_error(500, "Internal Server Error"),
+            {"id": "1", "name": "ok"},
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            result = service._execute_with_retry(request)
+        assert result == {"id": "1", "name": "ok"}
+        assert request.execute.call_count == 2
+
+    def test_execute_no_retry_on_400_individually(self, service):
+        """400 raises ValidationError immediately, no retry."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(400, "Bad Request")
+        with pytest.raises(ValidationError):
+            service._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_no_retry_on_401_individually(self, service):
+        """401 raises AuthenticationError immediately, no retry."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(401, "Unauthorized")
+        with pytest.raises(AuthenticationError):
+            service._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_no_retry_on_403_individually(self, service):
+        """403 raises PermissionDeniedError immediately, no retry."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(403, "Forbidden")
+        with pytest.raises(PermissionDeniedError):
+            service._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_no_retry_on_404_individually(self, service):
+        """404 raises ResourceNotFoundError immediately, no retry."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(404, "Not Found")
+        with pytest.raises(ResourceNotFoundError):
+            service._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_no_retry_on_409_individually(self, service):
+        """409 raises ResourceAlreadyExistsError immediately, no retry."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(409, "Conflict")
+        with pytest.raises(ResourceAlreadyExistsError):
+            service._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_retry_on_timeout_error(self, service):
+        """TimeoutError (subclass of OSError) triggers retry, then succeeds."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            TimeoutError("Connection timed out"),
+            {"id": "1", "name": "ok"},
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            result = service._execute_with_retry(request)
+        assert result == {"id": "1", "name": "ok"}
+        assert request.execute.call_count == 2
+
+    def test_execute_max_retries_zero_means_no_retry(self):
+        """num_retries=0 means no retry, immediate failure on retryable error."""
+        with mock.patch("gcpoto.services.base.discovery.build"):
+            svc = GCPService(
+                project_id="test-project",
+                service_name="compute",
+                version="v1",
+                num_retries=0,
+                retry_delay=0.01,
+            )
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(503, "Unavailable")
+        with pytest.raises(ServiceUnavailableError):
+            svc._execute_with_retry(request)
+        request.execute.assert_called_once()
+
+    def test_execute_retry_exhausted_429_raises_quota_error(self, service):
+        """All retries exhausted on 429 raises QuotaExceededError."""
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(429, "Rate limit")
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            with pytest.raises(QuotaExceededError):
+                service._execute_with_retry(request)
+        assert request.execute.call_count == 4  # 1 initial + 3 retries
+
+    def test_retryable_then_non_retryable_stops(self, service):
+        """Transient error followed by client error stops retrying immediately."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            _make_http_error(503, "Unavailable"),
+            _make_http_error(404, "Not Found"),
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            with pytest.raises(ResourceNotFoundError):
+                service._execute_with_retry(request)
+        assert request.execute.call_count == 2
+
+    def test_connection_then_http_error_then_success(self, service):
+        """Mix of connection and HTTP transient errors, then success."""
+        request = mock.MagicMock()
+        request.execute.side_effect = [
+            ConnectionError("Reset"),
+            _make_http_error(503, "Unavailable"),
+            {"id": "1", "name": "ok"},
+        ]
+        with mock.patch("gcpoto.services.base.time.sleep"):
+            result = service._execute_with_retry(request)
+        assert result == {"id": "1", "name": "ok"}
+        assert request.execute.call_count == 3
+
+    def test_retryable_status_codes_class_attribute(self, service):
+        """Verify the RETRYABLE_STATUS_CODES class attribute contains expected codes."""
+        assert service.RETRYABLE_STATUS_CODES == {429, 500, 502, 503, 504}
+
+    def test_handle_http_error_preserves_cause_chain(self, service):
+        """All mapped exceptions preserve the original HttpError as __cause__."""
+        for status, exc_type in [
+            (400, ValidationError),
+            (401, AuthenticationError),
+            (403, PermissionDeniedError),
+            (404, ResourceNotFoundError),
+            (409, ResourceAlreadyExistsError),
+            (429, QuotaExceededError),
+            (503, ServiceUnavailableError),
+            (418, APIError),
+        ]:
+            original = _make_http_error(status)
+            with pytest.raises(exc_type) as exc_info:
+                service._handle_http_error(original)
+            assert exc_info.value.__cause__ is original, (
+                "Exception for status %d should chain the original HttpError" % status
+            )
+
+    @mock.patch("gcpoto.services.base.random.uniform", return_value=0)
+    @mock.patch("gcpoto.services.base.time.sleep")
+    def test_backoff_delay_cap_at_60(self, mock_sleep, mock_random):
+        """Verify backoff delay is capped at 60 seconds (max_delay)."""
+        with mock.patch("gcpoto.services.base.discovery.build"):
+            svc = GCPService(
+                project_id="test-project",
+                service_name="compute",
+                version="v1",
+                num_retries=10,
+                retry_delay=100.0,  # Large base to exceed cap
+            )
+        request = mock.MagicMock()
+        request.execute.side_effect = _make_http_error(503, "Unavailable")
+        with pytest.raises(ServiceUnavailableError):
+            svc._execute_with_retry(request)
+
+        # All delays should be capped at 60.0 (with zero jitter)
+        for c in mock_sleep.call_args_list:
+            assert c.args[0] <= 60.0, (
+                "Backoff delay %s exceeds 60s cap" % c.args[0]
+            )

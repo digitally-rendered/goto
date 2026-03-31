@@ -191,9 +191,10 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
             f"/serverTlsPolicies/{policy_name}"
         )
 
-        self.service.projects().locations().serverTlsPolicies().delete(
+        request = self.service.projects().locations().serverTlsPolicies().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted server TLS policy %s", policy_name)
         return True
     def list_authorization_policies(
@@ -347,8 +348,9 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
             f"/authorizationPolicies/{policy_name}"
         )
 
-        self.service.projects().locations().authorizationPolicies().delete(
+        request = self.service.projects().locations().authorizationPolicies().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted authorization policy %s", policy_name)
         return True

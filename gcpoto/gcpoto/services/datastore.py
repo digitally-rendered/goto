@@ -190,9 +190,10 @@ class DatastoreService(GCPService[Entity]):
         mutations = [{"delete": key} for key in keys]
         body = {"mutations": mutations}
 
-        self.service.projects().commit(
+        request = self.service.projects().commit(
             projectId=self.project_id, body=body
-        ).execute()
+        )
+        self._execute(request)
         return True
     def allocate_ids(self, kind: str, count: int) -> List[Dict[str, Any]]:
         """Allocate IDs for incomplete keys.
@@ -294,7 +295,8 @@ class DatastoreService(GCPService[Entity]):
 
         body = {"transaction": transaction}
 
-        self.service.projects().rollback(
+        request = self.service.projects().rollback(
             projectId=self.project_id, body=body
-        ).execute()
+        )
+        self._execute(request)
         return True

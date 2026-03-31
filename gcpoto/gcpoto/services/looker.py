@@ -207,9 +207,10 @@ class LookerService(GCPService[LookerInstance]):
             f"projects/{self.project_id}/locations/{location}"
             f"/instances/{instance_name}"
         )
-        self.service.projects().locations().instances().delete(
+        request = self.service.projects().locations().instances().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted Looker instance %s", instance_name)
         return True
 

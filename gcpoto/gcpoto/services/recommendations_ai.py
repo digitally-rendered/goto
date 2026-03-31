@@ -256,7 +256,8 @@ class RecommendationsAIService(GCPService[CatalogItem]):
             .catalogs()
             .catalogItems()
             .delete(name=name)
-        ).execute()
+        )
+        self._execute(request)
         return True
     def import_catalog_items(
         self,

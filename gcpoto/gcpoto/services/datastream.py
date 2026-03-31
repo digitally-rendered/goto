@@ -164,9 +164,10 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/connectionProfiles/{profile_id}"
         )
-        self.service.projects().locations().connectionProfiles().delete(
+        request = self.service.projects().locations().connectionProfiles().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted connection profile %s", profile_id)
         return True
 
@@ -329,9 +330,10 @@ class DatastreamService(GCPService[ConnectionProfile]):
             f"projects/{self.project_id}/locations/{location}"
             f"/streams/{stream_id}"
         )
-        self.service.projects().locations().streams().delete(
+        request = self.service.projects().locations().streams().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted stream %s", stream_id)
         return True
 

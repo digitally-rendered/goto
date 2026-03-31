@@ -188,9 +188,10 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/topics/{topic_id}"
         )
-        self.service.projects().locations().topics().delete(
+        request = self.service.projects().locations().topics().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted topic %s", topic_id)
         return True
 
@@ -361,8 +362,9 @@ class PubSubLiteService(GCPService[LiteTopic]):
             f"projects/{self.project_id}/locations/{location}"
             f"/subscriptions/{subscription_id}"
         )
-        self.service.projects().locations().subscriptions().delete(
+        request = self.service.projects().locations().subscriptions().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted subscription %s", subscription_id)
         return True

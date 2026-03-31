@@ -157,9 +157,10 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}"
         )
-        self.service.projects().locations().entryGroups().delete(
+        request = self.service.projects().locations().entryGroups().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted entry group %s", entry_group_id)
         return True
 
@@ -305,9 +306,10 @@ class DataCatalogService(GCPService[EntryGroup]):
             f"projects/{self.project_id}/locations/{location}"
             f"/entryGroups/{entry_group_id}/entries/{entry_id}"
         )
-        self.service.projects().locations().entryGroups().entries().delete(
+        request = self.service.projects().locations().entryGroups().entries().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted entry %s", entry_id)
         return True
 

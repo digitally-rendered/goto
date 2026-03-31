@@ -80,7 +80,7 @@ class DataprocService(GCPService[DataprocCluster]):
             region=region,
             clusterName=cluster_name,
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocCluster", cluster_name)
         return DataprocCluster.from_api_response(response)
 
     def create_cluster(
@@ -117,7 +117,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().clusters().create(
             projectId=self.project_id, region=region, body=body
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocCluster", cluster_name)
         return DataprocCluster.from_api_response(response)
 
     def update_cluster(
@@ -153,7 +153,7 @@ class DataprocService(GCPService[DataprocCluster]):
             updateMask=update_mask,
             body=body,
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocCluster", cluster_name)
         return DataprocCluster.from_api_response(response)
 
     def delete_cluster(self, region: str, cluster_name: str) -> bool:
@@ -176,7 +176,7 @@ class DataprocService(GCPService[DataprocCluster]):
             region=region,
             clusterName=cluster_name,
         )
-        self._execute(request)
+        self._execute(request, "DataprocCluster", cluster_name)
         return True
 
     def start_cluster(self, region: str, cluster_name: str) -> Dict:
@@ -200,7 +200,7 @@ class DataprocService(GCPService[DataprocCluster]):
             clusterName=cluster_name,
             body={},
         )
-        return request.execute()
+        return self._execute(request, "DataprocCluster", cluster_name)
 
     def stop_cluster(self, region: str, cluster_name: str) -> Dict:
         """Stop a running Dataproc cluster.
@@ -223,7 +223,7 @@ class DataprocService(GCPService[DataprocCluster]):
             clusterName=cluster_name,
             body={},
         )
-        return request.execute()
+        return self._execute(request, "DataprocCluster", cluster_name)
 
     # --- Job methods ---
 
@@ -243,7 +243,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().jobs().submit(
             projectId=self.project_id, region=region, body=body
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocJob", "")
         return DataprocJob.from_api_response(response)
 
     def get_job(self, region: str, job_id: str) -> DataprocJob:
@@ -260,7 +260,7 @@ class DataprocService(GCPService[DataprocCluster]):
         request = self.service.projects().regions().jobs().get(
             projectId=self.project_id, region=region, jobId=job_id
         )
-        response = self._execute(request)
+        response = self._execute(request, "DataprocJob", job_id)
         return DataprocJob.from_api_response(response)
 
     def list_jobs(self, region: str) -> List[DataprocJob]:

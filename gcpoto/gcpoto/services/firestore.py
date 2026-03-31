@@ -203,9 +203,10 @@ class FirestoreService(GCPService[FirestoreDocument]):
         name = self._document_path(collection, document_id)
         logger.debug("Deleting document %s", name)
 
-        self.service.projects().databases().documents().delete(
+        request = self.service.projects().databases().documents().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_documents(
         self,
@@ -495,9 +496,10 @@ class FirestoreService(GCPService[FirestoreDocument]):
         """
         logger.debug("Deleting index %s", index_name)
 
-        self.service.projects().databases().collectionGroups().indexes().delete(
+        request = self.service.projects().databases().collectionGroups().indexes().delete(
             name=index_name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def batch_get_documents(
         self, collection: str, document_ids: List[str]

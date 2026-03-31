@@ -261,9 +261,10 @@ class CloudBuildService(GCPService[Build]):
         Returns:
             True if the deletion was successful
         """
-        self.service.projects().triggers().delete(
+        request = self.service.projects().triggers().delete(
             projectId=self.project_id, triggerId=trigger_id
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted trigger %s", trigger_id)
         return True
 

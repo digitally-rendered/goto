@@ -213,9 +213,10 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/gateways/{gateway_id}"
         )
 
-        self.service.projects().locations().gateways().delete(
+        request = self.service.projects().locations().gateways().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted API Gateway %s", gateway_id)
         return True
     def list_apis(self, location: Optional[str] = None) -> List[APIGateway]:
@@ -331,9 +332,10 @@ class APIGatewayService(GCPService[APIGateway]):
 
         name = f"projects/{self.project_id}/locations/global/apis/{api_id}"
 
-        self.service.projects().locations().apis().delete(
+        request = self.service.projects().locations().apis().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted API %s", api_id)
         return True
     def list_api_configs(self, api_id: str) -> List[APIConfig]:
@@ -480,8 +482,9 @@ class APIGatewayService(GCPService[APIGateway]):
             f"/apis/{api_id}/configs/{config_id}"
         )
 
-        self.service.projects().locations().apis().configs().delete(
+        request = self.service.projects().locations().apis().configs().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted API config %s for API %s", config_id, api_id)
         return True

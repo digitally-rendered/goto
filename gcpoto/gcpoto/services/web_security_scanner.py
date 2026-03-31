@@ -172,9 +172,10 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         """
         logger.info("Deleting scan config %s", config_id)
 
-        self.service.projects().scanConfigs().delete(
+        request = self.service.projects().scanConfigs().delete(
             name=f"projects/{self.project_id}/scanConfigs/{config_id}"
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted scan config %s", config_id)
         return True
     def start_scan(self, config_id: str) -> ScanRun:

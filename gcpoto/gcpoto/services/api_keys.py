@@ -214,9 +214,10 @@ class APIKeysService(GCPService[APIKey]):
             f"/keys/{key_id}"
         )
 
-        self.service.projects().locations().keys().delete(
+        request = self.service.projects().locations().keys().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted API key %s", key_id)
         return True
     def undelete_key(self, location: str, key_id: str) -> APIKey:

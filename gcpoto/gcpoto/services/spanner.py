@@ -391,7 +391,7 @@ class SpannerService(GCPService[SpannerInstance]):
             .databases()
             .updateDdl(database=name, body=body)
         )
-        return request.execute()
+        return self._execute(request)
 
     def execute_sql(
         self,
@@ -449,13 +449,14 @@ class SpannerService(GCPService[SpannerInstance]):
                 .sessions()
                 .executeSql(session=session_path, body=body)
             )
-            return sql_request.execute()
+            return self._execute(sql_request)
         finally:
             # Clean up the session
             try:
-                self.service.projects().instances().databases().sessions().delete(
+                request = self.service.projects().instances().databases().sessions().delete(
                     name=session_path
-                ).execute()
+                )
+                self._execute(request)
             except Exception:
                 logger.warning(
                     "Failed to delete session %s", session_path

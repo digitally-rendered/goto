@@ -134,9 +134,10 @@ class CloudArmorService(GCPService[SecurityPolicy]):
         """
         logger.info("Deleting security policy %s", policy_name)
 
-        self.service.securityPolicies().delete(
+        request = self.service.securityPolicies().delete(
             project=self.project_id, securityPolicy=policy_name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted security policy %s", policy_name)
         return True
     def add_rule(
@@ -212,11 +213,12 @@ class CloudArmorService(GCPService[SecurityPolicy]):
             policy_name,
         )
 
-        self.service.securityPolicies().removeRule(
+        request = self.service.securityPolicies().removeRule(
             project=self.project_id,
             securityPolicy=policy_name,
             priority=priority,
-        ).execute()
+        )
+        self._execute(request)
         logger.info(
             "Removed rule with priority %s from security policy %s",
             priority,

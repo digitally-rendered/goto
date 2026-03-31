@@ -187,9 +187,10 @@ class DocumentAIService(GCPService[Processor]):
         )
 
         name = self._format_processor_name(location, processor_id)
-        self.service.projects().locations().processors().delete(
+        request = self.service.projects().locations().processors().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def enable_processor(
         self, location: str, processor_id: str

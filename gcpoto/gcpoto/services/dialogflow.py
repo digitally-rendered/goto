@@ -278,9 +278,10 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_agent_name(location, agent_id)
-        self.service.projects().locations().agents().delete(
+        request = self.service.projects().locations().agents().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         return True
     def list_flows(
         self, location: str, agent_id: str, **kwargs
@@ -423,14 +424,14 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_flow_name(location, agent_id, flow_id)
-        (
+        request = (
             self.service.projects()
             .locations()
             .agents()
             .flows()
             .delete(name=name)
-            .execute()
         )
+        self._execute(request)
         return True
     def list_intents(
         self, location: str, agent_id: str, **kwargs
@@ -573,14 +574,14 @@ class DialogflowService(GCPService[Agent]):
         )
 
         name = self._format_intent_name(location, agent_id, intent_id)
-        (
+        request = (
             self.service.projects()
             .locations()
             .agents()
             .intents()
             .delete(name=name)
-            .execute()
         )
+        self._execute(request)
         return True
     def detect_intent(
         self,

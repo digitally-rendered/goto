@@ -397,7 +397,7 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
             .services()
             .getIamPolicy(resource=full_name)
         )
-        return request.execute()
+        return self._execute(request)
 
     def set_iam_policy(
         self, location: str, service_name: str, policy: Dict[str, Any]
@@ -423,4 +423,4 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
                 resource=full_name, body={"policy": policy}
             )
         )
-        return request.execute()
+        return self._execute(request)

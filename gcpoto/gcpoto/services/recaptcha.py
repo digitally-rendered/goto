@@ -184,7 +184,8 @@ class RecaptchaService(GCPService[RecaptchaKey]):
 
         name = f"projects/{self.project_id}/keys/{key_id}"
 
-        self.service.projects().keys().delete(name=name).execute()
+        request = self.service.projects().keys().delete(name=name)
+        self._execute(request)
         logger.info("Deleted reCAPTCHA key %s", key_id)
         return True
     def create_assessment(self, event: Dict[str, Any]) -> Assessment:

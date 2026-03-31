@@ -200,8 +200,9 @@ class ComposerService(GCPService[ComposerEnvironment]):
             f"projects/{self.project_id}/locations/{location}"
             f"/environments/{environment_name}"
         )
-        self.service.projects().locations().environments().delete(
+        request = self.service.projects().locations().environments().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.debug("Deleted environment %s", environment_name)
         return True

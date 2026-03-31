@@ -120,7 +120,8 @@ class SecretManagerService(GCPService[Secret]):
             True if the deletion was successful
         """
         name = format_secret_path(self.project_id, secret_id)
-        self.service.projects().secrets().delete(name=name).execute()
+        request = self.service.projects().secrets().delete(name=name)
+        self._execute(request)
         return True
 
     def update_secret(

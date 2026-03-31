@@ -141,9 +141,10 @@ class DNSService(GCPService[ManagedZone]):
         """
         logger.info("Deleting DNS managed zone %s", zone_name)
 
-        self.service.managedZones().delete(
+        request = self.service.managedZones().delete(
             project=self.project_id, managedZone=zone_name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted DNS managed zone %s", zone_name)
         return True
     def update_zone(
@@ -312,12 +313,13 @@ class DNSService(GCPService[ManagedZone]):
             zone_name,
         )
 
-        self.service.resourceRecordSets().delete(
+        request = self.service.resourceRecordSets().delete(
             project=self.project_id,
             managedZone=zone_name,
             name=name,
             type=type,
-        ).execute()
+        )
+        self._execute(request)
         logger.info(
             "Deleted record set %s (type %s) from zone %s",
             name,

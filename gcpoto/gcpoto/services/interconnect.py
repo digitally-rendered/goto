@@ -152,10 +152,11 @@ class InterconnectService(GCPService[Interconnect]):
         """
         logger.info("Deleting interconnect %s", interconnect_name)
 
-        self.service.interconnects().delete(
+        request = self.service.interconnects().delete(
             project=self.project_id,
             interconnect=interconnect_name,
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted interconnect %s", interconnect_name)
         return True
     def list_attachments(
@@ -300,11 +301,12 @@ class InterconnectService(GCPService[Interconnect]):
             region,
         )
 
-        self.service.interconnectAttachments().delete(
+        request = self.service.interconnectAttachments().delete(
             project=self.project_id,
             region=region,
             interconnectAttachment=attachment_name,
-        ).execute()
+        )
+        self._execute(request)
         logger.info(
             "Deleted interconnect attachment %s", attachment_name
         )

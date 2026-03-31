@@ -193,9 +193,10 @@ class NetworkConnectivityService(GCPService[Hub]):
             f"projects/{self.project_id}/locations/global/hubs/{hub_name}"
         )
 
-        self.service.projects().locations().global_().hubs().delete(
+        request = self.service.projects().locations().global_().hubs().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted hub %s", hub_name)
         return True
     def list_spokes(self, location: str) -> List[Spoke]:
@@ -380,8 +381,9 @@ class NetworkConnectivityService(GCPService[Hub]):
             f"/spokes/{spoke_name}"
         )
 
-        self.service.projects().locations().spokes().delete(
+        request = self.service.projects().locations().spokes().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted spoke %s", spoke_name)
         return True

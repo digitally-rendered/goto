@@ -174,9 +174,10 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting backend service %s", name)
 
-        self.service.backendServices().delete(
+        request = self.service.backendServices().delete(
             project=self.project_id, backendService=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted backend service %s", name)
         return True
     def list_url_maps(self, **kwargs) -> List[UrlMap]:
@@ -278,9 +279,10 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting URL map %s", name)
 
-        self.service.urlMaps().delete(
+        request = self.service.urlMaps().delete(
             project=self.project_id, urlMap=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted URL map %s", name)
         return True
     def list_health_checks(self, **kwargs) -> List[HealthCheck]:
@@ -405,9 +407,10 @@ class CDNService(GCPService[BackendService]):
         """
         logger.info("Deleting health check %s", name)
 
-        self.service.healthChecks().delete(
+        request = self.service.healthChecks().delete(
             project=self.project_id, healthCheck=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted health check %s", name)
         return True
     def invalidate_cache(

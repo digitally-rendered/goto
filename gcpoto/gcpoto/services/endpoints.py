@@ -134,9 +134,10 @@ class EndpointsService(GCPService[ManagedService]):
         """
         logger.info("Deleting managed service %s", service_name)
 
-        self.service.services().delete(
+        request = self.service.services().delete(
             serviceName=service_name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted managed service %s", service_name)
         return True
     def list_service_configs(

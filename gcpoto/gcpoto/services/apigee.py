@@ -187,9 +187,10 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/environments/{env_name}"
 
-        self.service.organizations().environments().delete(
+        request = self.service.organizations().environments().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted Apigee environment %s", env_name)
         return True
     def list_api_proxies(self, org_name: str) -> List[ApigeeAPIProxy]:
@@ -305,9 +306,10 @@ class ApigeeService(GCPService[ApigeeOrganization]):
 
         name = f"organizations/{org_name}/apis/{proxy_name}"
 
-        self.service.organizations().apis().delete(
+        request = self.service.organizations().apis().delete(
             name=name
-        ).execute()
+        )
+        self._execute(request)
         logger.info("Deleted Apigee API proxy %s", proxy_name)
         return True
     def deploy_api_proxy(
