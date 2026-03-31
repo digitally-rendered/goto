@@ -8,7 +8,7 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_run import CloudRunService, CloudRunRevision
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import ResourceAlreadyExistsError, ResourceNotFoundError, APIError
 
 logger = logging.getLogger(__name__)
 
