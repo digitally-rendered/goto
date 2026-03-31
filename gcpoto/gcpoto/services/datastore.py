@@ -74,6 +74,12 @@ class DatastoreService(GCPService[Entity]):
 
             return results
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def run_query(
@@ -149,6 +155,12 @@ class DatastoreService(GCPService[Entity]):
 
             return results
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def upsert(self, entities: List[Dict[str, Any]]) -> List[Entity]:
@@ -189,6 +201,12 @@ class DatastoreService(GCPService[Entity]):
 
             return results
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete(self, keys: List[Dict[str, Any]]) -> bool:
@@ -216,6 +234,12 @@ class DatastoreService(GCPService[Entity]):
             ).execute()
             return True
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def allocate_ids(self, kind: str, count: int) -> List[Dict[str, Any]]:
@@ -255,6 +279,12 @@ class DatastoreService(GCPService[Entity]):
             response = request.execute()
             return response.get("keys", [])
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def begin_transaction(self) -> str:
@@ -275,6 +305,12 @@ class DatastoreService(GCPService[Entity]):
             response = request.execute()
             return response.get("transaction", "")
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def commit(
@@ -312,6 +348,12 @@ class DatastoreService(GCPService[Entity]):
             )
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def rollback(self, transaction: str) -> bool:
@@ -336,4 +378,10 @@ class DatastoreService(GCPService[Entity]):
             ).execute()
             return True
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e

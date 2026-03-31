@@ -137,6 +137,12 @@ class EventarcService(GCPService[EventarcTrigger]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("trigger", trigger_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved trigger %s", trigger_name)
@@ -192,6 +198,12 @@ class EventarcService(GCPService[EventarcTrigger]):
                 raise ResourceAlreadyExistsError(
                     f"Trigger '{trigger_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Created trigger %s in %s", trigger_name, location)
@@ -231,6 +243,12 @@ class EventarcService(GCPService[EventarcTrigger]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("trigger", trigger_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Updated trigger %s in %s", trigger_name, location)
@@ -259,6 +277,12 @@ class EventarcService(GCPService[EventarcTrigger]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("trigger", trigger_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Deleted trigger %s in %s", trigger_name, location)

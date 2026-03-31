@@ -111,6 +111,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 raise ResourceNotFoundError(
                     "firestore.document", f"{collection}/{document_id}"
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def create_document(
@@ -158,6 +164,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 response, self.project_id
             )
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def update_document(
@@ -207,6 +219,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 raise ResourceNotFoundError(
                     "firestore.document", f"{collection}/{document_id}"
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete_document(
@@ -238,6 +256,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 raise ResourceNotFoundError(
                     "firestore.document", f"{collection}/{document_id}"
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def list_documents(
@@ -300,6 +324,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
             return documents
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def query_documents(
@@ -401,6 +431,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
             return documents
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def list_collection_ids(
@@ -440,6 +476,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
             return collections
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def list_indexes(
@@ -483,6 +525,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
             return indexes
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def create_index(
@@ -531,6 +579,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 response, self.project_id
             )
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete_index(self, index_name: str) -> bool:
@@ -558,6 +612,12 @@ class FirestoreService(GCPService[FirestoreDocument]):
                 raise ResourceNotFoundError(
                     "firestore.index", index_name
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def batch_get_documents(
@@ -610,4 +670,10 @@ class FirestoreService(GCPService[FirestoreDocument]):
 
             return documents
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e

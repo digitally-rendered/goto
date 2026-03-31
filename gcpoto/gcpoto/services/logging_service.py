@@ -260,6 +260,12 @@ class LoggingService(GCPService[LogEntry]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("sink", sink_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return LogSink.from_api_response(response)
@@ -405,6 +411,12 @@ class LoggingService(GCPService[LogEntry]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("metric", metric_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return LogMetric.from_api_response(response)

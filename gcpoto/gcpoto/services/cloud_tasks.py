@@ -151,6 +151,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved queue %s", queue_name)
@@ -198,6 +204,12 @@ class CloudTasksService(GCPService[TaskQueue]):
                 raise ResourceAlreadyExistsError(
                     f"Queue '{queue_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Created queue %s in %s", queue_name, location)
@@ -237,6 +249,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Updated queue %s in %s", queue_name, location)
@@ -265,6 +283,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Deleted queue %s in %s", queue_name, location)
@@ -293,6 +317,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Paused queue %s in %s", queue_name, location)
@@ -321,6 +351,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Resumed queue %s in %s", queue_name, location)
@@ -349,6 +385,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("queue", queue_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Purged queue %s in %s", queue_name, location)
@@ -425,6 +467,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("task", task_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved task %s from queue %s", task_name, queue_name)
@@ -499,6 +547,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("task", task_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
@@ -533,6 +587,12 @@ class CloudTasksService(GCPService[TaskQueue]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("task", task_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(

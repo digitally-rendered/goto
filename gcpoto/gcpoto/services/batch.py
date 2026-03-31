@@ -149,6 +149,12 @@ class BatchService(GCPService[BatchJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("job", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved job %s", job_name)
@@ -199,6 +205,12 @@ class BatchService(GCPService[BatchJob]):
                 raise ResourceAlreadyExistsError(
                     f"Job '{job_id}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Created job %s in %s", job_id, location)
@@ -227,6 +239,12 @@ class BatchService(GCPService[BatchJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("job", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Deleted job %s in %s", job_name, location)

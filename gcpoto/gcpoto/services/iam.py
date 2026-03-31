@@ -122,6 +122,12 @@ class IAMService(GCPService[ServiceAccount]):
                 raise ResourceNotFoundError(
                     "ServiceAccount", email_or_uid
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.info("Retrieved service account %s", email_or_uid)
@@ -426,6 +432,12 @@ class IAMService(GCPService[ServiceAccount]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Role", role_name) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.info("Retrieved role %s", role_name)

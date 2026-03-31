@@ -247,6 +247,12 @@ class CloudRunServiceManager(GCPService[CloudRunService]):
                 raise ResourceAlreadyExistsError(
                     f"Cloud Run service '{service_name}' already exists in {location}"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
     def update_service(

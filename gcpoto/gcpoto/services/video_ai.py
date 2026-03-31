@@ -83,6 +83,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def detect_labels(
@@ -128,6 +134,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def detect_shots(
@@ -159,6 +171,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def detect_explicit_content(
@@ -192,6 +210,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def detect_text(
@@ -223,6 +247,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def detect_objects(
@@ -254,6 +284,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def transcribe_speech(
@@ -298,6 +334,12 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
             request = self.service.videos().annotate(body=body)
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def get_operation(self, operation_name: str) -> Dict[str, Any]:
@@ -325,4 +367,10 @@ class VideoAIService(GCPService[VideoAnnotationResult]):
                 raise ResourceNotFoundError(
                     "videointelligence.operation", operation_name
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e

@@ -144,6 +144,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "Repository", repository_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def create_repository(
@@ -200,6 +206,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ValueError(
                     f"Repository '{repository_id}' already exists"
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def update_repository(
@@ -270,6 +282,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "Repository", repository_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     # --- Docker Image methods ---
@@ -351,6 +369,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "DockerImage", image_name
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     # --- Package methods ---
@@ -430,6 +454,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "Package", package_name
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete_package(
@@ -461,6 +491,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "Package", package_name
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     # --- Version methods ---
@@ -556,6 +592,12 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "PackageVersion", version_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete_version(
@@ -598,4 +640,10 @@ class ArtifactRegistryService(GCPService[Repository]):
                 raise ResourceNotFoundError(
                     "PackageVersion", version_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e

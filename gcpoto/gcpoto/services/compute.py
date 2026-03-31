@@ -1,9 +1,19 @@
 """Service implementation for Google Compute Engine."""
 
+import logging
 from typing import List, Optional, Dict, Any
+
+from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.base import GCPResource
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    ResourceAlreadyExistsError,
+    APIError,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class ComputeInstance(GCPResource):
@@ -69,10 +79,13 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             A list of ComputeInstance instances
         """
-        request = self.service.instances().list(
-            project=self.project_id, zone=zone, **kwargs
-        )
-        response = request.execute()
+        try:
+            request = self.service.instances().list(
+                project=self.project_id, zone=zone, **kwargs
+            )
+            response = request.execute()
+        except HttpError as e:
+            raise APIError(e.resp.status, str(e))
 
         instances = []
         for item in response.get("items", []):
@@ -91,12 +104,16 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             A ComputeInstance instance
         """
-        request = self.service.instances().get(
-            project=self.project_id, zone=zone, instance=resource_id, **kwargs
-        )
-        response = request.execute()
-
-        return self._parse_response(response)
+        try:
+            request = self.service.instances().get(
+                project=self.project_id, zone=zone, instance=resource_id, **kwargs
+            )
+            response = request.execute()
+            return self._parse_response(response)
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("ComputeInstance", resource_id)
+            raise APIError(e.resp.status, str(e))
 
     def create_resource(
         self, resource: ComputeInstance, zone: str, **kwargs
@@ -119,12 +136,18 @@ class ComputeService(GCPService[ComputeInstance]):
             "labels": resource.labels or {},
         }
 
-        request = self.service.instances().insert(
-            project=self.project_id, zone=zone, body=body, **kwargs
-        )
-        response = request.execute()
-
-        return self._parse_response(response)
+        try:
+            request = self.service.instances().insert(
+                project=self.project_id, zone=zone, body=body, **kwargs
+            )
+            response = request.execute()
+            return self._parse_response(response)
+        except HttpError as e:
+            if e.resp.status == 409:
+                raise ResourceAlreadyExistsError(
+                    f"ComputeInstance '{resource.name}' already exists"
+                )
+            raise APIError(e.resp.status, str(e))
 
     def delete_resource(self, resource_id: str, zone: str, **kwargs) -> bool:
         """Delete an instance by name.
@@ -137,9 +160,13 @@ class ComputeService(GCPService[ComputeInstance]):
         Returns:
             True if the deletion was successful
         """
-        request = self.service.instances().delete(
-            project=self.project_id, zone=zone, instance=resource_id, **kwargs
-        )
-        request.execute()
-
-        return True
+        try:
+            request = self.service.instances().delete(
+                project=self.project_id, zone=zone, instance=resource_id, **kwargs
+            )
+            request.execute()
+            return True
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("ComputeInstance", resource_id)
+            raise APIError(e.resp.status, str(e))

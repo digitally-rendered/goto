@@ -110,6 +110,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("metricDescriptor", metric_type)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return MetricDescriptor.from_api_response(response)
@@ -314,6 +320,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("alertPolicy", policy_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return AlertPolicy.from_api_response(response)
@@ -487,6 +499,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
                 raise ResourceNotFoundError(
                     "notificationChannel", channel_id
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return NotificationChannel.from_api_response(response)
@@ -632,6 +650,12 @@ class MonitoringService(GCPService[MetricDescriptor]):
                 raise ResourceNotFoundError(
                     "uptimeCheckConfig", check_id
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return UptimeCheckConfig.from_api_response(response)

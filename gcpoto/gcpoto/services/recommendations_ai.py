@@ -124,6 +124,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
 
             return items
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def get_catalog_item(
@@ -161,6 +167,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
                 raise ResourceNotFoundError(
                     "recommendationengine.catalogItem", item_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def create_catalog_item(
@@ -213,6 +225,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
             response = request.execute()
             return CatalogItem.from_api_response(response, self.project_id)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def update_catalog_item(
@@ -257,6 +275,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
                 raise ResourceNotFoundError(
                     "recommendationengine.catalogItem", item_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def delete_catalog_item(
@@ -293,6 +317,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
                 raise ResourceNotFoundError(
                     "recommendationengine.catalogItem", item_id
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def import_catalog_items(
@@ -329,6 +359,12 @@ class RecommendationsAIService(GCPService[CatalogItem]):
             )
             return request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e
 
     def predict(
@@ -381,4 +417,10 @@ class RecommendationsAIService(GCPService[CatalogItem]):
                 response, self.project_id
             )
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e)) from e

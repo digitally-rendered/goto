@@ -11,6 +11,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)

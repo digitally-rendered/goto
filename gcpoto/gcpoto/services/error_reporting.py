@@ -202,6 +202,12 @@ class ErrorReportingService(GCPService[ErrorGroup]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("errorGroup", group_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         return ErrorGroup.from_api_response(response)

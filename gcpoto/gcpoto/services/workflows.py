@@ -176,6 +176,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("workflow", workflow_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved workflow %s", workflow_name)
@@ -235,6 +241,12 @@ class WorkflowsService(GCPService[Workflow]):
                 raise ResourceAlreadyExistsError(
                     f"Workflow '{workflow_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Created workflow %s in %s", workflow_name, location)
@@ -284,6 +296,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("workflow", workflow_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Updated workflow %s in %s", workflow_name, location)
@@ -312,6 +330,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("workflow", workflow_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Deleted workflow %s in %s", workflow_name, location)
@@ -351,6 +375,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("workflow", workflow_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Executed workflow %s", workflow_name)
@@ -390,6 +420,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("execution", execution_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
@@ -484,6 +520,12 @@ class WorkflowsService(GCPService[Workflow]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("execution", execution_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(

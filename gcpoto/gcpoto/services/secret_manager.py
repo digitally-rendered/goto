@@ -125,6 +125,12 @@ class SecretManagerService(GCPService[Secret]):
                 raise ValueError(
                     f"Secret '{secret_id}' already exists"
                 ) from e
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
     def delete_secret(self, secret_id: str) -> bool:

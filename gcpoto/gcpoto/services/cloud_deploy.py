@@ -180,6 +180,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("deliveryPipeline", pipeline_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Retrieved pipeline %s", pipeline_name)
@@ -235,6 +241,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
                 raise ResourceAlreadyExistsError(
                     f"Delivery pipeline '{pipeline_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Created pipeline %s in %s", pipeline_name, location)
@@ -263,6 +275,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("deliveryPipeline", pipeline_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug("Deleted pipeline %s in %s", pipeline_name, location)
@@ -345,6 +363,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("release", release_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
@@ -401,6 +425,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
                 raise ResourceAlreadyExistsError(
                     f"Release '{release_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
@@ -502,6 +532,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("rollout", rollout_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
@@ -558,6 +594,12 @@ class CloudDeployService(GCPService[DeliveryPipeline]):
                 raise ResourceAlreadyExistsError(
                     f"Rollout '{rollout_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
         logger.debug(
