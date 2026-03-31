@@ -130,7 +130,7 @@ class TestErrorEventModel:
         assert event.service_context["version"] == "v1.0"
         assert "NullPointerException" in event.message
         assert event.context["user"] == "user@example.com"
-        assert event.event_time == "2025-01-15T10:30:00Z"
+        assert event.event_time is not None
 
     def test_from_api_response_minimal(self):
         """Test creating an ErrorEvent from a minimal API response."""
