@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,6 +111,12 @@ class CertificateManagerService(GCPService[Certificate]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Certificate", cert_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_certificate(
@@ -171,6 +180,12 @@ class CertificateManagerService(GCPService[Certificate]):
                 raise ResourceAlreadyExistsError(
                     f"Certificate '{cert_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_certificate(self, location: str, cert_name: str) -> bool:
@@ -202,6 +217,12 @@ class CertificateManagerService(GCPService[Certificate]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Certificate", cert_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_certificate_maps(self, location: str) -> List[CertificateMap]:
@@ -275,6 +296,12 @@ class CertificateManagerService(GCPService[Certificate]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("CertificateMap", map_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_certificate_map(
@@ -330,6 +357,12 @@ class CertificateManagerService(GCPService[Certificate]):
                 raise ResourceAlreadyExistsError(
                     f"CertificateMap '{map_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_certificate_map(
@@ -363,4 +396,10 @@ class CertificateManagerService(GCPService[Certificate]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("CertificateMap", map_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

@@ -3,9 +3,15 @@
 import logging
 from typing import List, Optional, Dict, Any
 
+from googleapiclient.errors import HttpError
+
 from gcpoto.services.base import GCPService
 from gcpoto.models.alloydb import AlloyDBCluster, AlloyDBInstance
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    ResourceAlreadyExistsError,
+    APIError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +92,10 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            try:
+                response = request.execute()
+            except HttpError as e:
+                raise APIError(e.resp.status, str(e))
             clusters = response.get("clusters", [])
             all_clusters.extend(
                 AlloyDBCluster.from_api_response(item) for item in clusters
@@ -113,14 +122,19 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         """
         name = self._cluster_path(location, cluster_id)
         logger.debug("Getting AlloyDB cluster %s", name)
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .get(name=name)
-        )
-        response = request.execute()
-        return AlloyDBCluster.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .get(name=name)
+            )
+            response = request.execute()
+            return AlloyDBCluster.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBCluster", cluster_id)
+            raise APIError(e.resp.status, str(e))
 
     def create_cluster(
         self,
@@ -162,14 +176,21 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         if automated_backup_policy is not None:
             body["automatedBackupPolicy"] = automated_backup_policy
 
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .create(parent=parent, clusterId=cluster_id, body=body)
-        )
-        response = request.execute()
-        return AlloyDBCluster.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .create(parent=parent, clusterId=cluster_id, body=body)
+            )
+            response = request.execute()
+            return AlloyDBCluster.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 409:
+                raise ResourceAlreadyExistsError(
+                    f"AlloyDBCluster '{cluster_id}' already exists"
+                )
+            raise APIError(e.resp.status, str(e))
 
     def update_cluster(
         self,
@@ -192,14 +213,19 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         name = self._cluster_path(location, cluster_id)
         logger.info("Updating AlloyDB cluster %s", name)
 
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .patch(name=name, updateMask=update_mask, body=update_fields)
-        )
-        response = request.execute()
-        return AlloyDBCluster.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .patch(name=name, updateMask=update_mask, body=update_fields)
+            )
+            response = request.execute()
+            return AlloyDBCluster.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBCluster", cluster_id)
+            raise APIError(e.resp.status, str(e))
 
     def delete_cluster(self, location: str, cluster_id: str) -> bool:
         """Delete an AlloyDB cluster.
@@ -213,14 +239,19 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         """
         name = self._cluster_path(location, cluster_id)
         logger.info("Deleting AlloyDB cluster %s", name)
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .delete(name=name)
-        )
-        request.execute()
-        return True
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .delete(name=name)
+            )
+            request.execute()
+            return True
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBCluster", cluster_id)
+            raise APIError(e.resp.status, str(e))
 
     # --- Instance methods ---
 
@@ -247,7 +278,10 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
             .list(parent=parent)
         )
         while request is not None:
-            response = request.execute()
+            try:
+                response = request.execute()
+            except HttpError as e:
+                raise APIError(e.resp.status, str(e))
             instances = response.get("instances", [])
             all_instances.extend(
                 AlloyDBInstance.from_api_response(item) for item in instances
@@ -276,15 +310,20 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         """
         name = self._instance_path(location, cluster_id, instance_id)
         logger.debug("Getting AlloyDB instance %s", name)
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .instances()
-            .get(name=name)
-        )
-        response = request.execute()
-        return AlloyDBInstance.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .instances()
+                .get(name=name)
+            )
+            response = request.execute()
+            return AlloyDBInstance.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBInstance", instance_id)
+            raise APIError(e.resp.status, str(e))
 
     def create_instance(
         self,
@@ -325,15 +364,22 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         if availability_type is not None:
             body["availabilityType"] = availability_type
 
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .instances()
-            .create(parent=parent, instanceId=instance_id, body=body)
-        )
-        response = request.execute()
-        return AlloyDBInstance.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .instances()
+                .create(parent=parent, instanceId=instance_id, body=body)
+            )
+            response = request.execute()
+            return AlloyDBInstance.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 409:
+                raise ResourceAlreadyExistsError(
+                    f"AlloyDBInstance '{instance_id}' already exists"
+                )
+            raise APIError(e.resp.status, str(e))
 
     def update_instance(
         self,
@@ -358,15 +404,20 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         name = self._instance_path(location, cluster_id, instance_id)
         logger.info("Updating AlloyDB instance %s", name)
 
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .instances()
-            .patch(name=name, updateMask=update_mask, body=update_fields)
-        )
-        response = request.execute()
-        return AlloyDBInstance.from_api_response(response)
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .instances()
+                .patch(name=name, updateMask=update_mask, body=update_fields)
+            )
+            response = request.execute()
+            return AlloyDBInstance.from_api_response(response)
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBInstance", instance_id)
+            raise APIError(e.resp.status, str(e))
 
     def delete_instance(
         self, location: str, cluster_id: str, instance_id: str
@@ -383,12 +434,17 @@ class AlloyDBService(GCPService[AlloyDBCluster]):
         """
         name = self._instance_path(location, cluster_id, instance_id)
         logger.info("Deleting AlloyDB instance %s", name)
-        request = (
-            self.service.projects()
-            .locations()
-            .clusters()
-            .instances()
-            .delete(name=name)
-        )
-        request.execute()
-        return True
+        try:
+            request = (
+                self.service.projects()
+                .locations()
+                .clusters()
+                .instances()
+                .delete(name=name)
+            )
+            request.execute()
+            return True
+        except HttpError as e:
+            if e.resp.status == 404:
+                raise ResourceNotFoundError("AlloyDBInstance", instance_id)
+            raise APIError(e.resp.status, str(e))

@@ -13,7 +13,13 @@ from gcpoto.models.artifact_registry import (
     Package,
     PackageVersion,
 )
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 

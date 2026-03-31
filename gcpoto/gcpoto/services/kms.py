@@ -9,7 +9,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.kms import KeyRing, CryptoKey, CryptoKeyVersion
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 from gcpoto.utils import format_key_ring_path, format_crypto_key_path
 
 logger = logging.getLogger(__name__)

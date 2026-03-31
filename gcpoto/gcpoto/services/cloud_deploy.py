@@ -8,7 +8,14 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_deploy import DeliveryPipeline, Release, Rollout
-from gcpoto.exceptions import ResourceAlreadyExistsError, ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceAlreadyExistsError,
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 

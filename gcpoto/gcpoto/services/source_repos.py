@@ -11,6 +11,9 @@ from gcpoto.models.source_repos import Repo
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,6 +92,12 @@ class SourceReposService(GCPService[Repo]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Repo", repo_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_repo(self, repo_name: str) -> Repo:
@@ -118,6 +127,12 @@ class SourceReposService(GCPService[Repo]):
             logger.info("Created repository %s", repo_name)
             return Repo.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_repo(self, repo_name: str) -> bool:
@@ -144,6 +159,12 @@ class SourceReposService(GCPService[Repo]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Repo", repo_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def get_iam_policy(self, repo_name: str) -> Dict[str, Any]:
@@ -172,6 +193,12 @@ class SourceReposService(GCPService[Repo]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Repo", repo_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def set_iam_policy(
@@ -205,4 +232,10 @@ class SourceReposService(GCPService[Repo]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Repo", repo_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

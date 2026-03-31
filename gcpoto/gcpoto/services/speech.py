@@ -8,7 +8,12 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.speech import RecognitionResult, RecognitionConfig
-from gcpoto.exceptions import APIError
+from gcpoto.exceptions import (
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +143,12 @@ class SpeechService(GCPService[RecognitionResult]):
                 RecognitionResult.from_api_response(r) for r in results
             ]
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def long_running_recognize(
@@ -182,4 +193,10 @@ class SpeechService(GCPService[RecognitionResult]):
             response = request.execute()
             return response
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

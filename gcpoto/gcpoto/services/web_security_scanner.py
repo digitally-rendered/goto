@@ -11,6 +11,9 @@ from gcpoto.models.web_security_scanner import ScanConfig, ScanRun
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -90,6 +93,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ScanConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_scan_config(
@@ -137,6 +146,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
             logger.info("Created scan config %s", display_name)
             return ScanConfig.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_scan_config(
@@ -173,6 +188,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ScanConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_scan_config(self, config_id: str) -> bool:
@@ -199,6 +220,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ScanConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def start_scan(self, config_id: str) -> ScanRun:
@@ -227,6 +254,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ScanConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_scan_runs(self, config_id: str) -> List[ScanRun]:
@@ -288,6 +321,12 @@ class WebSecurityScannerService(GCPService[ScanConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ScanRun", run_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_findings_for_run(

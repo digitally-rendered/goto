@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_functions import CloudFunction
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +135,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         return self._parse_response(response)
@@ -210,6 +222,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                     409,
                     f"Function '{function_name}' already exists in {location}",
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info(
@@ -254,6 +272,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info(
@@ -288,6 +312,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info(
@@ -330,6 +360,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info(
@@ -364,6 +400,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         return response
@@ -401,6 +443,12 @@ class CloudFunctionsService(GCPService[CloudFunction]):
                 raise ResourceNotFoundError(
                     "CloudFunction", function_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info(

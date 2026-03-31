@@ -9,7 +9,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.secret_manager import Secret, SecretVersion
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 from gcpoto.utils import format_secret_path, format_secret_version_path
 
 logger = logging.getLogger(__name__)

@@ -13,7 +13,13 @@ from gcpoto.models.monitoring import (
     NotificationChannel,
     UptimeCheckConfig,
 )
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 

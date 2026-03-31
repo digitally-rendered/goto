@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -90,6 +93,12 @@ class DNSService(GCPService[ManagedZone]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedZone", zone_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_zone(
@@ -140,6 +149,12 @@ class DNSService(GCPService[ManagedZone]):
                 raise ResourceAlreadyExistsError(
                     f"ManagedZone '{zone_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_zone(self, zone_name: str) -> bool:
@@ -166,6 +181,12 @@ class DNSService(GCPService[ManagedZone]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedZone", zone_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_zone(
@@ -206,6 +227,12 @@ class DNSService(GCPService[ManagedZone]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedZone", zone_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_record_sets(self, zone_name: str, **kwargs) -> List[ResourceRecordSet]:
@@ -276,6 +303,12 @@ class DNSService(GCPService[ManagedZone]):
                 raise ResourceNotFoundError(
                     "ResourceRecordSet", f"{name} ({type})"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_record_set(
@@ -330,6 +363,12 @@ class DNSService(GCPService[ManagedZone]):
                 raise ResourceAlreadyExistsError(
                     f"ResourceRecordSet '{name}' (type {type}) already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_record_set(
@@ -375,6 +414,12 @@ class DNSService(GCPService[ManagedZone]):
                 raise ResourceNotFoundError(
                     "ResourceRecordSet", f"{name} ({type})"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_record_set(
@@ -435,4 +480,10 @@ class DNSService(GCPService[ManagedZone]):
                 raise ResourceNotFoundError(
                     "ResourceRecordSet", f"{name} ({type})"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

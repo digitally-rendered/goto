@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,6 +115,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("APIGateway", gateway_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_gateway(
@@ -167,6 +176,12 @@ class APIGatewayService(GCPService[APIGateway]):
                 raise ResourceAlreadyExistsError(
                     f"APIGateway '{gateway_id}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_gateway(
@@ -212,6 +227,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("APIGateway", gateway_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_gateway(self, location: str, gateway_id: str) -> bool:
@@ -244,6 +265,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("APIGateway", gateway_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -311,6 +338,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("API", api_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_api(
@@ -358,6 +391,12 @@ class APIGatewayService(GCPService[APIGateway]):
                 raise ResourceAlreadyExistsError(
                     f"API '{api_id}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_api(self, api_id: str) -> bool:
@@ -386,6 +425,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("API", api_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -464,6 +509,12 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("APIConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_api_config(
@@ -525,6 +576,12 @@ class APIGatewayService(GCPService[APIGateway]):
                 raise ResourceAlreadyExistsError(
                     f"APIConfig '{config_id}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_api_config(self, api_id: str, config_id: str) -> bool:
@@ -559,4 +616,10 @@ class APIGatewayService(GCPService[APIGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("APIConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

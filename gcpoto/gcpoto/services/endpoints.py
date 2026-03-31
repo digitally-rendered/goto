@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -95,6 +98,12 @@ class EndpointsService(GCPService[ManagedService]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedService", service_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_service(
@@ -133,6 +142,12 @@ class EndpointsService(GCPService[ManagedService]):
                 raise ResourceAlreadyExistsError(
                     f"ManagedService '{service_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_service(self, service_name: str) -> bool:
@@ -159,6 +174,12 @@ class EndpointsService(GCPService[ManagedService]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedService", service_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -231,6 +252,12 @@ class EndpointsService(GCPService[ManagedService]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ServiceConfig", config_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def submit_config_source(
@@ -269,6 +296,12 @@ class EndpointsService(GCPService[ManagedService]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedService", service_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -342,4 +375,10 @@ class EndpointsService(GCPService[ManagedService]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("ManagedService", service_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

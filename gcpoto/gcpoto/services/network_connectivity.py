@@ -11,6 +11,9 @@ from gcpoto.models.network_connectivity import Hub, Spoke
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -106,6 +109,12 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Hub", hub_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_hub(
@@ -148,6 +157,12 @@ class NetworkConnectivityService(GCPService[Hub]):
             logger.info("Created hub %s", hub_name)
             return Hub.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_hub(
@@ -190,6 +205,12 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Hub", hub_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_hub(self, hub_name: str) -> bool:
@@ -220,6 +241,12 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Hub", hub_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # --- Spoke methods ---
@@ -293,6 +320,12 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Spoke", spoke_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_spoke(
@@ -347,6 +380,12 @@ class NetworkConnectivityService(GCPService[Hub]):
             logger.info("Created spoke %s", spoke_name)
             return Spoke.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_spoke(
@@ -397,6 +436,12 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Spoke", spoke_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_spoke(self, location: str, spoke_name: str) -> bool:
@@ -431,4 +476,10 @@ class NetworkConnectivityService(GCPService[Hub]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Spoke", spoke_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

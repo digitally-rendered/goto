@@ -7,7 +7,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.bigtable import BigtableInstance, BigtableCluster, BigtableTable
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +135,12 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableInstance", instance_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_instance(
@@ -254,6 +266,12 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableInstance", instance_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # --- Cluster methods ---
@@ -316,6 +334,12 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableCluster", cluster_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_cluster(
@@ -436,6 +460,12 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableCluster", cluster_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # --- Table methods ---
@@ -504,6 +534,12 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableTable", table_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_table(
@@ -582,4 +618,10 @@ class BigtableService(GCPService[BigtableInstance]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("BigtableTable", table_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

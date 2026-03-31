@@ -11,6 +11,9 @@ from gcpoto.models.binary_auth import Policy, Attestor
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,6 +65,12 @@ class BinaryAuthService(GCPService[Policy]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Policy", self.project_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_policy(self, policy_body: Dict[str, Any]) -> Policy:
@@ -89,6 +98,12 @@ class BinaryAuthService(GCPService[Policy]):
             response = request.execute()
             return Policy.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_attestors(self) -> List[Attestor]:
@@ -141,6 +156,12 @@ class BinaryAuthService(GCPService[Policy]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Attestor", attestor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_attestor(
@@ -170,6 +191,12 @@ class BinaryAuthService(GCPService[Policy]):
             logger.info("Created attestor %s", attestor_id)
             return Attestor.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_attestor(
@@ -201,6 +228,12 @@ class BinaryAuthService(GCPService[Policy]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Attestor", attestor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_attestor(self, attestor_id: str) -> bool:
@@ -227,4 +260,10 @@ class BinaryAuthService(GCPService[Policy]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Attestor", attestor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

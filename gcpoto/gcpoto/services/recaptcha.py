@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,6 +101,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("RecaptchaKey", key_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_key(
@@ -151,6 +160,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
                 raise ResourceAlreadyExistsError(
                     f"RecaptchaKey '{display_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_key(
@@ -188,6 +203,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("RecaptchaKey", key_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_key(self, key_id: str) -> bool:
@@ -214,6 +235,12 @@ class RecaptchaService(GCPService[RecaptchaKey]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("RecaptchaKey", key_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -247,4 +274,10 @@ class RecaptchaService(GCPService[RecaptchaKey]):
             logger.info("Created reCAPTCHA assessment")
             return Assessment.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

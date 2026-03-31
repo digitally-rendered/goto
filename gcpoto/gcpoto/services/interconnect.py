@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,6 +107,12 @@ class InterconnectService(GCPService[Interconnect]):
                 raise ResourceNotFoundError(
                     "Interconnect", interconnect_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_interconnect(
@@ -153,6 +162,12 @@ class InterconnectService(GCPService[Interconnect]):
                 raise ResourceAlreadyExistsError(
                     f"Interconnect '{interconnect_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_interconnect(self, interconnect_name: str) -> bool:
@@ -182,6 +197,12 @@ class InterconnectService(GCPService[Interconnect]):
                 raise ResourceNotFoundError(
                     "Interconnect", interconnect_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -260,6 +281,12 @@ class InterconnectService(GCPService[Interconnect]):
                 raise ResourceNotFoundError(
                     "InterconnectAttachment", attachment_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_attachment(
@@ -323,6 +350,12 @@ class InterconnectService(GCPService[Interconnect]):
                     f"InterconnectAttachment '{attachment_name}' "
                     f"already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_attachment(
@@ -362,6 +395,12 @@ class InterconnectService(GCPService[Interconnect]):
                 raise ResourceNotFoundError(
                     "InterconnectAttachment", attachment_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #

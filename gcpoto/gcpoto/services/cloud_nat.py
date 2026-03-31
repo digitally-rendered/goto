@@ -11,6 +11,9 @@ from gcpoto.models.cloud_nat import NATConfig
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -93,6 +96,12 @@ class CloudNATService(GCPService[NATConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Router", router_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_nat(
@@ -154,6 +163,12 @@ class CloudNATService(GCPService[NATConfig]):
         except ResourceNotFoundError:
             raise
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_nat(
@@ -221,6 +236,12 @@ class CloudNATService(GCPService[NATConfig]):
         except ResourceNotFoundError:
             raise
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_nat(
@@ -273,6 +294,12 @@ class CloudNATService(GCPService[NATConfig]):
         except ResourceNotFoundError:
             raise
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def get_nat_mapping_info(
@@ -316,4 +343,10 @@ class CloudNATService(GCPService[NATConfig]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("Router", router_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

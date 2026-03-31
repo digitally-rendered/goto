@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.cloud_build import Build, BuildTrigger
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +125,12 @@ class CloudBuildService(GCPService[Build]):
             )
             response = request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.debug("Created build in project %s", self.project_id)
@@ -175,6 +187,12 @@ class CloudBuildService(GCPService[Build]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("build", build_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.debug("Retried build %s", build_id)
@@ -257,6 +275,12 @@ class CloudBuildService(GCPService[Build]):
             )
             response = request.execute()
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.debug("Created trigger in project %s", self.project_id)
@@ -288,6 +312,12 @@ class CloudBuildService(GCPService[Build]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("trigger", trigger_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.debug("Updated trigger %s", trigger_id)
@@ -346,6 +376,12 @@ class CloudBuildService(GCPService[Build]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("trigger", trigger_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.debug("Ran trigger %s", trigger_id)

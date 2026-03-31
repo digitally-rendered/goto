@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.document_ai import Processor, ProcessorVersion, ProcessResult
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +144,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_processor(
@@ -179,6 +191,12 @@ class DocumentAIService(GCPService[Processor]):
             response = request.execute()
             return Processor.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_processor(
@@ -209,6 +227,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def enable_processor(
@@ -243,6 +267,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def disable_processor(
@@ -277,6 +307,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def process_document(
@@ -329,6 +365,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def batch_process_documents(
@@ -378,6 +420,12 @@ class DocumentAIService(GCPService[Processor]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("processor", processor_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Processor Version methods ----

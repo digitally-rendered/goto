@@ -9,6 +9,12 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.pubsub import PubSubTopic, PubSubSubscription
+from gcpoto.exceptions import (
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 from gcpoto.utils import format_topic_path, format_subscription_path, extract_name_from_path
 
 
@@ -166,6 +172,12 @@ class PubSubService(GCPService[PubSubTopic]):
         except HttpError as e:
             if e.resp.status == 409:  # Conflict - topic already exists
                 raise ValueError(f"Topic '{topic_name}' already exists")
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
     def delete_topic(self, topic_name: str) -> bool:
@@ -410,6 +422,12 @@ class PubSubService(GCPService[PubSubTopic]):
         except HttpError as e:
             if e.resp.status == 409:  # Conflict - subscription already exists
                 raise ValueError(f"Subscription '{subscription_name}' already exists")
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise
 
     def delete_subscription(self, subscription_name: str) -> bool:

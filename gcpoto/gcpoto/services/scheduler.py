@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.scheduler import SchedulerJob
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +133,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Retrieved job %s", job_name)
@@ -200,6 +212,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 409:
                 raise ValueError(f"Job '{job_name}' already exists")
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Created job %s in location %s", job_name, location)
@@ -236,6 +254,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Updated job %s", job_name)
@@ -264,6 +288,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Deleted job %s", job_name)
@@ -292,6 +322,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Paused job %s", job_name)
@@ -320,6 +356,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Resumed job %s", job_name)
@@ -348,6 +390,12 @@ class SchedulerService(GCPService[SchedulerJob]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("SchedulerJob", job_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
         logger.info("Triggered run for job %s", job_name)

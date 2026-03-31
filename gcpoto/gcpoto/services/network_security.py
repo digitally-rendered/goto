@@ -11,6 +11,9 @@ from gcpoto.models.network_security import ServerTLSPolicy, AuthorizationPolicy
 from gcpoto.exceptions import (
     ResourceNotFoundError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -120,6 +123,12 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
                 raise ResourceNotFoundError(
                     "ServerTLSPolicy", policy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_server_tls_policy(
@@ -176,6 +185,12 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
             logger.info("Created server TLS policy %s", policy_name)
             return ServerTLSPolicy.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_server_tls_policy(
@@ -216,6 +231,12 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
                 raise ResourceNotFoundError(
                     "ServerTLSPolicy", policy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_authorization_policies(
@@ -300,6 +321,12 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
                 raise ResourceNotFoundError(
                     "AuthorizationPolicy", policy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_authorization_policy(
@@ -352,6 +379,12 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
             logger.info("Created authorization policy %s", policy_name)
             return AuthorizationPolicy.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_authorization_policy(
@@ -392,4 +425,10 @@ class NetworkSecurityService(GCPService[ServerTLSPolicy]):
                 raise ResourceNotFoundError(
                     "AuthorizationPolicy", policy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

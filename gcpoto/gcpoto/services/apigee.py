@@ -16,6 +16,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,6 +80,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeOrganization", org_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -145,6 +154,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeEnvironment", env_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_environment(
@@ -193,6 +208,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceAlreadyExistsError(
                     f"ApigeeEnvironment '{env_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_environment(self, org_name: str, env_name: str) -> bool:
@@ -228,6 +249,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeEnvironment", env_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -291,6 +318,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeAPIProxy", proxy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_api_proxy(
@@ -339,6 +372,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceAlreadyExistsError(
                     f"ApigeeAPIProxy '{proxy_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_api_proxy(self, org_name: str, proxy_name: str) -> bool:
@@ -374,6 +413,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeAPIProxy", proxy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ------------------------------------------------------------------ #
@@ -435,6 +480,12 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeAPIProxy", proxy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def undeploy_api_proxy(
@@ -492,4 +543,10 @@ class ApigeeService(GCPService[ApigeeOrganization]):
                 raise ResourceNotFoundError(
                     "ApigeeAPIProxy", proxy_name
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

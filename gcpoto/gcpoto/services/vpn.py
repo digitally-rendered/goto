@@ -12,6 +12,9 @@ from gcpoto.exceptions import (
     ResourceNotFoundError,
     ResourceAlreadyExistsError,
     APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
 )
 
 logger = logging.getLogger(__name__)
@@ -99,6 +102,12 @@ class VPNService(GCPService[VPNGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("VPNGateway", gateway_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_vpn_gateway(
@@ -139,6 +148,12 @@ class VPNService(GCPService[VPNGateway]):
                 raise ResourceAlreadyExistsError(
                     f"VPNGateway '{gateway_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_vpn_gateway(self, region: str, gateway_name: str) -> bool:
@@ -168,6 +183,12 @@ class VPNService(GCPService[VPNGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("VPNGateway", gateway_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def list_vpn_tunnels(self, region: str) -> List[VPNTunnel]:
@@ -225,6 +246,12 @@ class VPNService(GCPService[VPNGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("VPNTunnel", tunnel_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_vpn_tunnel(
@@ -277,6 +304,12 @@ class VPNService(GCPService[VPNGateway]):
                 raise ResourceAlreadyExistsError(
                     f"VPNTunnel '{tunnel_name}' already exists"
                 )
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_vpn_tunnel(self, region: str, tunnel_name: str) -> bool:
@@ -306,4 +339,10 @@ class VPNService(GCPService[VPNGateway]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("VPNTunnel", tunnel_name)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

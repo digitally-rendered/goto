@@ -8,7 +8,13 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.dialogflow import Agent, Flow, Intent
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +192,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("agent", agent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_agent(
@@ -235,6 +247,12 @@ class DialogflowService(GCPService[Agent]):
             response = request.execute()
             return Agent.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def update_agent(
@@ -278,6 +296,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("agent", agent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_agent(self, location: str, agent_id: str) -> bool:
@@ -306,6 +330,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("agent", agent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Flow methods ----
@@ -390,6 +420,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("flow", flow_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_flow(
@@ -437,6 +473,12 @@ class DialogflowService(GCPService[Agent]):
             response = request.execute()
             return Flow.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_flow(
@@ -474,6 +516,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("flow", flow_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Intent methods ----
@@ -558,6 +606,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("intent", intent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_intent(
@@ -605,6 +659,12 @@ class DialogflowService(GCPService[Agent]):
             response = request.execute()
             return Intent.from_api_response(response)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_intent(
@@ -642,6 +702,12 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("intent", intent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Session methods ----
@@ -696,4 +762,10 @@ class DialogflowService(GCPService[Agent]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("agent", agent_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))

@@ -13,7 +13,13 @@ from gcpoto.models.vertex_ai import (
     VertexEndpoint,
     TrainingPipeline,
 )
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import (
+    ResourceNotFoundError,
+    APIError,
+    PermissionDeniedError,
+    QuotaExceededError,
+    ServiceUnavailableError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +167,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("dataset", dataset_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_dataset(
@@ -209,6 +221,12 @@ class VertexAIService(GCPService[VertexDataset]):
             response = request.execute()
             return VertexDataset.from_api_response(response, self.project_id)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_dataset(self, location: str, dataset_id: str) -> bool:
@@ -237,6 +255,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("dataset", dataset_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Model methods ----
@@ -304,6 +328,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("model", model_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def upload_model(
@@ -361,6 +391,12 @@ class VertexAIService(GCPService[VertexDataset]):
             response = request.execute()
             return VertexModel.from_api_response(response, self.project_id)
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_model(self, location: str, model_id: str) -> bool:
@@ -389,6 +425,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("model", model_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Endpoint methods ----
@@ -460,6 +502,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("endpoint", endpoint_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def create_endpoint(
@@ -510,6 +558,12 @@ class VertexAIService(GCPService[VertexDataset]):
                 response, self.project_id
             )
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def delete_endpoint(self, location: str, endpoint_id: str) -> bool:
@@ -538,6 +592,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("endpoint", endpoint_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def deploy_model(
@@ -603,6 +663,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("endpoint", endpoint_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def undeploy_model(
@@ -648,6 +714,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("endpoint", endpoint_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     def predict(
@@ -695,6 +767,12 @@ class VertexAIService(GCPService[VertexDataset]):
         except HttpError as e:
             if e.resp.status == 404:
                 raise ResourceNotFoundError("endpoint", endpoint_id)
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
 
     # ---- Training Pipeline methods ----
@@ -791,4 +869,10 @@ class VertexAIService(GCPService[VertexDataset]):
                 response, self.project_id
             )
         except HttpError as e:
+            if e.resp.status == 403:
+                raise PermissionDeniedError(e.resp.status, str(e))
+            if e.resp.status == 429:
+                raise QuotaExceededError(e.resp.status, str(e))
+            if e.resp.status == 503:
+                raise ServiceUnavailableError(e.resp.status, str(e))
             raise APIError(e.resp.status, str(e))
