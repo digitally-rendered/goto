@@ -78,6 +78,44 @@ def format_secret_version_path(
     return f"{secret_path}/versions/{version_id}"
 
 
+def format_key_ring_path(
+    project_id: str, location: str, key_ring_id: str
+) -> str:
+    """Return full projects/{project}/locations/{location}/keyRings/{keyRing} path.
+
+    Args:
+        project_id: The GCP project ID.
+        location: The GCP location (e.g. 'global', 'us-east1').
+        key_ring_id: The key ring ID.
+
+    Returns:
+        The fully-qualified key ring resource path.
+    """
+    return (
+        f"projects/{project_id}/locations/{location}/keyRings/{key_ring_id}"
+    )
+
+
+def format_crypto_key_path(
+    project_id: str, location: str, key_ring_id: str, key_id: str
+) -> str:
+    """Return full projects/{project}/locations/{loc}/keyRings/{kr}/cryptoKeys/{key} path.
+
+    Args:
+        project_id: The GCP project ID.
+        location: The GCP location (e.g. 'global', 'us-east1').
+        key_ring_id: The key ring ID.
+        key_id: The crypto key ID.
+
+    Returns:
+        The fully-qualified crypto key resource path.
+    """
+    return (
+        f"projects/{project_id}/locations/{location}"
+        f"/keyRings/{key_ring_id}/cryptoKeys/{key_id}"
+    )
+
+
 def extract_name_from_path(full_path: str) -> str:
     """Extract the last segment from a full resource path.
 
