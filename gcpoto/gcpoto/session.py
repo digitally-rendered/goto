@@ -113,6 +113,29 @@ def _register_services():
             "gcpoto.services.web_security_scanner",
             "WebSecurityScannerService",
         ),
+        "api_keys": ("gcpoto.services.api_keys", "APIKeysService"),
+        "bare_metal": ("gcpoto.services.bare_metal", "BareMetalService"),
+        "dataplex": ("gcpoto.services.dataplex", "DataplexService"),
+        "interconnect": (
+            "gcpoto.services.interconnect",
+            "InterconnectService",
+        ),
+        "looker": ("gcpoto.services.looker", "LookerService"),
+        "media_cdn": ("gcpoto.services.media_cdn", "MediaCDNService"),
+        "network_connectivity": (
+            "gcpoto.services.network_connectivity",
+            "NetworkConnectivityService",
+        ),
+        "recaptcha": ("gcpoto.services.recaptcha", "RecaptchaService"),
+        "recommendations_ai": (
+            "gcpoto.services.recommendations_ai",
+            "RecommendationsAIService",
+        ),
+        "source_repos": (
+            "gcpoto.services.source_repos",
+            "SourceReposService",
+        ),
+        "video_ai": ("gcpoto.services.video_ai", "VideoAIService"),
     }
     _SERVICE_REGISTRY.update(services)
 
