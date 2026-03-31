@@ -9,6 +9,7 @@ from googleapiclient.errors import HttpError
 
 from gcpoto.services.base import GCPService
 from gcpoto.models.pubsub import PubSubTopic, PubSubSubscription
+from gcpoto.utils import format_topic_path, format_subscription_path, extract_name_from_path
 
 
 class PubSubService(GCPService[PubSubTopic]):
@@ -88,11 +89,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             A PubSubTopic instance
         """
-        # Check if we received just the name or the full path
-        if "/" not in topic_name:
-            full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-        else:
-            full_topic_path = topic_name
+        full_topic_path = format_topic_path(self.project_id, topic_name)
 
         request = self.service.projects().topics().get(topic=full_topic_path)
         response = request.execute()
@@ -125,13 +122,9 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             A PubSubTopic instance for the newly created topic
         """
-        # Check if we received just the name or the full path
-        if "/" not in topic_name:
-            full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-        else:
-            full_topic_path = topic_name
-            # Extract the short name for error messages
-            topic_name = full_topic_path.split("/")[-1]
+        full_topic_path = format_topic_path(self.project_id, topic_name)
+        # Extract the short name for error messages
+        topic_name = extract_name_from_path(full_topic_path)
 
         # Prepare the request body
         body = {}
@@ -184,11 +177,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             True if the deletion was successful
         """
-        # Check if we received just the name or the full path
-        if "/" not in topic_name:
-            full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-        else:
-            full_topic_path = topic_name
+        full_topic_path = format_topic_path(self.project_id, topic_name)
 
         request = self.service.projects().topics().delete(topic=full_topic_path)
         request.execute()
@@ -211,11 +200,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             The published message ID
         """
-        # Check if we received just the name or the full path
-        if "/" not in topic_name:
-            full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-        else:
-            full_topic_path = topic_name
+        full_topic_path = format_topic_path(self.project_id, topic_name)
 
         # Convert string data to bytes if needed
         if isinstance(data, str):
@@ -240,11 +225,7 @@ class PubSubService(GCPService[PubSubTopic]):
             A list of PubSubSubscription instances
         """
         if topic_name:
-            # Check if we received just the name or the full path
-            if "/" not in topic_name:
-                full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-            else:
-                full_topic_path = topic_name
+            full_topic_path = format_topic_path(self.project_id, topic_name)
 
             request = (
                 self.service.projects()
@@ -313,13 +294,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             A PubSubSubscription instance
         """
-        # Check if we received just the name or the full path
-        if "/" not in subscription_name:
-            full_subscription_path = (
-                f"projects/{self.project_id}/subscriptions/{subscription_name}"
-            )
-        else:
-            full_subscription_path = subscription_name
+        full_subscription_path = format_subscription_path(self.project_id, subscription_name)
 
         request = (
             self.service.projects()
@@ -369,20 +344,12 @@ class PubSubService(GCPService[PubSubTopic]):
             A PubSubSubscription instance for the newly created subscription
         """
         # Process subscription name
-        if "/" not in subscription_name:
-            full_subscription_path = (
-                f"projects/{self.project_id}/subscriptions/{subscription_name}"
-            )
-        else:
-            full_subscription_path = subscription_name
-            # Extract the short name for error messages
-            subscription_name = full_subscription_path.split("/")[-1]
+        full_subscription_path = format_subscription_path(self.project_id, subscription_name)
+        # Extract the short name for error messages
+        subscription_name = extract_name_from_path(full_subscription_path)
 
         # Process topic name
-        if "/" not in topic_name:
-            full_topic_path = f"projects/{self.project_id}/topics/{topic_name}"
-        else:
-            full_topic_path = topic_name
+        full_topic_path = format_topic_path(self.project_id, topic_name)
 
         # Prepare the request body
         body = {"topic": full_topic_path}
@@ -454,13 +421,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             True if the deletion was successful
         """
-        # Check if we received just the name or the full path
-        if "/" not in subscription_name:
-            full_subscription_path = (
-                f"projects/{self.project_id}/subscriptions/{subscription_name}"
-            )
-        else:
-            full_subscription_path = subscription_name
+        full_subscription_path = format_subscription_path(self.project_id, subscription_name)
 
         request = (
             self.service.projects()
@@ -487,13 +448,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             A list of received messages
         """
-        # Check if we received just the name or the full path
-        if "/" not in subscription_name:
-            full_subscription_path = (
-                f"projects/{self.project_id}/subscriptions/{subscription_name}"
-            )
-        else:
-            full_subscription_path = subscription_name
+        full_subscription_path = format_subscription_path(self.project_id, subscription_name)
 
         request = (
             self.service.projects()
@@ -520,13 +475,7 @@ class PubSubService(GCPService[PubSubTopic]):
         Returns:
             True if the acknowledgement was successful
         """
-        # Check if we received just the name or the full path
-        if "/" not in subscription_name:
-            full_subscription_path = (
-                f"projects/{self.project_id}/subscriptions/{subscription_name}"
-            )
-        else:
-            full_subscription_path = subscription_name
+        full_subscription_path = format_subscription_path(self.project_id, subscription_name)
 
         request = (
             self.service.projects()
