@@ -201,7 +201,7 @@ class BigQueryService(GCPService[BigQueryDataset]):
             datasetId=dataset_id,
             tableId=table_id,
         )
-        response = self._execute(request, "table", f)
+        response = self._execute(request, "table", table_id)
         return BigQueryTable.from_api_response(response, self.project_id)
     def create_table(
         self,

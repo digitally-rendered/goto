@@ -96,7 +96,7 @@ class FirestoreService(GCPService[FirestoreDocument]):
             .documents()
             .get(name=name)
         )
-        response = self._execute(request, "firestore.document", f)
+        response = self._execute(request, "firestore.document", document_id)
         return FirestoreDocument.from_api_response(
             response, self.project_id
         )
@@ -180,7 +180,7 @@ class FirestoreService(GCPService[FirestoreDocument]):
             .documents()
             .patch(**kwargs)
         )
-        response = self._execute(request, "firestore.document", f)
+        response = self._execute(request, "firestore.document", document_id)
         return FirestoreDocument.from_api_response(
             response, self.project_id
         )

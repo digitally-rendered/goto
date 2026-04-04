@@ -252,7 +252,7 @@ class CloudArmorService(GCPService[SecurityPolicy]):
             securityPolicy=policy_name,
             priority=priority,
         )
-        response = self._execute(request, "SecurityPolicyRule", f)
+        response = self._execute(request, "SecurityPolicyRule", str(priority))
         return SecurityPolicyRule.from_api_response(response, policy_name)
     def patch_rule(
         self,
@@ -302,7 +302,7 @@ class CloudArmorService(GCPService[SecurityPolicy]):
             priority=priority,
             body=body,
         )
-        self._execute(request, "SecurityPolicyRule", f)
+        self._execute(request, "SecurityPolicyRule", str(priority))
         logger.info(
             "Patched rule with priority %s in security policy %s",
             priority,

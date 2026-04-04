@@ -241,7 +241,7 @@ class DNSService(GCPService[ManagedZone]):
             name=name,
             type=type,
         )
-        response = self._execute(request, "ResourceRecordSet", f)
+        response = self._execute(request, "ResourceRecordSet", name)
         return ResourceRecordSet.from_api_response(response, zone_name)
     def create_record_set(
         self,
@@ -371,7 +371,7 @@ class DNSService(GCPService[ManagedZone]):
             type=type,
             body=body,
         )
-        response = self._execute(request, "ResourceRecordSet", f)
+        response = self._execute(request, "ResourceRecordSet", name)
         logger.info(
             "Updated record set %s (type %s) in zone %s",
             name,

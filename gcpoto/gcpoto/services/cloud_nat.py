@@ -232,39 +232,28 @@ class CloudNATService(GCPService[NATConfig]):
             region,
         )
 
-        try:
-            router = self.get_router(region, router_name)
+        router = self.get_router(region, router_name)
 
-            nats = router.get("nats", [])
-            original_len = len(nats)
-            nats = [n for n in nats if n.get("name") != nat_name]
+        nats = router.get("nats", [])
+        original_len = len(nats)
+        nats = [n for n in nats if n.get("name") != nat_name]
 
-            if len(nats) == original_len:
-                raise ResourceNotFoundError("NATConfig", nat_name)
+        if len(nats) == original_len:
+            raise ResourceNotFoundError("NATConfig", nat_name)
 
-            router["nats"] = nats
+        router["nats"] = nats
 
-            request = self.service.routers().patch(
-                project=self.project_id,
-                region=region,
-                router=router_name,
-                body=router,
-            )
-            self._execute(request)
-            logger.info(
-                "Deleted NAT %s from router %s", nat_name, router_name
-            )
-            return True
-        except ResourceNotFoundError:
-            raise
-        except HttpError as e:
-            if e.resp.status == 403:
-                raise PermissionDeniedError(e.resp.status, str(e))
-            if e.resp.status == 429:
-                raise QuotaExceededError(e.resp.status, str(e))
-            if e.resp.status == 503:
-                raise ServiceUnavailableError(e.resp.status, str(e))
-            raise APIError(e.resp.status, str(e))
+        request = self.service.routers().patch(
+            project=self.project_id,
+            region=region,
+            router=router_name,
+            body=router,
+        )
+        self._execute(request)
+        logger.info(
+            "Deleted NAT %s from router %s", nat_name, router_name
+        )
+        return True
 
     def get_nat_mapping_info(
         self, region: str, router_name: str

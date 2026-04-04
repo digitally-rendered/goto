@@ -75,7 +75,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().get(
             name=name
         )
-        response = self._execute(request)
+        response = self._execute(request, "GKECluster", cluster_name)
         return GKECluster.from_api_response(response)
 
     def create_cluster(
@@ -130,7 +130,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().create(
             parent=parent, body=body
         )
-        response = self._execute(request)
+        response = self._execute(request, "GKECluster", cluster_name)
         logger.info("Cluster creation initiated for %s", cluster_name)
         return response
 
@@ -153,7 +153,7 @@ class GKEService(GCPService[GKECluster]):
         request = self.service.projects().locations().clusters().delete(
             name=name
         )
-        response = self._execute(request)
+        response = self._execute(request, "GKECluster", cluster_name)
         logger.info("Cluster deletion initiated for %s", cluster_name)
         return response
 

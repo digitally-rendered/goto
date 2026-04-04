@@ -12,7 +12,7 @@ from gcpoto.models.artifact_registry import (
     Package,
     PackageVersion,
 )
-from gcpoto.exceptions import ResourceNotFoundError, APIError
+from gcpoto.exceptions import ResourceNotFoundError, ResourceAlreadyExistsError, APIError
 
 
 @pytest.fixture
@@ -438,9 +438,7 @@ class TestCreateRepository:
         )
 
         service = ArtifactRegistryService(project_id="test-project")
-        with pytest.raises(
-            ValueError, match="Repository 'my-repo' already exists"
-        ):
+        with pytest.raises(ResourceAlreadyExistsError):
             service.create_repository(
                 "us-central1", "my-repo", "DOCKER"
             )
